@@ -2,7 +2,7 @@ name: greenmind_ai
 
 description: GreenMind AI - AI Powered Plant Identification & Smart Care Assistant
 
-publish_to: 'none'
+publish_to: "none"
 
 version: 1.0.0+1
 
@@ -15,11 +15,14 @@ dependencies:
 
   cupertino_icons: ^1.0.8
 
+  # State Management
+  flutter_riverpod: ^2.6.1
+
   # Navigation
   go_router: ^16.0.0
 
-  # State Management
-  provider: ^6.1.5
+  # Networking
+  dio: ^5.9.0
 
   # UI
   google_fonts: ^6.3.0
@@ -31,14 +34,15 @@ dependencies:
   # Local Storage
   shared_preferences: ^2.5.3
 
-  # Date & Time
-  intl: ^0.20.2
+  # Connectivity
+  connectivity_plus: ^6.1.5
 
-  # UUID Generator
+  # Utilities
+  intl: ^0.20.2
   uuid: ^4.5.1
 
-  # Internet Connectivity
-  connectivity_plus: ^6.1.5
+  # Logging
+  logger: ^2.6.1
 
 dev_dependencies:
   flutter_test:
