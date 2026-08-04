@@ -1,17 +1,36 @@
-# greenmind_ai
+# 🌿 GreenMind AI
 
-A new Flutter project.
+GreenMind AI is a modern AI-powered Flutter application designed to help users identify plants, detect plant diseases, receive personalized plant care recommendations, and interact with an intelligent AI chatbot. The application combines Artificial Intelligence with an intuitive user experience to make plant care smarter, easier, and more accessible.
 
-## Getting Started
+## 🚀 Features
 
-This project is a starting point for a Flutter application.
+- 🌱 AI Plant Identification
+- 🩺 Plant Disease Detection
+- 🤖 AI Chatbot Assistant
+- 💧 Smart Plant Care Recommendations
+- ⏰ Watering & Care Reminders
+- 👤 User Profile Management
+- ⚙️ App Settings
+- 📱 Responsive Material 3 UI
+- 🌐 Cross-platform (Android, iOS, Web)
 
-A few resources to get you started if this is your first Flutter project:
+## 🛠️ Tech Stack
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+- Flutter
+- Dart
+- Provider (State Management)
+- GoRouter
+- Material 3
+- Google Fonts
+- Image Picker
+- Shared Preferences
+- Gemini / OpenAI API (Planned)
+- Plant.id API (Planned)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 🎯 Project Goal
+
+To build a production-ready, scalable, and AI-driven plant care assistant that helps users identify plants, diagnose diseases, and receive intelligent recommendations through an elegant and user-friendly mobile application.
+
+---
+
+Made with ❤️ using Flutter.
