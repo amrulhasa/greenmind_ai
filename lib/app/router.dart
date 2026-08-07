@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 
+import '../features/disease/screens/disease_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/identify/screens/identify_screen.dart';
 import '../features/splash/splash_screen.dart';
@@ -23,6 +24,11 @@ class AppRouter {
       GoRoute(
         path: '/identify',
         builder: (context, state) => const IdentifyScreen(),
+      ),
+
+      GoRoute(
+        path: '/disease',
+        builder: (context, state) => const DiseaseScreen(),
       ),
     ],
   );
