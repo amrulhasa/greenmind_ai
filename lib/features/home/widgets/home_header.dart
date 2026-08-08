@@ -13,19 +13,24 @@ class HomeHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(
-              AppRadius.circular,
+        GestureDetector(
+          onTap: () {
+            context.push('/profile');
+          },
+          child: Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(
+                AppRadius.circular,
+              ),
             ),
-          ),
-          child: const Icon(
-            Icons.person,
-            color: Colors.white,
-            size: 30,
+            child: const Icon(
+              Icons.person,
+              color: Colors.white,
+              size: 30,
+            ),
           ),
         ),
 

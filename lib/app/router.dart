@@ -4,6 +4,7 @@ import '../features/chatbot/screens/chatbot_screen.dart';
 import '../features/disease/screens/disease_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/identify/screens/identify_screen.dart';
+import '../features/profile/screens/profile_screen.dart';
 import '../features/reminder/screens/reminder_screen.dart';
 import '../features/splash/splash_screen.dart';
 
@@ -36,6 +37,10 @@ class AppRouter {
       GoRoute(
         path: '/reminders',
         builder: (context, state) => const ReminderScreen(),
+      ),
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const ProfileScreen(),
       ),
     ],
   );
