@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
@@ -35,14 +36,14 @@ class HomeHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "Good Morning 👋",
+                'Good Morning 👋',
                 style: AppTextStyles.subtitle,
               ),
 
               const SizedBox(height: AppSpacing.xs),
 
               Text(
-                "Welcome Back",
+                'Welcome Back',
                 style: AppTextStyles.heading2,
               ),
             ],
@@ -62,7 +63,9 @@ class HomeHeader extends StatelessWidget {
             ),
           ),
           child: IconButton(
-            onPressed: () {},
+            onPressed: () {
+              context.push('/reminders');
+            },
             icon: const Icon(
               Icons.notifications_none_rounded,
               color: AppColors.textPrimary,
