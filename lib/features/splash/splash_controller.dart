@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -10,8 +11,16 @@ class SplashController {
     Timer(
       const Duration(seconds: 2),
       () {
-        if (context.mounted) {
+        if (!context.mounted) {
+          return;
+        }
+
+        final user = FirebaseAuth.instance.currentUser;
+
+        if (user != null) {
           context.go('/home');
+        } else {
+          context.go('/login');
         }
       },
     );

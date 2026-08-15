@@ -13,13 +13,15 @@ class DiseasePreview extends ConsumerWidget {
     final state = ref.watch(diseaseProvider);
     final notifier = ref.read(diseaseProvider.notifier);
 
-    if (state.image == null) {
+    if (state.imageBytes == null) {
       return Container(
         width: double.infinity,
         height: 250,
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.card),
+          borderRadius: BorderRadius.circular(
+            AppRadius.card,
+          ),
           border: Border.all(
             color: AppColors.border,
           ),
@@ -28,13 +30,13 @@ class DiseasePreview extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.image_search_rounded,
+              Icons.image_outlined,
               size: 70,
               color: Colors.grey,
             ),
             SizedBox(height: 12),
             Text(
-              'No leaf image selected',
+              'No image selected',
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey,
@@ -48,14 +50,17 @@ class DiseasePreview extends ConsumerWidget {
     return Stack(
       children: [
         ClipRRect(
-          borderRadius: BorderRadius.circular(AppRadius.card),
-          child: Image.file(
-            state.image!,
+          borderRadius: BorderRadius.circular(
+            AppRadius.card,
+          ),
+          child: Image.memory(
+            state.imageBytes!,
             width: double.infinity,
             height: 250,
             fit: BoxFit.cover,
           ),
         ),
+
         Positioned(
           top: 10,
           right: 10,

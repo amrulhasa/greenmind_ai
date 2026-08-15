@@ -15,9 +15,10 @@ class IdentifyButton extends ConsumerWidget {
       width: double.infinity,
       height: 55,
       child: ElevatedButton.icon(
-        onPressed: state.image == null || state.isLoading
+        onPressed: state.imageBytes == null || state.isLoading
             ? null
             : () async {
+                debugPrint('IDENTIFY BUTTON PRESSED');
                 await notifier.identifyPlant();
               },
         icon: state.isLoading

@@ -27,53 +27,54 @@ class SettingsTile extends StatelessWidget {
       margin: const EdgeInsets.only(
         bottom: AppSpacing.sm,
       ),
-      decoration: BoxDecoration(
+      child: Material(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(
           AppRadius.card,
         ),
-      ),
-      child: ListTile(
-        onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.xs,
-        ),
-        leading: Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(
-              alpha: 0.10,
-            ),
-            borderRadius: BorderRadius.circular(12),
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          onTap: onTap,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.xs,
           ),
-          child: Icon(
-            icon,
-            color: AppColors.primary,
-            size: 21,
-          ),
-        ),
-        title: Text(
-          title,
-          style: AppTextStyles.title,
-        ),
-        subtitle: subtitle.isEmpty
-            ? null
-            : Padding(
-                padding: const EdgeInsets.only(
-                  top: 3,
-                ),
-                child: Text(
-                  subtitle,
-                  style: AppTextStyles.caption,
-                ),
+          leading: Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(
+                alpha: 0.10,
               ),
-        trailing: trailing ??
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: AppColors.textSecondary,
+              borderRadius: BorderRadius.circular(12),
             ),
+            child: Icon(
+              icon,
+              color: AppColors.primary,
+              size: 21,
+            ),
+          ),
+          title: Text(
+            title,
+            style: AppTextStyles.title,
+          ),
+          subtitle: subtitle.isEmpty
+              ? null
+              : Padding(
+                  padding: const EdgeInsets.only(
+                    top: 3,
+                  ),
+                  child: Text(
+                    subtitle,
+                    style: AppTextStyles.caption,
+                  ),
+                ),
+          trailing: trailing ??
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textSecondary,
+              ),
+        ),
       ),
     );
   }

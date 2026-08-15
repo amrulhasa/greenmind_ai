@@ -13,7 +13,7 @@ class ImagePreview extends ConsumerWidget {
     final state = ref.watch(identifyProvider);
     final notifier = ref.read(identifyProvider.notifier);
 
-    if (state.image == null) {
+    if (state.imageBytes == null) {
       return Container(
         width: double.infinity,
         height: 250,
@@ -49,13 +49,14 @@ class ImagePreview extends ConsumerWidget {
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(AppRadius.card),
-          child: Image.file(
-            state.image!,
+          child: Image.memory(
+            state.imageBytes!,
             width: double.infinity,
             height: 250,
             fit: BoxFit.cover,
           ),
         ),
+
         Positioned(
           top: 10,
           right: 10,

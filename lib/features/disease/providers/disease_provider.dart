@@ -1,9 +1,10 @@
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../models/disease_result.dart';
+import '../services/disease_service.dart';
 
 final diseaseProvider =
     NotifierProvider<DiseaseNotifier, DiseaseState>(
@@ -12,11 +13,16 @@ final diseaseProvider =
 
 class DiseaseNotifier extends Notifier<DiseaseState> {
   final ImagePicker _picker = ImagePicker();
+  final DiseaseService _diseaseService = DiseaseService();
 
   @override
   DiseaseState build() {
     return const DiseaseState();
   }
+
+  // ==============================
+  // PICK IMAGE FROM GALLERY
+  // ==============================
 
   Future<void> pickFromGallery() async {
     final XFile? image = await _picker.pickImage(
@@ -26,10 +32,18 @@ class DiseaseNotifier extends Notifier<DiseaseState> {
 
     if (image == null) return;
 
+    final bytes = await image.readAsBytes();
+
     state = state.copyWith(
-      image: File(image.path),
+      imageBytes: bytes,
+      clearResult: true,
+      clearError: true,
     );
   }
+
+  // ==============================
+  // PICK IMAGE FROM CAMERA
+  // ==============================
 
   Future<void> pickFromCamera() async {
     final XFile? image = await _picker.pickImage(
@@ -39,63 +53,96 @@ class DiseaseNotifier extends Notifier<DiseaseState> {
 
     if (image == null) return;
 
+    final bytes = await image.readAsBytes();
+
     state = state.copyWith(
-      image: File(image.path),
+      imageBytes: bytes,
+      clearResult: true,
+      clearError: true,
     );
   }
+
+  // ==============================
+  // CLEAR IMAGE
+  // ==============================
 
   void clearImage() {
     state = const DiseaseState();
   }
 
+  // ==============================
+  // DETECT DISEASE
+  // ==============================
+
   Future<void> detectDisease() async {
-    if (state.image == null) return;
+    final imageBytes = state.imageBytes;
+
+    if (imageBytes == null) return;
 
     state = state.copyWith(
       isLoading: true,
+      clearResult: true,
+      clearError: true,
     );
 
-    await Future.delayed(
-      const Duration(seconds: 2),
-    );
+    try {
+      final DiseaseResult result =
+          await _diseaseService.detectDisease(
+        imageBytes,
+      );
 
-    state = state.copyWith(
-      isLoading: false,
-      result: const DiseaseResult(
-        diseaseName: 'Healthy Leaf',
-        confidence: 98.7,
-        description:
-            'The uploaded plant leaf appears healthy with no visible disease symptoms.',
-        treatment:
-            'No treatment is required. Continue regular watering and fertilization.',
-        prevention:
-            'Maintain proper sunlight, watering schedule, and good air circulation.',
-        isHealthy: true,
-      ),
-    );
+      state = state.copyWith(
+        isLoading: false,
+        result: result,
+        clearResult: false,
+        clearError: true,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        clearResult: true,
+        errorMessage:
+            'Unable to analyze the plant. Please try again.',
+        clearError: false,
+      );
+    }
   }
 }
 
+// ==========================================
+// DISEASE STATE
+// ==========================================
+
 class DiseaseState {
-  final File? image;
+  final Uint8List? imageBytes;
   final bool isLoading;
   final DiseaseResult? result;
+  final String? errorMessage;
 
   const DiseaseState({
-    this.image,
+    this.imageBytes,
     this.isLoading = false,
     this.result,
+    this.errorMessage,
   });
 
   DiseaseState copyWith({
-    File? image,
+    Uint8List? imageBytes,
     bool? isLoading,
     DiseaseResult? result,
+    String? errorMessage,
+    bool clearResult = false,
+    bool clearError = false,
   }) {
     return DiseaseState(
-      image: image ?? this.image,
+      imageBytes: imageBytes ?? this.imageBytes,
       isLoading: isLoading ?? this.isLoading,
-      result: result ?? this.result,
+      result: clearResult
+          ? null
+          : (result ?? this.result),
+      errorMessage: clearError
+          ? null
+          : (errorMessage ?? this.errorMessage),
     );
   }
 }

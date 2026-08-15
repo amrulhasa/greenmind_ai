@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "188327902009",
+    "project_id": "greenmind-ai-497c9",
+    "storage_bucket": "greenmind-ai-497c9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:188327902009:android:83c708b586ca0aeb2246e8",
+        "android_client_info": {
+          "package_name": "com.example.greenmind_ai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA873NJTCeqOY8vdIxRJvO-TMiS5mmj2KM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

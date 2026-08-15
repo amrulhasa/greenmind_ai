@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
@@ -10,47 +11,90 @@ import '../widgets/disease_result_card.dart';
 class DiseaseScreen extends StatelessWidget {
   const DiseaseScreen({super.key});
 
+  void _goHome(BuildContext context) {
+    context.go('/home');
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Disease Detection'),
-        centerTitle: true,
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Detect Plant Disease',
-                style: AppTextStyles.heading1,
-              ),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (
+        didPop,
+        result,
+      ) {
+        if (didPop) {
+          return;
+        }
 
-              const SizedBox(height: AppSpacing.sm),
+        _goHome(context);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            onPressed: () {
+              _goHome(context);
+            },
+            icon: const Icon(
+              Icons.arrow_back_rounded,
+            ),
+            tooltip: 'Back',
+          ),
+          title: const Text(
+            'Disease Detection',
+          ),
+          centerTitle: true,
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(
+              AppSpacing.lg,
+            ),
+            child: Column(
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Detect Plant Disease',
+                  style:
+                      AppTextStyles.heading1,
+                ),
 
-              Text(
-                'Upload a clear leaf image to detect diseases using AI.',
-                style: AppTextStyles.body,
-              ),
+                const SizedBox(
+                  height: AppSpacing.sm,
+                ),
 
-              const SizedBox(height: AppSpacing.xl),
+                Text(
+                  'Upload a clear leaf image to detect diseases using AI.',
+                  style:
+                      AppTextStyles.body,
+                ),
 
-              const DiseasePickerCard(),
+                const SizedBox(
+                  height: AppSpacing.xl,
+                ),
 
-              const SizedBox(height: AppSpacing.lg),
+                const DiseasePickerCard(),
 
-              const DiseasePreview(),
+                const SizedBox(
+                  height: AppSpacing.lg,
+                ),
 
-              const SizedBox(height: AppSpacing.lg),
+                const DiseasePreview(),
 
-              const DetectButton(),
+                const SizedBox(
+                  height: AppSpacing.lg,
+                ),
 
-              const SizedBox(height: AppSpacing.xl),
+                const DetectButton(),
 
-              const DiseaseResultCard(),
-            ],
+                const SizedBox(
+                  height: AppSpacing.xl,
+                ),
+
+                const DiseaseResultCard(),
+              ],
+            ),
           ),
         ),
       ),

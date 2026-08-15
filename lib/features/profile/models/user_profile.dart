@@ -3,6 +3,7 @@ class UserProfile {
   final String email;
   final String location;
   final String bio;
+  final String? profileImagePath;
   final bool notificationsEnabled;
   final bool darkModeEnabled;
 
@@ -11,6 +12,7 @@ class UserProfile {
     this.email = 'user@example.com',
     this.location = '',
     this.bio = 'GreenMind AI plant enthusiast',
+    this.profileImagePath,
     this.notificationsEnabled = true,
     this.darkModeEnabled = false,
   });
@@ -20,6 +22,8 @@ class UserProfile {
     String? email,
     String? location,
     String? bio,
+    String? profileImagePath,
+    bool clearProfileImage = false,
     bool? notificationsEnabled,
     bool? darkModeEnabled,
   }) {
@@ -28,6 +32,9 @@ class UserProfile {
       email: email ?? this.email,
       location: location ?? this.location,
       bio: bio ?? this.bio,
+      profileImagePath: clearProfileImage
+          ? null
+          : profileImagePath ?? this.profileImagePath,
       notificationsEnabled:
           notificationsEnabled ?? this.notificationsEnabled,
       darkModeEnabled:

@@ -22,7 +22,11 @@ class FeatureCard extends StatelessWidget {
             route: '/identify',
           ),
         ),
-        SizedBox(width: AppSpacing.md),
+
+        SizedBox(
+          width: AppSpacing.md,
+        ),
+
         Expanded(
           child: _FeatureItem(
             title: 'Disease Detection',
@@ -52,17 +56,35 @@ class _FeatureItem extends StatelessWidget {
     required this.route,
   });
 
+  void _openFeature(
+    BuildContext context,
+  ) {
+    context.go(route);
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return InkWell(
-      borderRadius: BorderRadius.circular(AppRadius.card),
-      onTap: () => context.push(route),
+      borderRadius:
+          BorderRadius.circular(
+        AppRadius.card,
+      ),
+      onTap: () {
+        _openFeature(context);
+      },
       child: Container(
-        height: 220,
-        padding: const EdgeInsets.all(AppSpacing.cardPadding),
-        decoration: BoxDecoration(
+        height: 180,
+        padding:
+            const EdgeInsets.all(14),
+        decoration:
+            BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.card),
+          borderRadius:
+              BorderRadius.circular(
+            AppRadius.card,
+          ),
           boxShadow: const [
             BoxShadow(
               color: AppColors.shadow,
@@ -72,33 +94,86 @@ class _FeatureItem extends StatelessWidget {
           ],
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
           children: [
+            // ==================================================
+            // ICON
+            // ==================================================
+
             CircleAvatar(
-              radius: 28,
-              backgroundColor: color.withValues(alpha: 0.12),
+              radius: 22,
+              backgroundColor:
+                  color.withValues(
+                alpha: 0.12,
+              ),
               child: Icon(
                 icon,
                 color: color,
-                size: 28,
+                size: 24,
               ),
             ),
-            const Spacer(),
+
+            const SizedBox(
+              height: 6,
+            ),
+
+            // ==================================================
+            // TITLE
+            // ==================================================
+
             Text(
               title,
-              style: AppTextStyles.heading3,
+              maxLines: 1,
+              overflow:
+                  TextOverflow.ellipsis,
+              style:
+                  AppTextStyles.heading3,
             ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              subtitle,
-              style: AppTextStyles.body,
+
+            const SizedBox(
+              height: 3,
             ),
-            const Spacer(),
+
+            // ==================================================
+            // SUBTITLE
+            // ==================================================
+
+            Expanded(
+              child: Align(
+                alignment:
+                    Alignment.topLeft,
+                child: Text(
+                  subtitle,
+                  maxLines: 2,
+                  overflow:
+                      TextOverflow.ellipsis,
+                  style:
+                      AppTextStyles.body,
+                ),
+              ),
+            ),
+
+            const SizedBox(
+              height: 6,
+            ),
+
+            // ==================================================
+            // GET STARTED
+            // ==================================================
+
             SizedBox(
               width: double.infinity,
+              height: 32,
               child: ElevatedButton(
-                onPressed: () => context.push(route),
-                child: const Text('Get Started'),
+                onPressed: () {
+                  _openFeature(
+                    context,
+                  );
+                },
+                child: const Text(
+                  'Get Started',
+                ),
               ),
             ),
           ],
