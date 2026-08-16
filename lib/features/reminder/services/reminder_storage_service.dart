@@ -19,27 +19,16 @@ class ReminderStorageService {
     final List<dynamic> decodedData = jsonDecode(storedData);
 
     return decodedData
-        .map(
-          (item) => _fromJson(
-            Map<String, dynamic>.from(item as Map),
-          ),
-        )
+        .map((item) => _fromJson(Map<String, dynamic>.from(item as Map)))
         .toList();
   }
 
-  Future<void> saveReminders(
-    List<PlantReminder> reminders,
-  ) async {
+  Future<void> saveReminders(List<PlantReminder> reminders) async {
     final preferences = await SharedPreferences.getInstance();
 
-    final encodedData = jsonEncode(
-      reminders.map(_toJson).toList(),
-    );
+    final encodedData = jsonEncode(reminders.map(_toJson).toList());
 
-    await preferences.setString(
-      _storageKey,
-      encodedData,
-    );
+    await preferences.setString(_storageKey, encodedData);
   }
 
   Future<void> clearReminders() async {
@@ -48,9 +37,7 @@ class ReminderStorageService {
     await preferences.remove(_storageKey);
   }
 
-  Map<String, dynamic> _toJson(
-    PlantReminder reminder,
-  ) {
+  Map<String, dynamic> _toJson(PlantReminder reminder) {
     return {
       'id': reminder.id,
       'plantName': reminder.plantName,
@@ -62,9 +49,7 @@ class ReminderStorageService {
     };
   }
 
-  PlantReminder _fromJson(
-    Map<String, dynamic> json,
-  ) {
+  PlantReminder _fromJson(Map<String, dynamic> json) {
     final reminderType = ReminderType.values.firstWhere(
       (type) => type.name == json['type'],
       orElse: () => ReminderType.custom,
@@ -76,9 +61,7 @@ class ReminderStorageService {
       title: json['title'] as String,
       description: json['description'] as String,
       type: reminderType,
-      scheduledAt: DateTime.parse(
-        json['scheduledAt'] as String,
-      ),
+      scheduledAt: DateTime.parse(json['scheduledAt'] as String),
       isCompleted: json['isCompleted'] as bool? ?? false,
     );
   }

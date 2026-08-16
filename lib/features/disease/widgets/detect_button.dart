@@ -30,26 +30,16 @@ class DetectButton extends ConsumerWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          disabledBackgroundColor: AppColors.primary.withValues(
-            alpha: 0.35,
-          ),
-          disabledForegroundColor: Colors.white.withValues(
-            alpha: 0.80,
-          ),
+          disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.35),
+          disabledForegroundColor: Colors.white.withValues(alpha: 0.80),
           elevation: isDisabled ? 0 : 2,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              AppRadius.card,
-            ),
+            borderRadius: BorderRadius.circular(AppRadius.card),
           ),
         ),
         child: AnimatedSwitcher(
-          duration: const Duration(
-            milliseconds: 200,
-          ),
-          child: isLoading
-              ? const _LoadingContent()
-              : const _ReadyContent(),
+          duration: const Duration(milliseconds: 200),
+          child: isLoading ? const _LoadingContent() : const _ReadyContent(),
         ),
       ),
     );
@@ -69,16 +59,9 @@ class _ReadyContent extends StatelessWidget {
       key: ValueKey('ready'),
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(
-          Icons.health_and_safety_outlined,
-          size: 23,
-        ),
-        SizedBox(
-          width: AppSpacing.sm,
-        ),
-        Text(
-          'Detect Disease',
-        ),
+        Icon(Icons.health_and_safety_outlined, size: 23),
+        SizedBox(width: AppSpacing.sm),
+        Text('Detect Disease'),
       ],
     );
   }
@@ -105,12 +88,8 @@ class _LoadingContent extends StatelessWidget {
             color: Colors.white,
           ),
         ),
-        SizedBox(
-          width: AppSpacing.sm,
-        ),
-        Text(
-          'Analyzing...',
-        ),
+        SizedBox(width: AppSpacing.sm),
+        Text('Analyzing...'),
       ],
     );
   }

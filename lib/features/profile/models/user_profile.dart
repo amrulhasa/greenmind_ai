@@ -11,7 +11,8 @@ class UserProfile {
     this.name = 'Plant Lover',
     this.email = 'user@example.com',
     this.location = '',
-    this.bio = 'GreenMind AI plant enthusiast',
+    this.bio =
+        'GreenMind AI plant enthusiast',
     this.profileImagePath,
     this.notificationsEnabled = true,
     this.darkModeEnabled = false,
@@ -30,15 +31,20 @@ class UserProfile {
     return UserProfile(
       name: name ?? this.name,
       email: email ?? this.email,
-      location: location ?? this.location,
+      location:
+          location ?? this.location,
       bio: bio ?? this.bio,
-      profileImagePath: clearProfileImage
-          ? null
-          : profileImagePath ?? this.profileImagePath,
+      profileImagePath:
+          clearProfileImage
+              ? null
+              : profileImagePath ??
+                  this.profileImagePath,
       notificationsEnabled:
-          notificationsEnabled ?? this.notificationsEnabled,
+          notificationsEnabled ??
+              this.notificationsEnabled,
       darkModeEnabled:
-          darkModeEnabled ?? this.darkModeEnabled,
+          darkModeEnabled ??
+              this.darkModeEnabled,
     );
   }
 }

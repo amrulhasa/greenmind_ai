@@ -25,7 +25,9 @@ class ProfileNotifier extends Notifier<ProfileState> {
 
   @override
   ProfileState build() {
-    Future.microtask(_loadProfile);
+    Future.microtask(
+      _loadProfile,
+    );
 
     return const ProfileState(
       isLoading: true,
@@ -44,9 +46,9 @@ class ProfileNotifier extends Notifier<ProfileState> {
       state = state.copyWith(
         profile: profile,
         isLoading: false,
-        errorMessage: null,
+        clearError: true,
       );
-    } catch (_) {
+    } catch (e) {
       state = state.copyWith(
         isLoading: false,
         errorMessage:
@@ -56,7 +58,7 @@ class ProfileNotifier extends Notifier<ProfileState> {
   }
 
   // ============================================================
-  // UPDATE PROFILE INFORMATION
+  // UPDATE PROFILE
   // ============================================================
 
   Future<void> updateProfile({
@@ -91,60 +93,61 @@ class ProfileNotifier extends Notifier<ProfileState> {
       final XFile? pickedImage =
           await picker.pickImage(
         source: source,
-        imageQuality: 85,
-        maxWidth: 1200,
-        maxHeight: 1200,
+        imageQuality: 90,
+        maxWidth: 1600,
+        maxHeight: 1600,
       );
 
-      // User cancelled.
+      // User cancelled image selection.
       if (pickedImage == null) {
         return;
       }
 
-      // Read selected/captured image.
+      // Read image as bytes.
       final Uint8List bytes =
           await pickedImage.readAsBytes();
 
-      // Keep old image path.
-      final oldImagePath =
-          state.profile.profileImagePath;
+      if (bytes.isEmpty) {
+        throw Exception(
+          'Selected image is empty.',
+        );
+      }
 
-      // Save new image with a NEW filename.
-      final String newImagePath =
+      // Compress image and convert to Base64.
+      //
+      // This is cross-platform:
+      // Android + Windows + Web.
+      final String imageBase64 =
           await _storageService.saveProfileImage(
         bytes,
       );
 
-      // Create updated profile.
+      if (imageBase64.isEmpty) {
+        throw Exception(
+          'Unable to process profile image.',
+        );
+      }
+
+      // Save Base64 image inside profile.
       final updatedProfile =
           state.profile.copyWith(
-        profileImagePath: newImagePath,
+        profileImagePath:
+            imageBase64,
       );
 
-      // Save profile metadata.
       await _storageService.saveProfile(
         updatedProfile,
       );
 
-      // IMPORTANT:
-      // Immediately update Riverpod state.
+      // Update UI immediately.
       state = state.copyWith(
         profile: updatedProfile,
         isLoading: false,
-        errorMessage: null,
+        clearError: true,
       );
-
-      // Delete old image only after
-      // new image has been successfully saved.
-      if (oldImagePath != null &&
-          oldImagePath.isNotEmpty &&
-          oldImagePath != newImagePath) {
-        await _storageService.deleteProfileImage(
-          oldImagePath,
-        );
-      }
-    } catch (_) {
+    } catch (e) {
       state = state.copyWith(
+        isLoading: false,
         errorMessage:
             'Unable to change profile picture.',
       );
@@ -157,33 +160,23 @@ class ProfileNotifier extends Notifier<ProfileState> {
 
   Future<void> removeProfilePicture() async {
     try {
-      final oldImagePath =
-          state.profile.profileImagePath;
-
-      // Remove image file.
-      await _storageService.deleteProfileImage(
-        oldImagePath,
-      );
-
-      // Remove image path from profile state.
       final updatedProfile =
           state.profile.copyWith(
         clearProfileImage: true,
       );
 
-      // Save updated profile.
       await _storageService.saveProfile(
         updatedProfile,
       );
 
-      // Immediately update UI.
       state = state.copyWith(
         profile: updatedProfile,
         isLoading: false,
-        errorMessage: null,
+        clearError: true,
       );
-    } catch (_) {
+    } catch (e) {
       state = state.copyWith(
+        isLoading: false,
         errorMessage:
             'Unable to remove profile picture.',
       );
@@ -228,27 +221,19 @@ class ProfileNotifier extends Notifier<ProfileState> {
 
   Future<void> resetProfile() async {
     try {
-      final oldImagePath =
-          state.profile.profileImagePath;
-
-      // Delete old image.
-      await _storageService.deleteProfileImage(
-        oldImagePath,
-      );
-
-      // Clear profile data.
       await _storageService.clearProfile();
 
-      const defaultProfile = UserProfile();
+      const defaultProfile =
+          UserProfile();
 
-      // Immediately reset state.
       state = state.copyWith(
         profile: defaultProfile,
         isLoading: false,
-        errorMessage: null,
+        clearError: true,
       );
-    } catch (_) {
+    } catch (e) {
       state = state.copyWith(
+        isLoading: false,
         errorMessage:
             'Unable to reset profile.',
       );
@@ -270,10 +255,11 @@ class ProfileNotifier extends Notifier<ProfileState> {
       state = state.copyWith(
         profile: profile,
         isLoading: false,
-        errorMessage: null,
+        clearError: true,
       );
-    } catch (_) {
+    } catch (e) {
       state = state.copyWith(
+        isLoading: false,
         errorMessage:
             'Unable to save profile.',
       );
@@ -300,6 +286,7 @@ class ProfileState {
     UserProfile? profile,
     bool? isLoading,
     String? errorMessage,
+    bool clearError = false,
   }) {
     return ProfileState(
       profile:
@@ -307,7 +294,10 @@ class ProfileState {
       isLoading:
           isLoading ?? this.isLoading,
       errorMessage:
-          errorMessage,
+          clearError
+              ? null
+              : errorMessage ??
+                  this.errorMessage,
     );
   }
 }

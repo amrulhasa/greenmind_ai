@@ -3,16 +3,13 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:firebase_ai/firebase_ai.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/disease_result.dart';
 
 class DiseaseService {
   DiseaseService() {
-    _model = FirebaseAI.googleAI().generativeModel(
-      model: 'gemini-3.5-flash',
-    );
+    _model = FirebaseAI.googleAI().generativeModel(model: 'gemini-3.5-flash');
   }
 
   late final GenerativeModel _model;
@@ -48,18 +45,14 @@ class DiseaseService {
             final value = entry.value;
 
             if (value is Map<String, dynamic>) {
-              loadedCache[entry.key] =
-                  DiseaseResult.fromJson(value);
+              loadedCache[entry.key] = DiseaseResult.fromJson(value);
             } else if (value is Map) {
-              loadedCache[entry.key] =
-                  DiseaseResult.fromJson(
+              loadedCache[entry.key] = DiseaseResult.fromJson(
                 Map<String, dynamic>.from(value),
               );
             }
           } catch (e) {
-            debugPrint(
-              'Could not load cached result for ${entry.key}: $e',
-            );
+            debugPrint('Could not load cached result for ${entry.key}: $e');
           }
         }
 
@@ -101,10 +94,7 @@ class DiseaseService {
         encodedCache[entry.key] = entry.value.toJson();
       }
 
-      await prefs.setString(
-        _cacheKey,
-        jsonEncode(encodedCache),
-      );
+      await prefs.setString(_cacheKey, jsonEncode(encodedCache));
 
       debugPrint('==============================');
       debugPrint('PERSISTENT CACHE SAVED');
@@ -123,9 +113,7 @@ class DiseaseService {
   // DETECT DISEASE
   // ============================================================
 
-  Future<DiseaseResult> detectDisease(
-    Uint8List imageBytes,
-  ) async {
+  Future<DiseaseResult> detectDisease(Uint8List imageBytes) async {
     // ----------------------------------------------------------
     // 1. Initialize persistent cache first
     // ----------------------------------------------------------
@@ -136,8 +124,7 @@ class DiseaseService {
     // 2. Generate SHA-256 hash
     // ----------------------------------------------------------
 
-    final imageHash =
-        sha256.convert(imageBytes).toString();
+    final imageHash = sha256.convert(imageBytes).toString();
 
     debugPrint('==============================');
     debugPrint('IMAGE HASH');
@@ -154,12 +141,8 @@ class DiseaseService {
       debugPrint('==============================');
       debugPrint('PERSISTENT CACHE HIT');
       debugPrint('Using saved detection result.');
-      debugPrint(
-        'Disease: ${cachedResult.diseaseName}',
-      );
-      debugPrint(
-        'Confidence: ${cachedResult.confidence}',
-      );
+      debugPrint('Disease: ${cachedResult.diseaseName}');
+      debugPrint('Confidence: ${cachedResult.confidence}');
       debugPrint('==============================');
 
       return cachedResult;
@@ -178,8 +161,7 @@ class DiseaseService {
     // 5. Prompt
     // ----------------------------------------------------------
 
-    final prompt = TextPart(
-      '''
+    final prompt = TextPart('''
 You are an expert plant health and disease analysis assistant.
 
 Analyze the provided plant image carefully.
@@ -269,17 +251,13 @@ Description should explain what is visible in the image.
 Symptoms should describe only visible symptoms.
 Treatment should provide practical care guidance.
 Prevention should provide practical prevention guidance.
-''',
-    );
+''');
 
     // ----------------------------------------------------------
     // 6. Image
     // ----------------------------------------------------------
 
-    final imagePart = InlineDataPart(
-      'image/jpeg',
-      imageBytes,
-    );
+    final imagePart = InlineDataPart('image/jpeg', imageBytes);
 
     try {
       // --------------------------------------------------------
@@ -287,10 +265,7 @@ Prevention should provide practical prevention guidance.
       // --------------------------------------------------------
 
       final response = await _model.generateContent([
-        Content.multi([
-          prompt,
-          imagePart,
-        ]),
+        Content.multi([prompt, imagePart]),
       ]);
 
       final text = response.text;
@@ -302,9 +277,7 @@ Prevention should provide practical prevention guidance.
       debugPrint('==============================');
 
       if (text == null || text.trim().isEmpty) {
-        throw Exception(
-          'AI returned an empty response.',
-        );
+        throw Exception('AI returned an empty response.');
       }
 
       // --------------------------------------------------------
@@ -327,12 +300,8 @@ Prevention should provide practical prevention guidance.
 
       debugPrint('==============================');
       debugPrint('RESULT SAVED TO PERSISTENT CACHE');
-      debugPrint(
-        'Disease: ${result.diseaseName}',
-      );
-      debugPrint(
-        'Confidence: ${result.confidence}',
-      );
+      debugPrint('Disease: ${result.diseaseName}');
+      debugPrint('Confidence: ${result.confidence}');
       debugPrint('==============================');
 
       return result;
@@ -371,10 +340,7 @@ Prevention should provide practical prevention guidance.
 
     for (final label in labels) {
       cleanedText = cleanedText.replaceAll(
-        RegExp(
-          RegExp.escape(label),
-          caseSensitive: false,
-        ),
+        RegExp(RegExp.escape(label), caseSensitive: false),
         '\n$label',
       );
     }
@@ -407,56 +373,36 @@ Prevention should provide practical prevention guidance.
         final colonIndex = line.indexOf(':');
 
         if (colonIndex != -1) {
-          values[currentLabel] =
-              line.substring(colonIndex + 1).trim();
+          values[currentLabel] = line.substring(colonIndex + 1).trim();
         }
       } else if (currentLabel != null) {
-        values[currentLabel] =
-            '${values[currentLabel] ?? ''} $line'.trim();
+        values[currentLabel] = '${values[currentLabel] ?? ''} $line'.trim();
       }
     }
 
-    final diseaseName =
-        values['Disease Name:']?.trim() ?? '';
+    final diseaseName = values['Disease Name:']?.trim() ?? '';
 
-    final confidenceText =
-        values['Confidence:']?.trim() ?? '';
+    final confidenceText = values['Confidence:']?.trim() ?? '';
 
-    final description =
-        values['Description:']?.trim() ?? '';
+    final description = values['Description:']?.trim() ?? '';
 
-    final symptoms =
-        values['Symptoms:']?.trim() ?? '';
+    final symptoms = values['Symptoms:']?.trim() ?? '';
 
-    final treatment =
-        values['Treatment:']?.trim() ?? '';
+    final treatment = values['Treatment:']?.trim() ?? '';
 
-    final prevention =
-        values['Prevention:']?.trim() ?? '';
+    final prevention = values['Prevention:']?.trim() ?? '';
 
-    final healthyText =
-        values['Healthy:']?.trim() ?? '';
+    final healthyText = values['Healthy:']?.trim() ?? '';
 
     double confidence =
-        double.tryParse(
-              confidenceText
-                  .replaceAll('%', '')
-                  .trim(),
-            ) ??
-            0;
+        double.tryParse(confidenceText.replaceAll('%', '').trim()) ?? 0;
 
-    confidence = confidence.clamp(
-      0.0,
-      100.0,
-    );
+    confidence = confidence.clamp(0.0, 100.0);
 
-    final isHealthy =
-        healthyText.toLowerCase() == 'true';
+    final isHealthy = healthyText.toLowerCase() == 'true';
 
     if (diseaseName.isEmpty) {
-      throw Exception(
-        'AI response could not be parsed.',
-      );
+      throw Exception('AI response could not be parsed.');
     }
 
     return DiseaseResult(
@@ -476,8 +422,7 @@ Prevention should provide practical prevention guidance.
 
   Future<void> clearCache() async {
     try {
-      final prefs =
-          await SharedPreferences.getInstance();
+      final prefs = await SharedPreferences.getInstance();
 
       await prefs.remove(_cacheKey);
 
@@ -489,9 +434,7 @@ Prevention should provide practical prevention guidance.
       debugPrint('PERSISTENT CACHE CLEARED');
       debugPrint('==============================');
     } catch (e) {
-      debugPrint(
-        'CACHE CLEAR ERROR: $e',
-      );
+      debugPrint('CACHE CLEAR ERROR: $e');
     }
   }
 

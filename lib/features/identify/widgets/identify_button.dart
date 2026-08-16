@@ -3,36 +3,61 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/identify_provider.dart';
 
-class IdentifyButton extends ConsumerWidget {
-  const IdentifyButton({super.key});
+class IdentifyButton
+    extends ConsumerWidget {
+  const IdentifyButton({
+    super.key,
+  });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(identifyProvider);
-    final notifier = ref.read(identifyProvider.notifier);
+  Widget build(
+    BuildContext context,
+    WidgetRef ref,
+  ) {
+    final state =
+        ref.watch(
+      identifyProvider,
+    );
+
+    final notifier =
+        ref.read(
+      identifyProvider.notifier,
+    );
+
+    final canIdentify =
+        state.imageBytes != null &&
+        state.imageBytes!.isNotEmpty &&
+        !state.isLoading;
 
     return SizedBox(
       width: double.infinity,
       height: 55,
       child: ElevatedButton.icon(
-        onPressed: state.imageBytes == null || state.isLoading
-            ? null
-            : () async {
-                debugPrint('IDENTIFY BUTTON PRESSED');
-                await notifier.identifyPlant();
-              },
+        onPressed:
+            canIdentify
+                ? () {
+                    notifier
+                        .identifyPlant();
+                  }
+                : null,
         icon: state.isLoading
             ? const SizedBox(
                 width: 20,
                 height: 20,
-                child: CircularProgressIndicator(
+                child:
+                    CircularProgressIndicator(
                   strokeWidth: 2.5,
-                  color: Colors.white,
+                  color:
+                      Colors.white,
                 ),
               )
-            : const Icon(Icons.search),
+            : const Icon(
+                Icons.search,
+              ),
         label: Text(
-          state.isLoading ? 'Identifying...' : 'Identify Plant',
+          state.isLoading
+              ? 'Identifying...'
+              : 'Identify Plant',
         ),
       ),
     );

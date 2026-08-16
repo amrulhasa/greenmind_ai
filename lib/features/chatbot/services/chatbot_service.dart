@@ -10,8 +10,7 @@ class ChatbotService {
   ChatbotService() {
     _model = FirebaseAI.googleAI().generativeModel(
       model: 'gemini-3.5-flash-lite',
-      systemInstruction: Content.system(
-        '''
+      systemInstruction: Content.system('''
 You are GreenMind AI, an expert plant care assistant.
 
 Your job is to help users with:
@@ -41,8 +40,7 @@ Rules:
    are GreenMind AI and specialize in plant-related questions.
 9. Do not use unnecessary markdown.
 10. Be friendly and helpful.
-        ''',
-      ),
+        '''),
     );
 
     _chat = _model.startChat();
@@ -52,9 +50,7 @@ Rules:
     try {
       _logger.i('Sending message to GreenMind AI');
 
-      final response = await _chat.sendMessage(
-        Content.text(message),
-      );
+      final response = await _chat.sendMessage(Content.text(message));
 
       final text = response.text;
 
@@ -66,41 +62,25 @@ Rules:
 
       return text.trim();
     } on QuotaExceeded catch (error, stackTrace) {
-      _logger.e(
-        'Gemini quota exceeded',
-        error: error,
-        stackTrace: stackTrace,
-      );
+      _logger.e('Gemini quota exceeded', error: error, stackTrace: stackTrace);
 
       throw Exception(
         'AI usage limit reached. Please wait a little and try again.',
       );
     } on InvalidApiKey catch (error, stackTrace) {
-      _logger.e(
-        'Invalid Gemini API key',
-        error: error,
-        stackTrace: stackTrace,
-      );
+      _logger.e('Invalid Gemini API key', error: error, stackTrace: stackTrace);
 
       throw Exception(
         'GreenMind AI configuration error. Please check the Firebase API configuration.',
       );
     } on ServerException catch (error, stackTrace) {
-      _logger.e(
-        'Gemini server error',
-        error: error,
-        stackTrace: stackTrace,
-      );
+      _logger.e('Gemini server error', error: error, stackTrace: stackTrace);
 
       throw Exception(
         'GreenMind AI server is temporarily unavailable. Please try again later.',
       );
     } on FirebaseAIException catch (error, stackTrace) {
-      _logger.e(
-        'Firebase AI error',
-        error: error,
-        stackTrace: stackTrace,
-      );
+      _logger.e('Firebase AI error', error: error, stackTrace: stackTrace);
 
       final errorText = error.toString().toLowerCase();
 

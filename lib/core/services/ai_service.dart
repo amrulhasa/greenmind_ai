@@ -11,9 +11,7 @@ class AIService {
   AIService() {
     final firebaseAI = FirebaseAI.googleAI();
 
-    _model = firebaseAI.generativeModel(
-      model: 'gemini-2.5-flash',
-    );
+    _model = firebaseAI.generativeModel(model: 'gemini-2.5-flash');
   }
 
   Future<IdentifyResult> identifyPlant(
@@ -49,16 +47,10 @@ Rules:
 - Keep description and careTips concise.
 ''');
 
-    final imagePart = InlineDataPart(
-      mimeType,
-      imageBytes,
-    );
+    final imagePart = InlineDataPart(mimeType, imageBytes);
 
     final response = await _model.generateContent([
-      Content.multi([
-        prompt,
-        imagePart,
-      ]),
+      Content.multi([prompt, imagePart]),
     ]);
 
     final text = response.text;
@@ -75,15 +67,9 @@ Rules:
 
     // Remove markdown code fences if the model adds them.
     if (cleaned.startsWith('```')) {
-      cleaned = cleaned.replaceFirst(
-        RegExp(r'^```(?:json)?\s*'),
-        '',
-      );
+      cleaned = cleaned.replaceFirst(RegExp(r'^```(?:json)?\s*'), '');
 
-      cleaned = cleaned.replaceFirst(
-        RegExp(r'\s*```$'),
-        '',
-      );
+      cleaned = cleaned.replaceFirst(RegExp(r'\s*```$'), '');
     }
 
     final json = jsonDecode(cleaned) as Map<String, dynamic>;

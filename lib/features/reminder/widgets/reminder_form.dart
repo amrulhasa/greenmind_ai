@@ -24,9 +24,7 @@ class _ReminderFormState extends ConsumerState<ReminderForm> {
 
   ReminderType _selectedType = ReminderType.watering;
 
-  DateTime _selectedDateTime = DateTime.now().add(
-    const Duration(hours: 1),
-  );
+  DateTime _selectedDateTime = DateTime.now().add(const Duration(hours: 1));
 
   @override
   void dispose() {
@@ -41,9 +39,7 @@ class _ReminderFormState extends ConsumerState<ReminderForm> {
       context: context,
       initialDate: _selectedDateTime,
       firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(
-        const Duration(days: 3650),
-      ),
+      lastDate: DateTime.now().add(const Duration(days: 3650)),
     );
 
     if (date == null || !mounted) {
@@ -64,9 +60,7 @@ class _ReminderFormState extends ConsumerState<ReminderForm> {
   Future<void> _selectTime() async {
     final time = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.fromDateTime(
-        _selectedDateTime,
-      ),
+      initialTime: TimeOfDay.fromDateTime(_selectedDateTime),
     );
 
     if (time == null || !mounted) {
@@ -145,10 +139,7 @@ class _ReminderFormState extends ConsumerState<ReminderForm> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Create Reminder',
-              style: AppTextStyles.heading2,
-            ),
+            Text('Create Reminder', style: AppTextStyles.heading2),
 
             const SizedBox(height: AppSpacing.lg),
 
@@ -157,9 +148,7 @@ class _ReminderFormState extends ConsumerState<ReminderForm> {
               decoration: const InputDecoration(
                 labelText: 'Plant Name',
                 hintText: 'e.g. Rose',
-                prefixIcon: Icon(
-                  Icons.local_florist_outlined,
-                ),
+                prefixIcon: Icon(Icons.local_florist_outlined),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
@@ -172,40 +161,27 @@ class _ReminderFormState extends ConsumerState<ReminderForm> {
 
             const SizedBox(height: AppSpacing.md),
 
-            Text(
-              'Reminder Type',
-              style: AppTextStyles.title,
-            ),
+            Text('Reminder Type', style: AppTextStyles.title),
 
             const SizedBox(height: AppSpacing.sm),
 
             DropdownButtonFormField<ReminderType>(
               initialValue: _selectedType,
               decoration: const InputDecoration(
-                prefixIcon: Icon(
-                  Icons.category_outlined,
-                ),
+                prefixIcon: Icon(Icons.category_outlined),
               ),
-              items: ReminderType.values.map(
-                (type) {
-                  return DropdownMenuItem<ReminderType>(
-                    value: type,
-                    child: Row(
-                      children: [
-                        Icon(
-                          _typeIcon(type),
-                          size: 20,
-                          color: AppColors.primary,
-                        ),
-                        const SizedBox(
-                          width: AppSpacing.sm,
-                        ),
-                        Text(_typeLabel(type)),
-                      ],
-                    ),
-                  );
-                },
-              ).toList(),
+              items: ReminderType.values.map((type) {
+                return DropdownMenuItem<ReminderType>(
+                  value: type,
+                  child: Row(
+                    children: [
+                      Icon(_typeIcon(type), size: 20, color: AppColors.primary),
+                      const SizedBox(width: AppSpacing.sm),
+                      Text(_typeLabel(type)),
+                    ],
+                  ),
+                );
+              }).toList(),
               onChanged: (value) {
                 if (value == null) {
                   return;
@@ -224,9 +200,7 @@ class _ReminderFormState extends ConsumerState<ReminderForm> {
               decoration: const InputDecoration(
                 labelText: 'Reminder Title',
                 hintText: 'e.g. Water the rose',
-                prefixIcon: Icon(
-                  Icons.title_rounded,
-                ),
+                prefixIcon: Icon(Icons.title_rounded),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
@@ -245,19 +219,14 @@ class _ReminderFormState extends ConsumerState<ReminderForm> {
               decoration: const InputDecoration(
                 labelText: 'Description',
                 hintText: 'Add some details...',
-                prefixIcon: Icon(
-                  Icons.notes_rounded,
-                ),
+                prefixIcon: Icon(Icons.notes_rounded),
                 alignLabelWithHint: true,
               ),
             ),
 
             const SizedBox(height: AppSpacing.lg),
 
-            Text(
-              'Schedule',
-              style: AppTextStyles.title,
-            ),
+            Text('Schedule', style: AppTextStyles.title),
 
             const SizedBox(height: AppSpacing.sm),
 
@@ -266,9 +235,7 @@ class _ReminderFormState extends ConsumerState<ReminderForm> {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: _selectDate,
-                    icon: const Icon(
-                      Icons.calendar_today_rounded,
-                    ),
+                    icon: const Icon(Icons.calendar_today_rounded),
                     label: Text(
                       '${_selectedDateTime.day.toString().padLeft(2, '0')}/'
                       '${_selectedDateTime.month.toString().padLeft(2, '0')}/'
@@ -280,13 +247,9 @@ class _ReminderFormState extends ConsumerState<ReminderForm> {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: _selectTime,
-                    icon: const Icon(
-                      Icons.access_time_rounded,
-                    ),
+                    icon: const Icon(Icons.access_time_rounded),
                     label: Text(
-                      TimeOfDay.fromDateTime(
-                        _selectedDateTime,
-                      ).format(context),
+                      TimeOfDay.fromDateTime(_selectedDateTime).format(context),
                     ),
                   ),
                 ),
@@ -300,19 +263,13 @@ class _ReminderFormState extends ConsumerState<ReminderForm> {
               height: 54,
               child: ElevatedButton.icon(
                 onPressed: _createReminder,
-                icon: const Icon(
-                  Icons.add_alert_rounded,
-                ),
-                label: const Text(
-                  'Create Reminder',
-                ),
+                icon: const Icon(Icons.add_alert_rounded),
+                label: const Text('Create Reminder'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(
-                      AppRadius.card,
-                    ),
+                    borderRadius: BorderRadius.circular(AppRadius.card),
                   ),
                 ),
               ),

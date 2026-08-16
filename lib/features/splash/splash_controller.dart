@@ -8,21 +8,18 @@ class SplashController {
   SplashController._();
 
   static void start(BuildContext context) {
-    Timer(
-      const Duration(seconds: 2),
-      () {
-        if (!context.mounted) {
-          return;
-        }
+    Timer(const Duration(seconds: 2), () {
+      if (!context.mounted) {
+        return;
+      }
 
-        final user = FirebaseAuth.instance.currentUser;
+      final user = FirebaseAuth.instance.currentUser;
 
-        if (user != null) {
-          context.go('/home');
-        } else {
-          context.go('/login');
-        }
-      },
-    );
+      if (user != null) {
+        context.go('/home');
+      } else {
+        context.go('/login');
+      }
+    });
   }
 }

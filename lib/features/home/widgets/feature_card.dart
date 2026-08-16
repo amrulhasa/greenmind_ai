@@ -6,34 +6,50 @@ import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
 
-class FeatureCard extends StatelessWidget {
-  const FeatureCard({super.key});
+class FeatureCard
+    extends StatelessWidget {
+  const FeatureCard({
+    super.key,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return const Row(
       children: [
         Expanded(
           child: _FeatureItem(
-            title: 'Identify Plant',
-            subtitle: 'Scan any plant with AI',
-            icon: Icons.eco_rounded,
-            color: AppColors.primary,
-            route: '/identify',
+            title:
+                'Identify Plant',
+            subtitle:
+                'Scan any plant with AI',
+            icon:
+                Icons.eco_rounded,
+            color:
+                AppColors.primary,
+            route:
+                '/identify',
           ),
         ),
 
         SizedBox(
-          width: AppSpacing.md,
+          width:
+              AppSpacing.md,
         ),
 
         Expanded(
           child: _FeatureItem(
-            title: 'Disease Detection',
-            subtitle: 'Detect plant diseases',
-            icon: Icons.health_and_safety_rounded,
-            color: AppColors.error,
-            route: '/disease',
+            title:
+                'Disease Detection',
+            subtitle:
+                'Detect plant diseases',
+            icon: Icons
+                .health_and_safety_rounded,
+            color:
+                AppColors.error,
+            route:
+                '/disease',
           ),
         ),
       ],
@@ -41,7 +57,8 @@ class FeatureCard extends StatelessWidget {
   }
 }
 
-class _FeatureItem extends StatelessWidget {
+class _FeatureItem
+    extends StatelessWidget {
   final String title;
   final String subtitle;
   final IconData icon;
@@ -56,12 +73,6 @@ class _FeatureItem extends StatelessWidget {
     required this.route,
   });
 
-  void _openFeature(
-    BuildContext context,
-  ) {
-    context.go(route);
-  }
-
   @override
   Widget build(
     BuildContext context,
@@ -72,7 +83,7 @@ class _FeatureItem extends StatelessWidget {
         AppRadius.card,
       ),
       onTap: () {
-        _openFeature(context);
+        context.push(route);
       },
       child: Container(
         height: 180,
@@ -80,27 +91,28 @@ class _FeatureItem extends StatelessWidget {
             const EdgeInsets.all(14),
         decoration:
             BoxDecoration(
-          color: AppColors.surface,
+          color:
+              AppColors.surface,
           borderRadius:
               BorderRadius.circular(
             AppRadius.card,
           ),
-          boxShadow: const [
+          boxShadow:
+              const [
             BoxShadow(
-              color: AppColors.shadow,
+              color:
+                  AppColors.shadow,
               blurRadius: 16,
-              offset: Offset(0, 6),
+              offset:
+                  Offset(0, 6),
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment:
-              CrossAxisAlignment.start,
+              CrossAxisAlignment
+                  .start,
           children: [
-            // ==================================================
-            // ICON
-            // ==================================================
-
             CircleAvatar(
               radius: 22,
               backgroundColor:
@@ -118,10 +130,6 @@ class _FeatureItem extends StatelessWidget {
               height: 6,
             ),
 
-            // ==================================================
-            // TITLE
-            // ==================================================
-
             Text(
               title,
               maxLines: 1,
@@ -134,10 +142,6 @@ class _FeatureItem extends StatelessWidget {
             const SizedBox(
               height: 3,
             ),
-
-            // ==================================================
-            // SUBTITLE
-            // ==================================================
 
             Expanded(
               child: Align(
@@ -158,20 +162,19 @@ class _FeatureItem extends StatelessWidget {
               height: 6,
             ),
 
-            // ==================================================
-            // GET STARTED
-            // ==================================================
-
             SizedBox(
-              width: double.infinity,
+              width:
+                  double.infinity,
               height: 32,
-              child: ElevatedButton(
+              child:
+                  ElevatedButton(
                 onPressed: () {
-                  _openFeature(
-                    context,
+                  context.push(
+                    route,
                   );
                 },
-                child: const Text(
+                child:
+                    const Text(
                   'Get Started',
                 ),
               ),

@@ -43,4 +43,14 @@ class IdentifyResult {
       isHealthy: isHealthy ?? this.isHealthy,
     );
   }
+
+  @override
+  String toString() {
+    return 'IdentifyResult('
+        'plantName: $plantName, '
+        'scientificName: $scientificName, '
+        'confidence: $confidence, '
+        'isHealthy: $isHealthy'
+        ')';
+  }
 }

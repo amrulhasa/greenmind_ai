@@ -26,18 +26,11 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.eco_rounded,
-              size: 90,
-              color: AppColors.primary,
-            ),
+            Icon(Icons.eco_rounded, size: 90, color: AppColors.primary),
 
             const SizedBox(height: 24),
 
-            Text(
-              'GreenMind AI',
-              style: AppTextStyles.heading1,
-            ),
+            Text('GreenMind AI', style: AppTextStyles.heading1),
 
             const SizedBox(height: 10),
 

@@ -5,7 +5,6 @@ import 'package:uuid/uuid.dart';
 import '../models/chat_message.dart';
 import '../services/chatbot_service.dart';
 
-
 // ============================================================
 // CHATBOT SERVICE PROVIDER
 // ============================================================
@@ -14,16 +13,13 @@ final chatbotServiceProvider = Provider<ChatbotService>(
   (ref) => ChatbotService(),
 );
 
-
 // ============================================================
 // CHATBOT STATE PROVIDER
 // ============================================================
 
-final chatbotProvider =
-    NotifierProvider<ChatbotNotifier, ChatbotState>(
+final chatbotProvider = NotifierProvider<ChatbotNotifier, ChatbotState>(
   ChatbotNotifier.new,
 );
-
 
 // ============================================================
 // CHATBOT NOTIFIER
@@ -40,20 +36,14 @@ class ChatbotNotifier extends Notifier<ChatbotState> {
     return ref.read(chatbotServiceProvider);
   }
 
-
   // ----------------------------------------------------------
   // INITIAL STATE
   // ----------------------------------------------------------
 
   @override
   ChatbotState build() {
-    return ChatbotState(
-      messages: [
-        _createWelcomeMessage(),
-      ],
-    );
+    return ChatbotState(messages: [_createWelcomeMessage()]);
   }
-
 
   // ----------------------------------------------------------
   // WELCOME MESSAGE
@@ -62,13 +52,11 @@ class ChatbotNotifier extends Notifier<ChatbotState> {
   ChatMessage _createWelcomeMessage() {
     return ChatMessage(
       id: _uuid.v4(),
-      text:
-          'Hello! I am GreenMind AI. Ask me anything about your plants.',
+      text: 'Hello! I am GreenMind AI. Ask me anything about your plants.',
       role: ChatMessageRole.assistant,
       timestamp: DateTime.now(),
     );
   }
-
 
   // ----------------------------------------------------------
   // SEND MESSAGE
@@ -87,7 +75,6 @@ class ChatbotNotifier extends Notifier<ChatbotState> {
       return;
     }
 
-
     // --------------------------------------------------------
     // CREATE USER MESSAGE
     // --------------------------------------------------------
@@ -99,20 +86,15 @@ class ChatbotNotifier extends Notifier<ChatbotState> {
       timestamp: DateTime.now(),
     );
 
-
     // --------------------------------------------------------
     // UPDATE STATE
     // --------------------------------------------------------
 
     state = state.copyWith(
-      messages: [
-        ...state.messages,
-        userMessage,
-      ],
+      messages: [...state.messages, userMessage],
       isLoading: true,
       errorMessage: null,
     );
-
 
     try {
       // ------------------------------------------------------
@@ -124,9 +106,7 @@ class ChatbotNotifier extends Notifier<ChatbotState> {
       debugPrint('Sending message...');
       debugPrint('========================================');
 
-
       final response = await _service.sendMessage(message);
-
 
       // ------------------------------------------------------
       // CREATE ASSISTANT MESSAGE
@@ -139,20 +119,15 @@ class ChatbotNotifier extends Notifier<ChatbotState> {
         timestamp: DateTime.now(),
       );
 
-
       // ------------------------------------------------------
       // UPDATE STATE WITH AI RESPONSE
       // ------------------------------------------------------
 
       state = state.copyWith(
-        messages: [
-          ...state.messages,
-          assistantMessage,
-        ],
+        messages: [...state.messages, assistantMessage],
         isLoading: false,
         errorMessage: null,
       );
-
 
       debugPrint('========================================');
       debugPrint('GREENMIND CHATBOT');
@@ -171,7 +146,6 @@ class ChatbotNotifier extends Notifier<ChatbotState> {
       debugPrint('$stackTrace');
       debugPrint('========================================');
 
-
       // ------------------------------------------------------
       // DETERMINE ERROR TYPE
       // ------------------------------------------------------
@@ -179,7 +153,6 @@ class ChatbotNotifier extends Notifier<ChatbotState> {
       final errorText = error.toString().toLowerCase();
 
       String errorMessage;
-
 
       // Gemini / API quota error
       if (errorText.contains('quota') ||
@@ -190,7 +163,6 @@ class ChatbotNotifier extends Notifier<ChatbotState> {
             'AI usage limit reached. Please wait a few seconds '
             'and try again.';
       }
-
       // Network related error
       else if (errorText.contains('network') ||
           errorText.contains('socket') ||
@@ -199,7 +171,6 @@ class ChatbotNotifier extends Notifier<ChatbotState> {
             'Unable to connect to GreenMind AI. '
             'Please check your internet connection and try again.';
       }
-
       // Generic error
       else {
         errorMessage =
@@ -207,18 +178,13 @@ class ChatbotNotifier extends Notifier<ChatbotState> {
             'Please try again.';
       }
 
-
       // ------------------------------------------------------
       // UPDATE ERROR STATE
       // ------------------------------------------------------
 
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: errorMessage,
-      );
+      state = state.copyWith(isLoading: false, errorMessage: errorMessage);
     }
   }
-
 
   // ----------------------------------------------------------
   // CLEAR CHAT
@@ -226,15 +192,12 @@ class ChatbotNotifier extends Notifier<ChatbotState> {
 
   void clearChat() {
     state = ChatbotState(
-      messages: [
-        _createWelcomeMessage(),
-      ],
+      messages: [_createWelcomeMessage()],
       isLoading: false,
       errorMessage: null,
     );
   }
 }
-
 
 // ============================================================
 // CHATBOT STATE
@@ -245,13 +208,11 @@ class ChatbotState {
   final bool isLoading;
   final String? errorMessage;
 
-
   const ChatbotState({
     this.messages = const [],
     this.isLoading = false,
     this.errorMessage,
   });
-
 
   // ----------------------------------------------------------
   // COPY WITH

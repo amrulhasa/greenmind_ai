@@ -14,8 +14,7 @@ class ChatInput extends ConsumerStatefulWidget {
 }
 
 class _ChatInputState extends ConsumerState<ChatInput> {
-  final TextEditingController _controller =
-      TextEditingController();
+  final TextEditingController _controller = TextEditingController();
 
   @override
   void dispose() {
@@ -32,9 +31,7 @@ class _ChatInputState extends ConsumerState<ChatInput> {
 
     _controller.clear();
 
-    await ref
-        .read(chatbotProvider.notifier)
-        .sendMessage(text);
+    await ref.read(chatbotProvider.notifier).sendMessage(text);
   }
 
   @override
@@ -64,9 +61,7 @@ class _ChatInputState extends ConsumerState<ChatInput> {
                     vertical: AppSpacing.md,
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(
-                      AppRadius.card,
-                    ),
+                    borderRadius: BorderRadius.circular(AppRadius.card),
                     borderSide: BorderSide.none,
                   ),
                 ),
@@ -77,9 +72,7 @@ class _ChatInputState extends ConsumerState<ChatInput> {
               width: 52,
               height: 52,
               child: IconButton.filled(
-                onPressed: state.isLoading
-                    ? null
-                    : _sendMessage,
+                onPressed: state.isLoading ? null : _sendMessage,
                 icon: state.isLoading
                     ? const SizedBox(
                         width: 20,
@@ -89,16 +82,12 @@ class _ChatInputState extends ConsumerState<ChatInput> {
                           color: Colors.white,
                         ),
                       )
-                    : const Icon(
-                        Icons.send_rounded,
-                      ),
+                    : const Icon(Icons.send_rounded),
                 style: IconButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(
-                      AppRadius.card,
-                    ),
+                    borderRadius: BorderRadius.circular(AppRadius.card),
                   ),
                 ),
               ),

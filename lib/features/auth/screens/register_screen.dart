@@ -11,19 +11,16 @@ class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  ConsumerState<RegisterScreen> createState() =>
-      _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState
-    extends ConsumerState<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmPasswordController =
-      TextEditingController();
+  final _confirmPasswordController = TextEditingController();
 
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -48,7 +45,9 @@ class _RegisterScreenState
     });
 
     try {
-      await ref.read(authServiceProvider).register(
+      await ref
+          .read(authServiceProvider)
+          .register(
             name: _nameController.text.trim(),
             email: _emailController.text.trim(),
             password: _passwordController.text,
@@ -60,37 +59,25 @@ class _RegisterScreenState
     } on Exception catch (error) {
       if (!mounted) return;
 
-      String message =
-          'Unable to create your account.';
+      String message = 'Unable to create your account.';
 
       final errorText = error.toString();
 
       if (errorText.contains('email-already-in-use')) {
-        message =
-            'An account already exists with this email.';
+        message = 'An account already exists with this email.';
       } else if (errorText.contains('invalid-email')) {
-        message =
-            'Please enter a valid email address.';
+        message = 'Please enter a valid email address.';
       } else if (errorText.contains('weak-password')) {
-        message =
-            'Password is too weak. Use at least 6 characters.';
-      } else if (errorText.contains(
-        'network-request-failed',
-      )) {
-        message =
-            'Please check your internet connection.';
-      } else if (errorText.contains(
-        'permission-denied',
-      )) {
+        message = 'Password is too weak. Use at least 6 characters.';
+      } else if (errorText.contains('network-request-failed')) {
+        message = 'Please check your internet connection.';
+      } else if (errorText.contains('permission-denied')) {
         message =
             'Account created, but profile setup was blocked. Please check Firebase permissions.';
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          behavior: SnackBarBehavior.floating,
-        ),
+        SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
       );
     } finally {
       if (mounted) {
@@ -107,16 +94,13 @@ class _RegisterScreenState
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding:
-                const EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: ConstrainedBox(
-              constraints:
-                  const BoxConstraints(maxWidth: 430),
+              constraints: const BoxConstraints(maxWidth: 430),
               child: Form(
                 key: _formKey,
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Logo
                     Center(
@@ -124,10 +108,7 @@ class _RegisterScreenState
                         width: 82,
                         height: 82,
                         decoration: BoxDecoration(
-                          color:
-                              AppColors.primary.withValues(
-                            alpha: 0.12,
-                          ),
+                          color: AppColors.primary.withValues(alpha: 0.12),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -138,9 +119,7 @@ class _RegisterScreenState
                       ),
                     ),
 
-                    const SizedBox(
-                      height: AppSpacing.lg,
-                    ),
+                    const SizedBox(height: AppSpacing.lg),
 
                     // Title
                     Center(
@@ -151,9 +130,7 @@ class _RegisterScreenState
                       ),
                     ),
 
-                    const SizedBox(
-                      height: AppSpacing.xs,
-                    ),
+                    const SizedBox(height: AppSpacing.xs),
 
                     // Subtitle
                     Center(
@@ -164,37 +141,23 @@ class _RegisterScreenState
                       ),
                     ),
 
-                    const SizedBox(
-                      height: AppSpacing.xl,
-                    ),
+                    const SizedBox(height: AppSpacing.xl),
 
                     // Name
-                    Text(
-                      'Name',
-                      style: AppTextStyles.heading3,
-                    ),
+                    Text('Name', style: AppTextStyles.heading3),
 
-                    const SizedBox(
-                      height: AppSpacing.xs,
-                    ),
+                    const SizedBox(height: AppSpacing.xs),
 
                     TextFormField(
                       controller: _nameController,
-                      textInputAction:
-                          TextInputAction.next,
-                      autofillHints: const [
-                        AutofillHints.name,
-                      ],
-                      decoration:
-                          const InputDecoration(
+                      textInputAction: TextInputAction.next,
+                      autofillHints: const [AutofillHints.name],
+                      decoration: const InputDecoration(
                         hintText: 'Enter your name',
-                        prefixIcon: Icon(
-                          Icons.person_outline_rounded,
-                        ),
+                        prefixIcon: Icon(Icons.person_outline_rounded),
                       ),
                       validator: (value) {
-                        if (value == null ||
-                            value.trim().isEmpty) {
+                        if (value == null || value.trim().isEmpty) {
                           return 'Please enter your name.';
                         }
 
@@ -202,46 +165,30 @@ class _RegisterScreenState
                       },
                     ),
 
-                    const SizedBox(
-                      height: AppSpacing.md,
-                    ),
+                    const SizedBox(height: AppSpacing.md),
 
                     // Email
-                    Text(
-                      'Email',
-                      style: AppTextStyles.heading3,
-                    ),
+                    Text('Email', style: AppTextStyles.heading3),
 
-                    const SizedBox(
-                      height: AppSpacing.xs,
-                    ),
+                    const SizedBox(height: AppSpacing.xs),
 
                     TextFormField(
                       controller: _emailController,
-                      keyboardType:
-                          TextInputType.emailAddress,
-                      textInputAction:
-                          TextInputAction.next,
-                      autofillHints: const [
-                        AutofillHints.email,
-                      ],
-                      decoration:
-                          const InputDecoration(
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                      autofillHints: const [AutofillHints.email],
+                      decoration: const InputDecoration(
                         hintText: 'Enter your email',
-                        prefixIcon: Icon(
-                          Icons.email_outlined,
-                        ),
+                        prefixIcon: Icon(Icons.email_outlined),
                       ),
                       validator: (value) {
-                        final email =
-                            value?.trim() ?? '';
+                        final email = value?.trim() ?? '';
 
                         if (email.isEmpty) {
                           return 'Please enter your email.';
                         }
 
-                        if (!email.contains('@') ||
-                            !email.contains('.')) {
+                        if (!email.contains('@') || !email.contains('.')) {
                           return 'Please enter a valid email.';
                         }
 
@@ -249,52 +196,36 @@ class _RegisterScreenState
                       },
                     ),
 
-                    const SizedBox(
-                      height: AppSpacing.md,
-                    ),
+                    const SizedBox(height: AppSpacing.md),
 
                     // Password
-                    Text(
-                      'Password',
-                      style: AppTextStyles.heading3,
-                    ),
+                    Text('Password', style: AppTextStyles.heading3),
 
-                    const SizedBox(
-                      height: AppSpacing.xs,
-                    ),
+                    const SizedBox(height: AppSpacing.xs),
 
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
-                      textInputAction:
-                          TextInputAction.next,
-                      autofillHints: const [
-                        AutofillHints.newPassword,
-                      ],
+                      textInputAction: TextInputAction.next,
+                      autofillHints: const [AutofillHints.newPassword],
                       decoration: InputDecoration(
                         hintText: 'Create a password',
-                        prefixIcon: const Icon(
-                          Icons.lock_outline_rounded,
-                        ),
+                        prefixIcon: const Icon(Icons.lock_outline_rounded),
                         suffixIcon: IconButton(
                           onPressed: () {
                             setState(() {
-                              _obscurePassword =
-                                  !_obscurePassword;
+                              _obscurePassword = !_obscurePassword;
                             });
                           },
                           icon: Icon(
                             _obscurePassword
-                                ? Icons
-                                    .visibility_outlined
-                                : Icons
-                                    .visibility_off_outlined,
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
                           ),
                         ),
                       ),
                       validator: (value) {
-                        if (value == null ||
-                            value.isEmpty) {
+                        if (value == null || value.isEmpty) {
                           return 'Please enter a password.';
                         }
 
@@ -306,41 +237,26 @@ class _RegisterScreenState
                       },
                     ),
 
-                    const SizedBox(
-                      height: AppSpacing.md,
-                    ),
+                    const SizedBox(height: AppSpacing.md),
 
                     // Confirm Password
-                    Text(
-                      'Confirm Password',
-                      style: AppTextStyles.heading3,
-                    ),
+                    Text('Confirm Password', style: AppTextStyles.heading3),
 
-                    const SizedBox(
-                      height: AppSpacing.xs,
-                    ),
+                    const SizedBox(height: AppSpacing.xs),
 
                     TextFormField(
-                      controller:
-                          _confirmPasswordController,
-                      obscureText:
-                          _obscureConfirmPassword,
-                      textInputAction:
-                          TextInputAction.done,
-                      autofillHints: const [
-                        AutofillHints.newPassword,
-                      ],
+                      controller: _confirmPasswordController,
+                      obscureText: _obscureConfirmPassword,
+                      textInputAction: TextInputAction.done,
+                      autofillHints: const [AutofillHints.newPassword],
                       onFieldSubmitted: (_) {
                         if (!_isLoading) {
                           _register();
                         }
                       },
                       decoration: InputDecoration(
-                        hintText:
-                            'Confirm your password',
-                        prefixIcon: const Icon(
-                          Icons.lock_outline_rounded,
-                        ),
+                        hintText: 'Confirm your password',
+                        prefixIcon: const Icon(Icons.lock_outline_rounded),
                         suffixIcon: IconButton(
                           onPressed: () {
                             setState(() {
@@ -350,21 +266,17 @@ class _RegisterScreenState
                           },
                           icon: Icon(
                             _obscureConfirmPassword
-                                ? Icons
-                                    .visibility_outlined
-                                : Icons
-                                    .visibility_off_outlined,
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
                           ),
                         ),
                       ),
                       validator: (value) {
-                        if (value == null ||
-                            value.isEmpty) {
+                        if (value == null || value.isEmpty) {
                           return 'Please confirm your password.';
                         }
 
-                        if (value !=
-                            _passwordController.text) {
+                        if (value != _passwordController.text) {
                           return 'Passwords do not match.';
                         }
 
@@ -372,41 +284,32 @@ class _RegisterScreenState
                       },
                     ),
 
-                    const SizedBox(
-                      height: AppSpacing.xl,
-                    ),
+                    const SizedBox(height: AppSpacing.xl),
 
                     // Create Account Button
                     SizedBox(
                       width: double.infinity,
                       height: AppSpacing.buttonHeight,
                       child: ElevatedButton(
-                        onPressed:
-                            _isLoading ? null : _register,
+                        onPressed: _isLoading ? null : _register,
                         child: _isLoading
                             ? const SizedBox(
                                 width: 22,
                                 height: 22,
-                                child:
-                                    CircularProgressIndicator(
+                                child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   color: Colors.white,
                                 ),
                               )
-                            : const Text(
-                                'Create Account',
-                              ),
+                            : const Text('Create Account'),
                       ),
                     ),
 
-                    const SizedBox(
-                      height: AppSpacing.lg,
-                    ),
+                    const SizedBox(height: AppSpacing.lg),
 
                     // Sign In
                     Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
                           'Already have an account?',
@@ -416,9 +319,7 @@ class _RegisterScreenState
                           onPressed: () {
                             context.pop();
                           },
-                          child: const Text(
-                            'Sign In',
-                          ),
+                          child: const Text('Sign In'),
                         ),
                       ],
                     ),

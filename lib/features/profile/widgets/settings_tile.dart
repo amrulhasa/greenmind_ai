@@ -24,14 +24,10 @@ class SettingsTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(
-        bottom: AppSpacing.sm,
-      ),
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Material(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(
-          AppRadius.card,
-        ),
+        borderRadius: BorderRadius.circular(AppRadius.card),
         clipBehavior: Clip.antiAlias,
         child: ListTile(
           onTap: onTap,
@@ -43,33 +39,20 @@ class SettingsTile extends StatelessWidget {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(
-                alpha: 0.10,
-              ),
+              color: AppColors.primary.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
-              icon,
-              color: AppColors.primary,
-              size: 21,
-            ),
+            child: Icon(icon, color: AppColors.primary, size: 21),
           ),
-          title: Text(
-            title,
-            style: AppTextStyles.title,
-          ),
+          title: Text(title, style: AppTextStyles.title),
           subtitle: subtitle.isEmpty
               ? null
               : Padding(
-                  padding: const EdgeInsets.only(
-                    top: 3,
-                  ),
-                  child: Text(
-                    subtitle,
-                    style: AppTextStyles.caption,
-                  ),
+                  padding: const EdgeInsets.only(top: 3),
+                  child: Text(subtitle, style: AppTextStyles.caption),
                 ),
-          trailing: trailing ??
+          trailing:
+              trailing ??
               const Icon(
                 Icons.chevron_right_rounded,
                 color: AppColors.textSecondary,

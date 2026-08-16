@@ -6,9 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../services/auth_service.dart';
 
-final authServiceProvider = Provider<AuthService>(
-  (ref) => AuthService(),
-);
+final authServiceProvider = Provider<AuthService>((ref) => AuthService());
 
 final authProvider = StreamProvider<User?>((ref) {
   final service = ref.read(authServiceProvider);
@@ -18,11 +16,9 @@ final authProvider = StreamProvider<User?>((ref) {
 
 class AuthRefreshNotifier extends ChangeNotifier {
   AuthRefreshNotifier() {
-    _subscription = FirebaseAuth.instance.authStateChanges().listen(
-      (_) {
-        notifyListeners();
-      },
-    );
+    _subscription = FirebaseAuth.instance.authStateChanges().listen((_) {
+      notifyListeners();
+    });
   }
 
   late final StreamSubscription<User?> _subscription;

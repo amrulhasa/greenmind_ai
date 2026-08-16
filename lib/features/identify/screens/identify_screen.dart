@@ -10,10 +10,15 @@ import '../widgets/identify_result_card.dart';
 import '../widgets/image_picker_card.dart';
 import '../widgets/image_preview.dart';
 
-class IdentifyScreen extends ConsumerWidget {
-  const IdentifyScreen({super.key});
+class IdentifyScreen
+    extends ConsumerWidget {
+  const IdentifyScreen({
+    super.key,
+  });
 
-  void _goHome(BuildContext context) {
+  void _goHome(
+    BuildContext context,
+  ) {
     context.go('/home');
   }
 
@@ -22,23 +27,15 @@ class IdentifyScreen extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
   ) {
-    final state = ref.watch(
+    final state =
+        ref.watch(
       identifyProvider,
     );
 
-    debugPrint('================================');
-    debugPrint('IDENTIFY SCREEN STATE');
-    debugPrint('Loading: ${state.isLoading}');
-    debugPrint('Result: ${state.result}');
-    debugPrint('Error: ${state.errorMessage}');
-    debugPrint('================================');
-
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (
-        didPop,
-        result,
-      ) {
+      onPopInvokedWithResult:
+          (didPop, result) {
         if (didPop) {
           return;
         }
@@ -47,28 +44,33 @@ class IdentifyScreen extends ConsumerWidget {
       },
       child: Scaffold(
         appBar: AppBar(
-          leading: IconButton(
+          leading:
+              IconButton(
             onPressed: () {
               _goHome(context);
             },
             icon: const Icon(
-              Icons.arrow_back_rounded,
+              Icons
+                  .arrow_back_rounded,
             ),
-            tooltip: 'Back',
           ),
           title: const Text(
             'Plant Identification',
           ),
           centerTitle: true,
         ),
+
         body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(
+          child:
+              SingleChildScrollView(
+            padding:
+                const EdgeInsets.all(
               AppSpacing.lg,
             ),
             child: Column(
               crossAxisAlignment:
-                  CrossAxisAlignment.start,
+                  CrossAxisAlignment
+                      .start,
               children: [
                 Text(
                   'Identify Any Plant',
@@ -77,7 +79,8 @@ class IdentifyScreen extends ConsumerWidget {
                 ),
 
                 const SizedBox(
-                  height: AppSpacing.sm,
+                  height:
+                      AppSpacing.sm,
                 ),
 
                 Text(
@@ -87,51 +90,51 @@ class IdentifyScreen extends ConsumerWidget {
                 ),
 
                 const SizedBox(
-                  height: AppSpacing.xl,
+                  height:
+                      AppSpacing.xl,
                 ),
 
                 const ImagePickerCard(),
 
                 const SizedBox(
-                  height: AppSpacing.lg,
+                  height:
+                      AppSpacing.lg,
                 ),
 
                 const ImagePreview(),
 
                 const SizedBox(
-                  height: AppSpacing.xl,
+                  height:
+                      AppSpacing.xl,
                 ),
 
                 const IdentifyButton(),
 
                 const SizedBox(
-                  height: AppSpacing.xl,
+                  height:
+                      AppSpacing.xl,
                 ),
-
-                // ==================================================
-                // LOADING
-                // ==================================================
 
                 if (state.isLoading)
                   const Center(
                     child: Padding(
                       padding:
-                          EdgeInsets.all(20),
+                          EdgeInsets.all(
+                        20,
+                      ),
                       child:
                           CircularProgressIndicator(),
                     ),
                   ),
 
-                // ==================================================
-                // ERROR
-                // ==================================================
-
                 if (state.errorMessage !=
                     null) ...[
                   Container(
-                    width: double.infinity,
+                    width:
+                        double.infinity,
                     padding:
-                        const EdgeInsets.all(
+                        const EdgeInsets
+                            .all(
                       16,
                     ),
                     decoration:
@@ -141,7 +144,8 @@ class IdentifyScreen extends ConsumerWidget {
                         alpha: 0.08,
                       ),
                       borderRadius:
-                          BorderRadius.circular(
+                          BorderRadius
+                              .circular(
                         12,
                       ),
                       border: Border.all(
@@ -153,24 +157,22 @@ class IdentifyScreen extends ConsumerWidget {
                     ),
                     child: Text(
                       state.errorMessage!,
-                      style: AppTextStyles
-                          .body
-                          .copyWith(
-                        color: Colors.red,
+                      style:
+                          AppTextStyles.body
+                              .copyWith(
+                        color:
+                            Colors.red,
                       ),
                     ),
                   ),
                 ],
 
-                // ==================================================
-                // AI RESULT
-                // ==================================================
-
-                if (state.result != null) ...[
+                if (state.result !=
+                    null) ...[
                   const SizedBox(
-                    height: AppSpacing.xl,
+                    height:
+                        AppSpacing.xl,
                   ),
-
                   const Text(
                     'AI Identification Result',
                     style: TextStyle(
@@ -179,22 +181,18 @@ class IdentifyScreen extends ConsumerWidget {
                           FontWeight.bold,
                     ),
                   ),
-
                   const SizedBox(
                     height: 16,
                   ),
-
                   IdentifyResultCard(
-                    result: state.result!,
+                    result:
+                        state.result!,
                   ),
                 ],
 
-                // ==================================================
-                // IMAGE SELECTED
-                // ==================================================
-
                 if (!state.isLoading &&
-                    state.result == null &&
+                    state.result ==
+                        null &&
                     state.errorMessage ==
                         null &&
                     state.imageBytes !=
@@ -202,12 +200,12 @@ class IdentifyScreen extends ConsumerWidget {
                   const SizedBox(
                     height: 20,
                   ),
-
                   const Center(
                     child: Text(
                       'Image selected. Press "Identify Plant".',
                       style: TextStyle(
-                        color: Colors.grey,
+                        color:
+                            Colors.grey,
                         fontSize: 16,
                       ),
                     ),

@@ -55,30 +55,21 @@ class DiseaseResult {
   // Used to restore Persistent Cache
   // ============================================================
 
-  factory DiseaseResult.fromJson(
-    Map<String, dynamic> json,
-  ) {
+  factory DiseaseResult.fromJson(Map<String, dynamic> json) {
     return DiseaseResult(
-      diseaseName:
-          json['diseaseName']?.toString() ?? '',
+      diseaseName: json['diseaseName']?.toString() ?? '',
 
-      confidence:
-          (json['confidence'] as num?)?.toDouble() ?? 0.0,
+      confidence: (json['confidence'] as num?)?.toDouble() ?? 0.0,
 
-      description:
-          json['description']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
 
-      symptoms:
-          json['symptoms']?.toString() ?? '',
+      symptoms: json['symptoms']?.toString() ?? '',
 
-      treatment:
-          json['treatment']?.toString() ?? '',
+      treatment: json['treatment']?.toString() ?? '',
 
-      prevention:
-          json['prevention']?.toString() ?? '',
+      prevention: json['prevention']?.toString() ?? '',
 
-      isHealthy:
-          json['isHealthy'] == true,
+      isHealthy: json['isHealthy'] == true,
     );
   }
 

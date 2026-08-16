@@ -41,7 +41,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     try {
-      await ref.read(authServiceProvider).login(
+      await ref
+          .read(authServiceProvider)
+          .login(
             email: _emailController.text,
             password: _passwordController.text,
           );
@@ -68,10 +70,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          behavior: SnackBarBehavior.floating,
-        ),
+        SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
       );
     } finally {
       if (mounted) {
@@ -101,9 +100,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             decoration: const InputDecoration(
               labelText: 'Email',
               hintText: 'Enter your account email',
-              prefixIcon: Icon(
-                Icons.email_outlined,
-              ),
+              prefixIcon: Icon(Icons.email_outlined),
             ),
           ),
           actions: [
@@ -132,16 +129,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return;
     }
 
-    if (email.isEmpty ||
-        !email.contains('@') ||
-        !email.contains('.')) {
+    if (email.isEmpty || !email.contains('@') || !email.contains('.')) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'Please enter a valid email address.',
-          ),
+          content: Text('Please enter a valid email address.'),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -150,27 +143,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
 
     try {
-      await ref
-          .read(authServiceProvider)
-          .sendPasswordResetEmail(
-            email: email,
-          );
+      await ref.read(authServiceProvider).sendPasswordResetEmail(email: email);
 
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'Password reset email sent. Check your inbox.',
-          ),
+          content: Text('Password reset email sent. Check your inbox.'),
           behavior: SnackBarBehavior.floating,
         ),
       );
     } on Exception catch (error) {
       if (!mounted) return;
 
-      String message =
-          'Unable to send password reset email.';
+      String message = 'Unable to send password reset email.';
 
       final errorText = error.toString();
 
@@ -183,10 +169,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          behavior: SnackBarBehavior.floating,
-        ),
+        SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
       );
     }
   }
@@ -197,28 +180,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(
-              AppSpacing.lg,
-            ),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxWidth: 430,
-              ),
+              constraints: const BoxConstraints(maxWidth: 430),
               child: Form(
                 key: _formKey,
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Center(
                       child: Container(
                         width: 82,
                         height: 82,
                         decoration: BoxDecoration(
-                          color:
-                              AppColors.primary.withValues(
-                            alpha: 0.12,
-                          ),
+                          color: AppColors.primary.withValues(alpha: 0.12),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -229,9 +204,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
 
-                    const SizedBox(
-                      height: AppSpacing.lg,
-                    ),
+                    const SizedBox(height: AppSpacing.lg),
 
                     Center(
                       child: Text(
@@ -241,9 +214,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
 
-                    const SizedBox(
-                      height: AppSpacing.xs,
-                    ),
+                    const SizedBox(height: AppSpacing.xs),
 
                     Center(
                       child: Text(
@@ -253,45 +224,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
 
-                    const SizedBox(
-                      height: AppSpacing.xl,
-                    ),
+                    const SizedBox(height: AppSpacing.xl),
 
-                    Text(
-                      'Email',
-                      style: AppTextStyles.heading3,
-                    ),
+                    Text('Email', style: AppTextStyles.heading3),
 
-                    const SizedBox(
-                      height: AppSpacing.xs,
-                    ),
+                    const SizedBox(height: AppSpacing.xs),
 
                     // Email field without browser autofill.
                     TextFormField(
                       controller: _emailController,
-                      keyboardType:
-                          TextInputType.emailAddress,
-                      textInputAction:
-                          TextInputAction.next,
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
                       enableSuggestions: false,
                       autocorrect: false,
-                      decoration:
-                          const InputDecoration(
+                      decoration: const InputDecoration(
                         hintText: 'Enter your email',
-                        prefixIcon: Icon(
-                          Icons.email_outlined,
-                        ),
+                        prefixIcon: Icon(Icons.email_outlined),
                       ),
                       validator: (value) {
-                        final email =
-                            value?.trim() ?? '';
+                        final email = value?.trim() ?? '';
 
                         if (email.isEmpty) {
                           return 'Please enter your email.';
                         }
 
-                        if (!email.contains('@') ||
-                            !email.contains('.')) {
+                        if (!email.contains('@') || !email.contains('.')) {
                           return 'Please enter a valid email.';
                         }
 
@@ -299,18 +256,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       },
                     ),
 
-                    const SizedBox(
-                      height: AppSpacing.md,
-                    ),
+                    const SizedBox(height: AppSpacing.md),
 
-                    Text(
-                      'Password',
-                      style: AppTextStyles.heading3,
-                    ),
+                    Text('Password', style: AppTextStyles.heading3),
 
-                    const SizedBox(
-                      height: AppSpacing.xs,
-                    ),
+                    const SizedBox(height: AppSpacing.xs),
 
                     // Password field without browser autofill.
                     TextFormField(
@@ -318,8 +268,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       obscureText: _obscurePassword,
                       enableSuggestions: false,
                       autocorrect: false,
-                      textInputAction:
-                          TextInputAction.done,
+                      textInputAction: TextInputAction.done,
                       onFieldSubmitted: (_) {
                         if (!_isLoading) {
                           _login();
@@ -327,28 +276,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       },
                       decoration: InputDecoration(
                         hintText: 'Enter your password',
-                        prefixIcon: const Icon(
-                          Icons.lock_outline_rounded,
-                        ),
+                        prefixIcon: const Icon(Icons.lock_outline_rounded),
                         suffixIcon: IconButton(
                           onPressed: () {
                             setState(() {
-                              _obscurePassword =
-                                  !_obscurePassword;
+                              _obscurePassword = !_obscurePassword;
                             });
                           },
                           icon: Icon(
                             _obscurePassword
-                                ? Icons
-                                    .visibility_outlined
-                                : Icons
-                                    .visibility_off_outlined,
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
                           ),
                         ),
                       ),
                       validator: (value) {
-                        if (value == null ||
-                            value.isEmpty) {
+                        if (value == null || value.isEmpty) {
                           return 'Please enter your password.';
                         }
 
@@ -360,74 +303,50 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       },
                     ),
 
-                    const SizedBox(
-                      height: AppSpacing.sm,
-                    ),
+                    const SizedBox(height: AppSpacing.sm),
 
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed:
-                            _isLoading
-                                ? null
-                                : _forgotPassword,
-                        child: const Text(
-                          'Forgot Password?',
-                        ),
+                        onPressed: _isLoading ? null : _forgotPassword,
+                        child: const Text('Forgot Password?'),
                       ),
                     ),
 
-                    const SizedBox(
-                      height: AppSpacing.md,
-                    ),
+                    const SizedBox(height: AppSpacing.md),
 
                     SizedBox(
                       width: double.infinity,
-                      height:
-                          AppSpacing.buttonHeight,
+                      height: AppSpacing.buttonHeight,
                       child: ElevatedButton(
-                        onPressed:
-                            _isLoading
-                                ? null
-                                : _login,
+                        onPressed: _isLoading ? null : _login,
                         child: _isLoading
                             ? const SizedBox(
                                 width: 22,
                                 height: 22,
-                                child:
-                                    CircularProgressIndicator(
+                                child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   color: Colors.white,
                                 ),
                               )
-                            : const Text(
-                                'Sign In',
-                              ),
+                            : const Text('Sign In'),
                       ),
                     ),
 
-                    const SizedBox(
-                      height: AppSpacing.lg,
-                    ),
+                    const SizedBox(height: AppSpacing.lg),
 
                     Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
                           "Don't have an account?",
-                          style:
-                              AppTextStyles.body,
+                          style: AppTextStyles.body,
                         ),
                         TextButton(
                           onPressed: () {
-                            context.push(
-                              '/register',
-                            );
+                            context.push('/register');
                           },
-                          child: const Text(
-                            'Create Account',
-                          ),
+                          child: const Text('Create Account'),
                         ),
                       ],
                     ),

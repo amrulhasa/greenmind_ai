@@ -6,8 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../models/disease_result.dart';
 import '../services/disease_service.dart';
 
-final diseaseProvider =
-    NotifierProvider<DiseaseNotifier, DiseaseState>(
+final diseaseProvider = NotifierProvider<DiseaseNotifier, DiseaseState>(
   DiseaseNotifier.new,
 );
 
@@ -86,8 +85,7 @@ class DiseaseNotifier extends Notifier<DiseaseState> {
     );
 
     try {
-      final DiseaseResult result =
-          await _diseaseService.detectDisease(
+      final DiseaseResult result = await _diseaseService.detectDisease(
         imageBytes,
       );
 
@@ -101,8 +99,7 @@ class DiseaseNotifier extends Notifier<DiseaseState> {
       state = state.copyWith(
         isLoading: false,
         clearResult: true,
-        errorMessage:
-            'Unable to analyze the plant. Please try again.',
+        errorMessage: 'Unable to analyze the plant. Please try again.',
         clearError: false,
       );
     }
@@ -137,12 +134,8 @@ class DiseaseState {
     return DiseaseState(
       imageBytes: imageBytes ?? this.imageBytes,
       isLoading: isLoading ?? this.isLoading,
-      result: clearResult
-          ? null
-          : (result ?? this.result),
-      errorMessage: clearError
-          ? null
-          : (errorMessage ?? this.errorMessage),
+      result: clearResult ? null : (result ?? this.result),
+      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     );
   }
 }

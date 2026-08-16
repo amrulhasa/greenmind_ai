@@ -16,10 +16,7 @@ class DiseaseResultCard extends ConsumerWidget {
   // ASK GREENMIND AI
   // ==========================================
 
-  Future<void> _askGreenMindAI(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
+  Future<void> _askGreenMindAI(BuildContext context, WidgetRef ref) async {
     final result = ref.read(diseaseProvider).result;
 
     if (result == null) {
@@ -34,9 +31,7 @@ class DiseaseResultCard extends ConsumerWidget {
         ? 'Unknown condition'
         : result.diseaseName.trim();
 
-    final confidence = result.confidence
-        .clamp(0.0, 100.0)
-        .toStringAsFixed(1);
+    final confidence = result.confidence.clamp(0.0, 100.0).toStringAsFixed(1);
 
     final description = result.description.trim().isEmpty
         ? 'No description available.'
@@ -58,7 +53,8 @@ class DiseaseResultCard extends ConsumerWidget {
     // Create AI prompt
     // ------------------------------------------
 
-    final prompt = '''
+    final prompt =
+        '''
 I have just analyzed a plant using GreenMind AI's plant disease detection system.
 
 Here is the detection result:
@@ -98,17 +94,13 @@ Keep the answer practical, clear, and easy to understand.
     // Get chatbot notifier
     // ------------------------------------------
 
-    final chatbotNotifier = ref.read(
-      chatbotProvider.notifier,
-    );
+    final chatbotNotifier = ref.read(chatbotProvider.notifier);
 
     // ------------------------------------------
     // Send message BEFORE opening chatbot
     // ------------------------------------------
 
-    final responseFuture = chatbotNotifier.sendMessage(
-      prompt,
-    );
+    final responseFuture = chatbotNotifier.sendMessage(prompt);
 
     // ------------------------------------------
     // Open chatbot immediately
@@ -118,11 +110,9 @@ Keep the answer practical, clear, and easy to understand.
       return;
     }
 
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => const ChatbotScreen(),
-      ),
-    );
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const ChatbotScreen()));
 
     // Wait for request to finish.
     // The notifier already handles errors internally.
@@ -130,10 +120,7 @@ Keep the answer practical, clear, and easy to understand.
   }
 
   @override
-  Widget build(
-    BuildContext context,
-    WidgetRef ref,
-  ) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(diseaseProvider);
 
     final result = state.result;
@@ -150,10 +137,7 @@ Keep the answer practical, clear, and easy to understand.
     // CONFIDENCE
     // ==========================================
 
-    final confidence = result.confidence.clamp(
-      0.0,
-      100.0,
-    );
+    final confidence = result.confidence.clamp(0.0, 100.0);
 
     // ==========================================
     // MAIN CARD
@@ -161,14 +145,10 @@ Keep the answer practical, clear, and easy to understand.
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(
-        AppSpacing.lg,
-      ),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(
-          AppRadius.card,
-        ),
+        borderRadius: BorderRadius.circular(AppRadius.card),
         boxShadow: const [
           BoxShadow(
             color: AppColors.shadow,
@@ -180,39 +160,29 @@ Keep the answer practical, clear, and easy to understand.
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           // ==========================================
           // HEADER
           // ==========================================
-
           Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: result.isHealthy
-                      ? Colors.green.withValues(
-                          alpha: 0.10,
-                        )
-                      : Colors.red.withValues(
-                          alpha: 0.10,
-                        ),
+                      ? Colors.green.withValues(alpha: 0.10)
+                      : Colors.red.withValues(alpha: 0.10),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   result.isHealthy
                       ? Icons.check_circle_outline
                       : Icons.health_and_safety_outlined,
-                  color: result.isHealthy
-                      ? Colors.green
-                      : Colors.red,
+                  color: result.isHealthy ? Colors.green : Colors.red,
                   size: 26,
                 ),
               ),
 
-              const SizedBox(
-                width: AppSpacing.md,
-              ),
+              const SizedBox(width: AppSpacing.md),
 
               Expanded(
                 child: Text(
@@ -223,14 +193,11 @@ Keep the answer practical, clear, and easy to understand.
             ],
           ),
 
-          const SizedBox(
-            height: AppSpacing.lg,
-          ),
+          const SizedBox(height: AppSpacing.lg),
 
           // ==========================================
           // DISEASE NAME
           // ==========================================
-
           Text(
             result.diseaseName.trim().isEmpty
                 ? 'Unknown Condition'
@@ -238,163 +205,97 @@ Keep the answer practical, clear, and easy to understand.
             style: AppTextStyles.heading2,
           ),
 
-          const SizedBox(
-            height: AppSpacing.lg,
-          ),
+          const SizedBox(height: AppSpacing.lg),
 
           // ==========================================
           // CONFIDENCE TITLE
           // ==========================================
+          Text('Confidence', style: AppTextStyles.heading3),
 
-          Text(
-            'Confidence',
-            style: AppTextStyles.heading3,
-          ),
-
-          const SizedBox(
-            height: AppSpacing.sm,
-          ),
+          const SizedBox(height: AppSpacing.sm),
 
           // ==========================================
           // CONFIDENCE BAR
           // ==========================================
-
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: LinearProgressIndicator(
               value: confidence / 100,
               minHeight: 8,
-              backgroundColor:
-                  AppColors.primary.withValues(
-                alpha: 0.10,
-              ),
-              color: result.isHealthy
-                  ? Colors.green
-                  : AppColors.primary,
+              backgroundColor: AppColors.primary.withValues(alpha: 0.10),
+              color: result.isHealthy ? Colors.green : AppColors.primary,
             ),
           ),
 
-          const SizedBox(
-            height: AppSpacing.xs,
-          ),
+          const SizedBox(height: AppSpacing.xs),
 
           // ==========================================
           // CONFIDENCE VALUE
           // ==========================================
-
           Align(
             alignment: Alignment.centerRight,
             child: Text(
               '${confidence.toStringAsFixed(1)}%',
-              style: AppTextStyles.body.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
 
           // ==========================================
           // DESCRIPTION
           // ==========================================
-
           if (result.description.trim().isNotEmpty) ...[
-            const SizedBox(
-              height: AppSpacing.lg,
-            ),
+            const SizedBox(height: AppSpacing.lg),
 
-            Text(
-              'Description',
-              style: AppTextStyles.heading3,
-            ),
+            Text('Description', style: AppTextStyles.heading3),
 
-            const SizedBox(
-              height: AppSpacing.sm,
-            ),
+            const SizedBox(height: AppSpacing.sm),
 
-            Text(
-              result.description,
-              style: AppTextStyles.body,
-            ),
+            Text(result.description, style: AppTextStyles.body),
           ],
 
           // ==========================================
           // SYMPTOMS
           // ==========================================
-
           if (result.symptoms.trim().isNotEmpty) ...[
-            const SizedBox(
-              height: AppSpacing.lg,
-            ),
+            const SizedBox(height: AppSpacing.lg),
 
-            Text(
-              'Symptoms',
-              style: AppTextStyles.heading3,
-            ),
+            Text('Symptoms', style: AppTextStyles.heading3),
 
-            const SizedBox(
-              height: AppSpacing.sm,
-            ),
+            const SizedBox(height: AppSpacing.sm),
 
-            Text(
-              result.symptoms,
-              style: AppTextStyles.body,
-            ),
+            Text(result.symptoms, style: AppTextStyles.body),
           ],
 
           // ==========================================
           // TREATMENT
           // ==========================================
-
           if (result.treatment.trim().isNotEmpty) ...[
-            const SizedBox(
-              height: AppSpacing.lg,
-            ),
+            const SizedBox(height: AppSpacing.lg),
 
-            Text(
-              'Treatment',
-              style: AppTextStyles.heading3,
-            ),
+            Text('Treatment', style: AppTextStyles.heading3),
 
-            const SizedBox(
-              height: AppSpacing.sm,
-            ),
+            const SizedBox(height: AppSpacing.sm),
 
-            Text(
-              result.treatment,
-              style: AppTextStyles.body,
-            ),
+            Text(result.treatment, style: AppTextStyles.body),
           ],
 
           // ==========================================
           // PREVENTION
           // ==========================================
-
           if (result.prevention.trim().isNotEmpty) ...[
-            const SizedBox(
-              height: AppSpacing.lg,
-            ),
+            const SizedBox(height: AppSpacing.lg),
 
-            Text(
-              'Prevention',
-              style: AppTextStyles.heading3,
-            ),
+            Text('Prevention', style: AppTextStyles.heading3),
 
-            const SizedBox(
-              height: AppSpacing.sm,
-            ),
+            const SizedBox(height: AppSpacing.sm),
 
-            Text(
-              result.prevention,
-              style: AppTextStyles.body,
-            ),
+            Text(result.prevention, style: AppTextStyles.body),
           ],
 
           // ==========================================
           // HEALTH STATUS
           // ==========================================
-
-          const SizedBox(
-            height: AppSpacing.lg,
-          ),
+          const SizedBox(height: AppSpacing.lg),
 
           Container(
             width: double.infinity,
@@ -404,15 +305,9 @@ Keep the answer practical, clear, and easy to understand.
             ),
             decoration: BoxDecoration(
               color: result.isHealthy
-                  ? Colors.green.withValues(
-                      alpha: 0.10,
-                    )
-                  : Colors.red.withValues(
-                      alpha: 0.10,
-                    ),
-              borderRadius: BorderRadius.circular(
-                AppRadius.card,
-              ),
+                  ? Colors.green.withValues(alpha: 0.10)
+                  : Colors.red.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(AppRadius.card),
             ),
             child: Row(
               children: [
@@ -420,15 +315,11 @@ Keep the answer practical, clear, and easy to understand.
                   result.isHealthy
                       ? Icons.check_circle_outline
                       : Icons.warning_amber_rounded,
-                  color: result.isHealthy
-                      ? Colors.green
-                      : Colors.red,
+                  color: result.isHealthy ? Colors.green : Colors.red,
                   size: 24,
                 ),
 
-                const SizedBox(
-                  width: AppSpacing.sm,
-                ),
+                const SizedBox(width: AppSpacing.sm),
 
                 Expanded(
                   child: Text(
@@ -447,49 +338,33 @@ Keep the answer practical, clear, and easy to understand.
           // ==========================================
           // ASK GREENMIND AI BUTTON
           // ==========================================
-
-          const SizedBox(
-            height: AppSpacing.lg,
-          ),
+          const SizedBox(height: AppSpacing.lg),
 
           SizedBox(
             width: double.infinity,
             height: 52,
             child: ElevatedButton.icon(
               onPressed: () {
-                _askGreenMindAI(
-                  context,
-                  ref,
-                );
+                _askGreenMindAI(context, ref);
               },
-              icon: const Icon(
-                Icons.smart_toy_rounded,
-                size: 22,
-              ),
-              label: const Text(
-                'Ask GreenMind AI',
-              ),
+              icon: const Icon(Icons.smart_toy_rounded, size: 22),
+              label: const Text('Ask GreenMind AI'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(
-                    AppRadius.card,
-                  ),
+                  borderRadius: BorderRadius.circular(AppRadius.card),
                 ),
               ),
             ),
           ),
 
-          const SizedBox(
-            height: AppSpacing.sm,
-          ),
+          const SizedBox(height: AppSpacing.sm),
 
           // ==========================================
           // SMALL INFO TEXT
           // ==========================================
-
           Center(
             child: Text(
               'Get personalized guidance from GreenMind AI',

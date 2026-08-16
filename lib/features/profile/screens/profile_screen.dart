@@ -12,9 +12,10 @@ import '../widgets/profile_header.dart';
 import '../widgets/profile_info_card.dart';
 import '../widgets/settings_tile.dart';
 
-class ProfileScreen
-    extends ConsumerWidget {
-  const ProfileScreen({super.key});
+class ProfileScreen extends ConsumerWidget {
+  const ProfileScreen({
+    super.key,
+  });
 
   // ============================================================
   // GO HOME
@@ -32,14 +33,14 @@ class ProfileScreen
     BuildContext context,
     WidgetRef ref,
   ) async {
-    final profile =
-        ref.read(profileProvider).profile;
+    final profile = ref.read(profileProvider).profile;
 
     await showDialog<void>(
       context: context,
       builder: (dialogContext) {
         return _EditProfileDialog(
           profile: profile,
+
           onSave: ({
             required String name,
             required String email,
@@ -47,10 +48,7 @@ class ProfileScreen
             required String bio,
           }) async {
             await ref
-                .read(
-                  profileProvider
-                      .notifier,
-                )
+                .read(profileProvider.notifier)
                 .updateProfile(
                   name: name,
                   email: email,
@@ -71,38 +69,31 @@ class ProfileScreen
     BuildContext context,
     WidgetRef ref,
   ) async {
-    final shouldReset =
-        await showDialog<bool>(
+    final shouldReset = await showDialog<bool>(
       context: context,
+
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text(
-            'Reset Profile?',
-          ),
+          title: const Text('Reset Profile?'),
+
           content: const Text(
             'Your profile information will be restored '
             'to the default values.',
           ),
+
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(
-                  dialogContext,
-                ).pop(false);
+                Navigator.of(dialogContext).pop(false);
               },
-              child: const Text(
-                'Cancel',
-              ),
+              child: const Text('Cancel'),
             ),
+
             FilledButton(
               onPressed: () {
-                Navigator.of(
-                  dialogContext,
-                ).pop(true);
+                Navigator.of(dialogContext).pop(true);
               },
-              child: const Text(
-                'Reset',
-              ),
+              child: const Text('Reset'),
             ),
           ],
         );
@@ -111,9 +102,7 @@ class ProfileScreen
 
     if (shouldReset == true) {
       await ref
-          .read(
-            profileProvider.notifier,
-          )
+          .read(profileProvider.notifier)
           .resetProfile();
     }
   }
@@ -125,38 +114,31 @@ class ProfileScreen
   Future<void> _logout(
     BuildContext context,
   ) async {
-    final shouldLogout =
-        await showDialog<bool>(
+    final shouldLogout = await showDialog<bool>(
       context: context,
+
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text(
-            'Sign Out?',
-          ),
+          title: const Text('Sign Out?'),
+
           content: const Text(
             'Are you sure you want to sign out '
             'of GreenMind AI?',
           ),
+
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(
-                  dialogContext,
-                ).pop(false);
+                Navigator.of(dialogContext).pop(false);
               },
-              child: const Text(
-                'Cancel',
-              ),
+              child: const Text('Cancel'),
             ),
+
             FilledButton(
               onPressed: () {
-                Navigator.of(
-                  dialogContext,
-                ).pop(true);
+                Navigator.of(dialogContext).pop(true);
               },
-              child: const Text(
-                'Sign Out',
-              ),
+              child: const Text('Sign Out'),
             ),
           ],
         );
@@ -175,9 +157,7 @@ class ProfileScreen
       }
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
               'Unable to sign out. Please try again.',
@@ -197,14 +177,14 @@ class ProfileScreen
     BuildContext context,
     WidgetRef ref,
   ) {
-    final state =
-        ref.watch(profileProvider);
+    final state = ref.watch(profileProvider);
 
     return PopScope(
       canPop: false,
+
       onPopInvokedWithResult: (
-        didPop,
-        result,
+        bool didPop,
+        Object? result,
       ) {
         if (didPop) {
           return;
@@ -212,6 +192,7 @@ class ProfileScreen
 
         _goHome(context);
       },
+
       child: Scaffold(
         // ========================================================
         // APP BAR
@@ -230,23 +211,22 @@ class ProfileScreen
 
           title: Text(
             'Profile',
-            style:
-                AppTextStyles.heading3,
+            style: AppTextStyles.heading3,
           ),
 
           actions: [
             IconButton(
-              tooltip:
-                  'Edit profile',
-              onPressed:
-                  state.isLoading
-                      ? null
-                      : () {
-                          _editProfile(
-                            context,
-                            ref,
-                          );
-                        },
+              tooltip: 'Edit profile',
+
+              onPressed: state.isLoading
+                  ? null
+                  : () {
+                      _editProfile(
+                        context,
+                        ref,
+                      );
+                    },
+
               icon: const Icon(
                 Icons.edit_outlined,
               ),
@@ -260,53 +240,43 @@ class ProfileScreen
 
         body: state.isLoading
             ? const Center(
-                child:
-                    CircularProgressIndicator(),
+                child: CircularProgressIndicator(),
               )
-            : state.errorMessage !=
-                    null
+            : state.errorMessage != null
                 ? _ErrorState(
-                    message:
-                        state.errorMessage!,
+                    message: state.errorMessage!,
                   )
                 : SingleChildScrollView(
-                    padding:
-                        const EdgeInsets
-                            .all(
+                    padding: const EdgeInsets.all(
                       AppSpacing.md,
                     ),
+
                     child: Column(
                       crossAxisAlignment:
-                          CrossAxisAlignment
-                              .start,
+                          CrossAxisAlignment.start,
+
                       children: [
                         const ProfileHeader(),
 
                         const SizedBox(
-                          height:
-                              AppSpacing.md,
+                          height: AppSpacing.md,
                         ),
 
                         ProfileInfoCard(
-                          profile:
-                              state.profile,
+                          profile: state.profile,
                         ),
 
                         const SizedBox(
-                          height:
-                              AppSpacing.lg,
+                          height: AppSpacing.lg,
                         ),
 
                         Text(
                           'Settings',
-                          style:
-                              AppTextStyles
-                                  .heading3,
+                          style: AppTextStyles.heading3,
                         ),
 
                         const SizedBox(
-                          height:
-                              AppSpacing.md,
+                          height: AppSpacing.md,
                         ),
 
                         // ==================================================
@@ -314,19 +284,17 @@ class ProfileScreen
                         // ==================================================
 
                         SettingsTile(
-                          icon: Icons
-                              .notifications_outlined,
-                          title:
-                              'Notifications',
+                          icon:
+                              Icons.notifications_outlined,
+                          title: 'Notifications',
                           subtitle:
                               'Manage plant care notifications',
-                          trailing:
-                              Switch(
-                            value: state
-                                .profile
+
+                          trailing: Switch(
+                            value: state.profile
                                 .notificationsEnabled,
-                            onChanged:
-                                (_) {
+
+                            onChanged: (bool value) {
                               ref
                                   .read(
                                     profileProvider
@@ -334,9 +302,9 @@ class ProfileScreen
                                   )
                                   .toggleNotifications();
                             },
+
                             activeThumbColor:
-                                AppColors
-                                    .primary,
+                                AppColors.primary,
                           ),
                         ),
 
@@ -345,19 +313,17 @@ class ProfileScreen
                         // ==================================================
 
                         SettingsTile(
-                          icon: Icons
-                              .dark_mode_outlined,
-                          title:
-                              'Dark Mode',
+                          icon:
+                              Icons.dark_mode_outlined,
+                          title: 'Dark Mode',
                           subtitle:
                               'Save your preferred theme',
-                          trailing:
-                              Switch(
-                            value: state
-                                .profile
+
+                          trailing: Switch(
+                            value: state.profile
                                 .darkModeEnabled,
-                            onChanged:
-                                (_) {
+
+                            onChanged: (bool value) {
                               ref
                                   .read(
                                     profileProvider
@@ -365,9 +331,9 @@ class ProfileScreen
                                   )
                                   .toggleDarkMode();
                             },
+
                             activeThumbColor:
-                                AppColors
-                                    .primary,
+                                AppColors.primary,
                           ),
                         ),
 
@@ -376,16 +342,14 @@ class ProfileScreen
                         // ==================================================
 
                         SettingsTile(
-                          icon: Icons
-                              .info_outline_rounded,
-                          title:
-                              'About GreenMind AI',
+                          icon:
+                              Icons.info_outline_rounded,
+                          title: 'About GreenMind AI',
                           subtitle:
                               'AI-powered plant care assistant',
+
                           onTap: () {
-                            _showAboutDialog(
-                              context,
-                            );
+                            _showAboutDialog(context);
                           },
                         ),
 
@@ -394,12 +358,12 @@ class ProfileScreen
                         // ==================================================
 
                         SettingsTile(
-                          icon: Icons
-                              .refresh_rounded,
-                          title:
-                              'Reset Profile',
+                          icon:
+                              Icons.refresh_rounded,
+                          title: 'Reset Profile',
                           subtitle:
                               'Restore default profile data',
+
                           onTap: () {
                             _confirmReset(
                               context,
@@ -409,8 +373,7 @@ class ProfileScreen
                         ),
 
                         const SizedBox(
-                          height:
-                              AppSpacing.md,
+                          height: AppSpacing.md,
                         ),
 
                         // ==================================================
@@ -418,22 +381,19 @@ class ProfileScreen
                         // ==================================================
 
                         SettingsTile(
-                          icon: Icons
-                              .logout_rounded,
-                          title:
-                              'Sign Out',
+                          icon:
+                              Icons.logout_rounded,
+                          title: 'Sign Out',
                           subtitle:
                               'Sign out from your GreenMind AI account',
+
                           onTap: () {
-                            _logout(
-                              context,
-                            );
+                            _logout(context);
                           },
                         ),
 
                         const SizedBox(
-                          height:
-                              AppSpacing.lg,
+                          height: AppSpacing.lg,
                         ),
 
                         // ==================================================
@@ -443,18 +403,16 @@ class ProfileScreen
                         Center(
                           child: Text(
                             'GreenMind AI • Version 1.0.0',
-                            style: AppTextStyles
-                                .caption
-                                .copyWith(
-                              color: AppColors
-                                  .textSecondary,
+                            style:
+                                AppTextStyles.caption.copyWith(
+                              color:
+                                  AppColors.textSecondary,
                             ),
                           ),
                         ),
 
                         const SizedBox(
-                          height:
-                              AppSpacing.lg,
+                          height: AppSpacing.lg,
                         ),
                       ],
                     ),
@@ -472,16 +430,19 @@ class ProfileScreen
   ) {
     showAboutDialog(
       context: context,
+
       applicationName:
           'GreenMind AI',
-      applicationVersion: '1.0.0',
-      applicationIcon:
-          const Icon(
+
+      applicationVersion:
+          '1.0.0',
+
+      applicationIcon: const Icon(
         Icons.eco_rounded,
-        color:
-            AppColors.primary,
+        color: AppColors.primary,
         size: 36,
       ),
+
       children: const [
         Text(
           'GreenMind AI is an AI-powered plant '
@@ -513,14 +474,12 @@ class _EditProfileDialog
   });
 
   @override
-  State<_EditProfileDialog>
-      createState() =>
-          _EditProfileDialogState();
+  State<_EditProfileDialog> createState() =>
+      _EditProfileDialogState();
 }
 
 class _EditProfileDialogState
-    extends State<
-        _EditProfileDialog> {
+    extends State<_EditProfileDialog> {
   late final TextEditingController
       _nameController;
 
@@ -593,18 +552,11 @@ class _EditProfileDialogState
 
     try {
       await widget.onSave(
-        name:
-            _nameController.text
-                .trim(),
-        email:
-            _emailController.text
-                .trim(),
+        name: _nameController.text.trim(),
+        email: _emailController.text.trim(),
         location:
-            _locationController.text
-                .trim(),
-        bio:
-            _bioController.text
-                .trim(),
+            _locationController.text.trim(),
+        bio: _bioController.text.trim(),
       );
 
       if (!mounted) {
@@ -617,9 +569,7 @@ class _EditProfileDialogState
         return;
       }
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
             'Unable to update profile. Please try again.',
@@ -648,24 +598,20 @@ class _EditProfileDialogState
         'Edit Profile',
       ),
 
-      content:
-          SingleChildScrollView(
+      content: SingleChildScrollView(
         child: Column(
-          mainAxisSize:
-              MainAxisSize.min,
+          mainAxisSize: MainAxisSize.min,
+
           children: [
             TextField(
-              controller:
-                  _nameController,
+              controller: _nameController,
               textInputAction:
                   TextInputAction.next,
-              decoration:
-                  const InputDecoration(
+
+              decoration: const InputDecoration(
                 labelText: 'Name',
-                prefixIcon:
-                    Icon(
-                  Icons
-                      .person_outline_rounded,
+                prefixIcon: Icon(
+                  Icons.person_outline_rounded,
                 ),
               ),
             ),
@@ -675,20 +621,16 @@ class _EditProfileDialogState
             ),
 
             TextField(
-              controller:
-                  _emailController,
+              controller: _emailController,
               keyboardType:
-                  TextInputType
-                      .emailAddress,
+                  TextInputType.emailAddress,
               textInputAction:
                   TextInputAction.next,
-              decoration:
-                  const InputDecoration(
+
+              decoration: const InputDecoration(
                 labelText: 'Email',
-                prefixIcon:
-                    Icon(
-                  Icons
-                      .email_outlined,
+                prefixIcon: Icon(
+                  Icons.email_outlined,
                 ),
               ),
             ),
@@ -698,17 +640,14 @@ class _EditProfileDialogState
             ),
 
             TextField(
-              controller:
-                  _locationController,
+              controller: _locationController,
               textInputAction:
                   TextInputAction.next,
-              decoration:
-                  const InputDecoration(
+
+              decoration: const InputDecoration(
                 labelText: 'Location',
-                prefixIcon:
-                    Icon(
-                  Icons
-                      .location_on_outlined,
+                prefixIcon: Icon(
+                  Icons.location_on_outlined,
                 ),
               ),
             ),
@@ -718,18 +657,15 @@ class _EditProfileDialogState
             ),
 
             TextField(
-              controller:
-                  _bioController,
+              controller: _bioController,
               maxLines: 2,
               textInputAction:
                   TextInputAction.done,
-              decoration:
-                  const InputDecoration(
+
+              decoration: const InputDecoration(
                 labelText: 'Bio',
-                prefixIcon:
-                    Icon(
-                  Icons
-                      .info_outline_rounded,
+                prefixIcon: Icon(
+                  Icons.info_outline_rounded,
                 ),
               ),
             ),
@@ -742,10 +678,9 @@ class _EditProfileDialogState
           onPressed: _isSaving
               ? null
               : () {
-                  Navigator.of(
-                    context,
-                  ).pop();
+                  Navigator.of(context).pop();
                 },
+
           child: const Text(
             'Cancel',
           ),
@@ -754,10 +689,12 @@ class _EditProfileDialogState
         FilledButton(
           onPressed:
               _isSaving ? null : _save,
+
           child: _isSaving
               ? const SizedBox(
                   width: 18,
                   height: 18,
+
                   child:
                       CircularProgressIndicator(
                     strokeWidth: 2,
@@ -790,20 +727,18 @@ class _ErrorState
   ) {
     return Center(
       child: Padding(
-        padding:
-            const EdgeInsets.all(
+        padding: const EdgeInsets.all(
           AppSpacing.lg,
         ),
+
         child: Column(
-          mainAxisSize:
-              MainAxisSize.min,
+          mainAxisSize: MainAxisSize.min,
+
           children: [
             const Icon(
-              Icons
-                  .error_outline_rounded,
+              Icons.error_outline_rounded,
               size: 52,
-              color:
-                  AppColors.error,
+              color: AppColors.error,
             ),
 
             const SizedBox(
@@ -812,10 +747,8 @@ class _ErrorState
 
             Text(
               message,
-              style:
-                  AppTextStyles.body,
-              textAlign:
-                  TextAlign.center,
+              style: AppTextStyles.body,
+              textAlign: TextAlign.center,
             ),
           ],
         ),

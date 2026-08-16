@@ -10,8 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// - Plant care reminders
 /// - Dashboard statistics
 
-final homeProvider =
-    StateNotifierProvider<HomeNotifier, HomeState>(
+final homeProvider = StateNotifierProvider<HomeNotifier, HomeState>(
   (ref) => HomeNotifier(),
 );
 
@@ -26,15 +25,9 @@ class HomeNotifier extends StateNotifier<HomeState> {
 class HomeState {
   final int selectedIndex;
 
-  const HomeState({
-    this.selectedIndex = 0,
-  });
+  const HomeState({this.selectedIndex = 0});
 
-  HomeState copyWith({
-    int? selectedIndex,
-  }) {
-    return HomeState(
-      selectedIndex: selectedIndex ?? this.selectedIndex,
-    );
+  HomeState copyWith({int? selectedIndex}) {
+    return HomeState(selectedIndex: selectedIndex ?? this.selectedIndex);
   }
 }

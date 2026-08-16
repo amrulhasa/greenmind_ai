@@ -1,8 +1,7 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:path_provider/path_provider.dart';
+import 'package:image/image.dart' as img;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/user_profile.dart';
@@ -21,17 +20,20 @@ class ProfileStorageService {
     final storedData =
         preferences.getString(_storageKey);
 
-    if (storedData == null || storedData.isEmpty) {
+    if (storedData == null ||
+        storedData.isEmpty) {
       return const UserProfile();
     }
 
     try {
-      final decodedData = jsonDecode(storedData);
+      final decoded = jsonDecode(storedData);
+
+      if (decoded is! Map) {
+        return const UserProfile();
+      }
 
       return _fromJson(
-        Map<String, dynamic>.from(
-          decodedData as Map,
-        ),
+        Map<String, dynamic>.from(decoded),
       );
     } catch (_) {
       return const UserProfile();
@@ -48,62 +50,96 @@ class ProfileStorageService {
     final preferences =
         await SharedPreferences.getInstance();
 
-    final encodedData = jsonEncode(
+    final encoded = jsonEncode(
       _toJson(profile),
     );
 
     await preferences.setString(
       _storageKey,
-      encodedData,
+      encoded,
     );
   }
 
   // ============================================================
   // SAVE PROFILE IMAGE
   // ============================================================
+  //
+  // The image is:
+  // 1. Decoded
+  // 2. Resized
+  // 3. Compressed
+  // 4. Converted to Base64
+  //
+  // No dart:io.
+  // No File.
+  // No path_provider.
+  //
+  // Therefore this works on:
+  // Android
+  // Windows
+  // Chrome/Web
+  // ============================================================
 
   Future<String> saveProfileImage(
     Uint8List bytes,
   ) async {
-    final directory =
-        await getApplicationDocumentsDirectory();
+    if (bytes.isEmpty) {
+      throw Exception(
+        'Profile image is empty.',
+      );
+    }
 
-    final timestamp =
-        DateTime.now().millisecondsSinceEpoch;
+    final decodedImage =
+        img.decodeImage(bytes);
 
-    final file = File(
-      '${directory.path}/profile_image_$timestamp.jpg',
+    if (decodedImage == null) {
+      throw Exception(
+        'Unable to process profile image.',
+      );
+    }
+
+    // Keep the image reasonably small
+    // for SharedPreferences storage.
+    final resizedImage =
+        decodedImage.width > 700
+            ? img.copyResize(
+                decodedImage,
+                width: 700,
+              )
+            : decodedImage;
+
+    final compressedBytes =
+        img.encodeJpg(
+      resizedImage,
+      quality: 75,
     );
 
-    await file.writeAsBytes(
-      bytes,
-      flush: true,
-    );
+    if (compressedBytes.isEmpty) {
+      throw Exception(
+        'Unable to compress profile image.',
+      );
+    }
 
-    return file.path;
+    return base64Encode(
+      compressedBytes,
+    );
   }
 
   // ============================================================
   // DELETE PROFILE IMAGE
   // ============================================================
+  //
+  // There is no physical file.
+  // The image is stored inside profile JSON.
+  //
+  // Removing profileImagePath from UserProfile
+  // effectively removes the image.
+  // ============================================================
 
   Future<void> deleteProfileImage(
-    String? imagePath,
+    String? imageBase64,
   ) async {
-    if (imagePath == null ||
-        imagePath.isEmpty) {
-      return;
-    }
-
-    try {
-      final file = File(imagePath);
-
-      if (await file.exists()) {
-        await file.delete();
-      }
-    } catch (_) {
-      // Ignore file deletion errors.
-    }
+    // Nothing to delete physically.
   }
 
   // ============================================================
@@ -111,16 +147,10 @@ class ProfileStorageService {
   // ============================================================
 
   Future<bool> profileImageExists(
-    String? imagePath,
+    String? imageBase64,
   ) async {
-    if (imagePath == null ||
-        imagePath.isEmpty) {
-      return false;
-    }
-
-    final file = File(imagePath);
-
-    return file.exists();
+    return imageBase64 != null &&
+        imageBase64.isNotEmpty;
   }
 
   // ============================================================
@@ -131,7 +161,9 @@ class ProfileStorageService {
     final preferences =
         await SharedPreferences.getInstance();
 
-    await preferences.remove(_storageKey);
+    await preferences.remove(
+      _storageKey,
+    );
   }
 
   // ============================================================
@@ -163,27 +195,34 @@ class ProfileStorageService {
     Map<String, dynamic> json,
   ) {
     return UserProfile(
-      name: json['name'] as String? ??
-          'Plant Lover',
+      name:
+          json['name'] as String? ??
+              'Plant Lover',
 
-      email: json['email'] as String? ??
-          'user@example.com',
+      email:
+          json['email'] as String? ??
+              'user@example.com',
 
-      location: json['location'] as String? ??
-          '',
+      location:
+          json['location'] as String? ??
+              '',
 
-      bio: json['bio'] as String? ??
-          'GreenMind AI plant enthusiast',
+      bio:
+          json['bio'] as String? ??
+              'GreenMind AI plant enthusiast',
 
       profileImagePath:
-          json['profileImagePath'] as String?,
+          json['profileImagePath']
+              as String?,
 
       notificationsEnabled:
-          json['notificationsEnabled'] as bool? ??
+          json['notificationsEnabled']
+                  as bool? ??
               true,
 
       darkModeEnabled:
-          json['darkModeEnabled'] as bool? ??
+          json['darkModeEnabled']
+                  as bool? ??
               false,
     );
   }

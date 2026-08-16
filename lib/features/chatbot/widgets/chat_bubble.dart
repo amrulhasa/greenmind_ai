@@ -9,46 +9,28 @@ import '../models/chat_message.dart';
 class ChatBubble extends StatelessWidget {
   final ChatMessage message;
 
-  const ChatBubble({
-    super.key,
-    required this.message,
-  });
+  const ChatBubble({super.key, required this.message});
 
   @override
   Widget build(BuildContext context) {
     final isUser = message.isUser;
 
     return Align(
-      alignment:
-          isUser ? Alignment.centerRight : Alignment.centerLeft,
+      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        constraints: const BoxConstraints(
-          maxWidth: 320,
-        ),
-        margin: const EdgeInsets.only(
-          bottom: AppSpacing.sm,
-        ),
+        constraints: const BoxConstraints(maxWidth: 320),
+        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
           vertical: AppSpacing.sm,
         ),
         decoration: BoxDecoration(
-          color: isUser
-              ? AppColors.primary
-              : AppColors.surface,
+          color: isUser ? AppColors.primary : AppColors.surface,
           borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(
-              AppRadius.card,
-            ),
-            topRight: const Radius.circular(
-              AppRadius.card,
-            ),
-            bottomLeft: Radius.circular(
-              isUser ? AppRadius.card : 4,
-            ),
-            bottomRight: Radius.circular(
-              isUser ? 4 : AppRadius.card,
-            ),
+            topLeft: const Radius.circular(AppRadius.card),
+            topRight: const Radius.circular(AppRadius.card),
+            bottomLeft: Radius.circular(isUser ? AppRadius.card : 4),
+            bottomRight: Radius.circular(isUser ? 4 : AppRadius.card),
           ),
           boxShadow: const [
             BoxShadow(
@@ -61,9 +43,7 @@ class ChatBubble extends StatelessWidget {
         child: Text(
           message.text,
           style: AppTextStyles.body.copyWith(
-            color: isUser
-                ? Colors.white
-                : AppColors.textPrimary,
+            color: isUser ? Colors.white : AppColors.textPrimary,
           ),
         ),
       ),
@@ -79,12 +59,10 @@ class TypingIndicator extends StatefulWidget {
   const TypingIndicator({super.key});
 
   @override
-  State<TypingIndicator> createState() =>
-      _TypingIndicatorState();
+  State<TypingIndicator> createState() => _TypingIndicatorState();
 }
 
-class _TypingIndicatorState
-    extends State<TypingIndicator>
+class _TypingIndicatorState extends State<TypingIndicator>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
 
@@ -94,9 +72,7 @@ class _TypingIndicatorState
 
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(
-        milliseconds: 900,
-      ),
+      duration: const Duration(milliseconds: 900),
     )..repeat();
   }
 
@@ -111,9 +87,7 @@ class _TypingIndicatorState
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.only(
-          bottom: AppSpacing.sm,
-        ),
+        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
           vertical: AppSpacing.sm,
@@ -121,15 +95,9 @@ class _TypingIndicatorState
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(
-              AppRadius.card,
-            ),
-            topRight: Radius.circular(
-              AppRadius.card,
-            ),
-            bottomRight: Radius.circular(
-              AppRadius.card,
-            ),
+            topLeft: Radius.circular(AppRadius.card),
+            topRight: Radius.circular(AppRadius.card),
+            bottomRight: Radius.circular(AppRadius.card),
             bottomLeft: Radius.circular(4),
           ),
           boxShadow: const [
@@ -155,18 +123,9 @@ class _TypingIndicatorState
                   ),
                 ),
                 const SizedBox(width: 6),
-                _TypingDot(
-                  animationValue: value,
-                  delay: 0.0,
-                ),
-                _TypingDot(
-                  animationValue: value,
-                  delay: 0.2,
-                ),
-                _TypingDot(
-                  animationValue: value,
-                  delay: 0.4,
-                ),
+                _TypingDot(animationValue: value, delay: 0.0),
+                _TypingDot(animationValue: value, delay: 0.2),
+                _TypingDot(animationValue: value, delay: 0.4),
               ],
             );
           },
@@ -184,10 +143,7 @@ class _TypingDot extends StatelessWidget {
   final double animationValue;
   final double delay;
 
-  const _TypingDot({
-    required this.animationValue,
-    required this.delay,
-  });
+  const _TypingDot({required this.animationValue, required this.delay});
 
   @override
   Widget build(BuildContext context) {
@@ -197,16 +153,10 @@ class _TypingDot extends StatelessWidget {
       value += 1;
     }
 
-    final opacity = 0.35 +
-        (0.65 *
-            (value < 0.5
-                ? value * 2
-                : (1 - value) * 2));
+    final opacity = 0.35 + (0.65 * (value < 0.5 ? value * 2 : (1 - value) * 2));
 
     return Padding(
-      padding: const EdgeInsets.only(
-        left: 2,
-      ),
+      padding: const EdgeInsets.only(left: 2),
       child: Opacity(
         opacity: opacity.clamp(0.35, 1.0),
         child: Container(

@@ -1,10 +1,4 @@
-enum ReminderType {
-  watering,
-  fertilizing,
-  sunlight,
-  treatment,
-  custom,
-}
+enum ReminderType { watering, fertilizing, sunlight, treatment, custom }
 
 class PlantReminder {
   final String id;

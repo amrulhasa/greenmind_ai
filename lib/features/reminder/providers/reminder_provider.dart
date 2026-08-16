@@ -4,13 +4,11 @@ import 'package:uuid/uuid.dart';
 import '../models/plant_reminder.dart';
 import '../services/reminder_storage_service.dart';
 
-final reminderStorageServiceProvider =
-    Provider<ReminderStorageService>(
+final reminderStorageServiceProvider = Provider<ReminderStorageService>(
   (ref) => ReminderStorageService(),
 );
 
-final reminderProvider =
-    NotifierProvider<ReminderNotifier, ReminderState>(
+final reminderProvider = NotifierProvider<ReminderNotifier, ReminderState>(
   ReminderNotifier.new,
 );
 
@@ -25,9 +23,7 @@ class ReminderNotifier extends Notifier<ReminderState> {
   ReminderState build() {
     Future.microtask(_loadReminders);
 
-    return const ReminderState(
-      isLoading: true,
-    );
+    return const ReminderState(isLoading: true);
   }
 
   Future<void> _loadReminders() async {
@@ -63,39 +59,26 @@ class ReminderNotifier extends Notifier<ReminderState> {
       scheduledAt: scheduledAt,
     );
 
-    final updatedReminders = [
-      ...state.reminders,
-      reminder,
-    ];
+    final updatedReminders = [...state.reminders, reminder];
 
     await _saveReminders(updatedReminders);
   }
 
-  Future<void> toggleCompleted(
-    String reminderId,
-  ) async {
-    final updatedReminders = state.reminders.map(
-      (reminder) {
-        if (reminder.id == reminderId) {
-          return reminder.copyWith(
-            isCompleted: !reminder.isCompleted,
-          );
-        }
+  Future<void> toggleCompleted(String reminderId) async {
+    final updatedReminders = state.reminders.map((reminder) {
+      if (reminder.id == reminderId) {
+        return reminder.copyWith(isCompleted: !reminder.isCompleted);
+      }
 
-        return reminder;
-      },
-    ).toList();
+      return reminder;
+    }).toList();
 
     await _saveReminders(updatedReminders);
   }
 
-  Future<void> deleteReminder(
-    String reminderId,
-  ) async {
+  Future<void> deleteReminder(String reminderId) async {
     final updatedReminders = state.reminders
-        .where(
-          (reminder) => reminder.id != reminderId,
-        )
+        .where((reminder) => reminder.id != reminderId)
         .toList();
 
     await _saveReminders(updatedReminders);
@@ -104,26 +87,16 @@ class ReminderNotifier extends Notifier<ReminderState> {
   Future<void> clearAllReminders() async {
     await _storageService.clearReminders();
 
-    state = state.copyWith(
-      reminders: [],
-      errorMessage: null,
-    );
+    state = state.copyWith(reminders: [], errorMessage: null);
   }
 
-  Future<void> _saveReminders(
-    List<PlantReminder> reminders,
-  ) async {
+  Future<void> _saveReminders(List<PlantReminder> reminders) async {
     try {
       await _storageService.saveReminders(reminders);
 
-      state = state.copyWith(
-        reminders: reminders,
-        errorMessage: null,
-      );
+      state = state.copyWith(reminders: reminders, errorMessage: null);
     } catch (_) {
-      state = state.copyWith(
-        errorMessage: 'Unable to save reminder.',
-      );
+      state = state.copyWith(errorMessage: 'Unable to save reminder.');
     }
   }
 }

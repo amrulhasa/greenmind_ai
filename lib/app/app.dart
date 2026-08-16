@@ -9,10 +9,7 @@ class GreenMindApp extends ConsumerWidget {
   const GreenMindApp({super.key});
 
   @override
-  Widget build(
-    BuildContext context,
-    WidgetRef ref,
-  ) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final profileState = ref.watch(profileProvider);
 
     return MaterialApp.router(

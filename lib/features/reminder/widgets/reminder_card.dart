@@ -12,10 +12,7 @@ import '../providers/reminder_provider.dart';
 class ReminderCard extends ConsumerWidget {
   final PlantReminder reminder;
 
-  const ReminderCard({
-    super.key,
-    required this.reminder,
-  });
+  const ReminderCard({super.key, required this.reminder});
 
   IconData _getIcon() {
     switch (reminder.type) {
@@ -57,15 +54,11 @@ class ReminderCard extends ConsumerWidget {
       opacity: reminder.isCompleted ? 0.55 : 1,
       child: Container(
         width: double.infinity,
-        margin: const EdgeInsets.only(
-          bottom: AppSpacing.md,
-        ),
+        margin: const EdgeInsets.only(bottom: AppSpacing.md),
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(
-            AppRadius.card,
-          ),
+          borderRadius: BorderRadius.circular(AppRadius.card),
           boxShadow: const [
             BoxShadow(
               color: AppColors.shadow,
@@ -84,10 +77,7 @@ class ReminderCard extends ConsumerWidget {
                 color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(
-                _getIcon(),
-                color: color,
-              ),
+              child: Icon(_getIcon(), color: color),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
@@ -103,15 +93,9 @@ class ReminderCard extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    reminder.plantName,
-                    style: AppTextStyles.body,
-                  ),
+                  Text(reminder.plantName, style: AppTextStyles.body),
                   const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    reminder.description,
-                    style: AppTextStyles.caption,
-                  ),
+                  Text(reminder.description, style: AppTextStyles.caption),
                   const SizedBox(height: AppSpacing.sm),
                   Row(
                     children: [
@@ -149,10 +133,7 @@ class ReminderCard extends ConsumerWidget {
                         : 'Mark as Complete',
                   ),
                 ),
-                const PopupMenuItem(
-                  value: 'delete',
-                  child: Text('Delete'),
-                ),
+                const PopupMenuItem(value: 'delete', child: Text('Delete')),
               ],
             ),
           ],

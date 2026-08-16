@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../home/providers/recent_plants_provider.dart';
 import '../models/identify_result.dart';
 import '../services/identify_service.dart';
 
@@ -12,6 +13,7 @@ final identifyProvider =
 
 class IdentifyNotifier extends Notifier<IdentifyState> {
   final ImagePicker _picker = ImagePicker();
+
   final IdentifyService _identifyService = IdentifyService();
 
   @override
@@ -19,92 +21,167 @@ class IdentifyNotifier extends Notifier<IdentifyState> {
     return const IdentifyState();
   }
 
-  // ==============================
-  // PICK IMAGE FROM GALLERY
-  // ==============================
+  // ============================================================
+  // PICK FROM GALLERY
+  // ============================================================
 
   Future<void> pickFromGallery() async {
-    final XFile? image = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 90,
-    );
+    if (state.isLoading) {
+      return;
+    }
 
-    if (image == null) return;
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 90,
+        maxWidth: 1600,
+        maxHeight: 1600,
+      );
 
-    final bytes = await image.readAsBytes();
+      // User cancelled.
+      if (image == null) {
+        return;
+      }
 
-    state = state.copyWith(
-      imageBytes: bytes,
-      clearResult: true,
-      clearError: true,
-    );
+      final bytes = await image.readAsBytes();
+
+      if (bytes.isEmpty) {
+        state = state.copyWith(
+          errorMessage: 'The selected image is empty.',
+          clearResult: true,
+        );
+        return;
+      }
+
+      state = state.copyWith(
+        imageBytes: bytes,
+        isLoading: false,
+        clearResult: true,
+        clearError: true,
+      );
+    } catch (e, stackTrace) {
+      debugPrint('GALLERY IMAGE ERROR: $e');
+      debugPrint('$stackTrace');
+
+      state = state.copyWith(
+        isLoading: false,
+        clearResult: true,
+        errorMessage: 'Unable to select image.',
+      );
+    }
   }
 
-  // ==============================
-  // PICK IMAGE FROM CAMERA
-  // ==============================
+  // ============================================================
+  // PICK FROM CAMERA
+  // ============================================================
 
   Future<void> pickFromCamera() async {
-    final XFile? image = await _picker.pickImage(
-      source: ImageSource.camera,
-      imageQuality: 90,
-    );
+    if (state.isLoading) {
+      return;
+    }
 
-    if (image == null) return;
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 90,
+        maxWidth: 1600,
+        maxHeight: 1600,
+      );
 
-    final bytes = await image.readAsBytes();
+      // User cancelled.
+      if (image == null) {
+        return;
+      }
 
-    state = state.copyWith(
-      imageBytes: bytes,
-      clearResult: true,
-      clearError: true,
-    );
+      final bytes = await image.readAsBytes();
+
+      if (bytes.isEmpty) {
+        state = state.copyWith(
+          errorMessage: 'The captured image is empty.',
+          clearResult: true,
+        );
+        return;
+      }
+
+      state = state.copyWith(
+        imageBytes: bytes,
+        isLoading: false,
+        clearResult: true,
+        clearError: true,
+      );
+    } catch (e, stackTrace) {
+      debugPrint('CAMERA IMAGE ERROR: $e');
+      debugPrint('$stackTrace');
+
+      state = state.copyWith(
+        isLoading: false,
+        clearResult: true,
+        errorMessage: 'Unable to take photo.',
+      );
+    }
   }
 
-  // ==============================
+  // ============================================================
   // CLEAR IMAGE
-  // ==============================
+  // ============================================================
 
   void clearImage() {
     state = const IdentifyState();
   }
 
-  // ==============================
+  // ============================================================
   // IDENTIFY PLANT
-  // ==============================
+  // ============================================================
 
   Future<void> identifyPlant() async {
     final imageBytes = state.imageBytes;
 
-    if (imageBytes == null) return;
+    // Prevent duplicate requests.
+    if (state.isLoading) {
+      return;
+    }
 
-    // Start loading
+    // No image selected.
+    if (imageBytes == null || imageBytes.isEmpty) {
+      state = state.copyWith(
+        errorMessage: 'Please select or take a plant photo first.',
+        clearError: false,
+      );
+
+      return;
+    }
+
+    // ==========================================================
+    // START AI REQUEST
+    // ==========================================================
+
     state = state.copyWith(
       isLoading: true,
       clearError: true,
     );
 
     try {
+      // ========================================================
+      // CALL AI SERVICE
+      // ========================================================
+
       final IdentifyResult result =
           await _identifyService.identifyPlant(
         imageBytes,
       );
 
-      // ==========================================
-      // DEBUG: RESULT RECEIVED BY PROVIDER
-      // ==========================================
-
       debugPrint('================================');
-      debugPrint('RESULT RECEIVED BY PROVIDER');
-      debugPrint('Plant Name: ${result.plantName}');
-      debugPrint('Scientific Name: ${result.scientificName}');
+      debugPrint('IDENTIFICATION RESULT');
+      debugPrint('Plant: ${result.plantName}');
+      debugPrint('Scientific: ${result.scientificName}');
       debugPrint('Confidence: ${result.confidence}');
-      debugPrint('Description: ${result.description}');
-      debugPrint('Care Tips: ${result.careTips}');
       debugPrint('Healthy: ${result.isHealthy}');
       debugPrint('================================');
 
-      // Update state with AI result
+      // ========================================================
+      // SHOW RESULT IMMEDIATELY
+      // ========================================================
+
       state = state.copyWith(
         isLoading: false,
         result: result,
@@ -112,20 +189,33 @@ class IdentifyNotifier extends Notifier<IdentifyState> {
         clearError: true,
       );
 
-      // ==========================================
-      // DEBUG: STATE UPDATED
-      // ==========================================
+      // ========================================================
+      // SAVE TO RECENT PLANTS
+      // ========================================================
 
-      debugPrint('================================');
-      debugPrint('STATE UPDATED');
-      debugPrint('State Result: ${state.result}');
-      debugPrint('Loading: ${state.isLoading}');
-      debugPrint('Error: ${state.errorMessage}');
-      debugPrint('================================');
-    } catch (e, stackTrace) {
+      try {
+        await ref
+            .read(recentPlantsProvider.notifier)
+            .addPlant(
+              result: result,
+              imageBytes: imageBytes,
+            );
+
+        debugPrint('Recent plant saved successfully.');
+      } catch (saveError, saveStackTrace) {
+        // AI result remains visible even if local storage fails.
+        debugPrint(
+          'RECENT PLANT SAVE ERROR: $saveError',
+        );
+
+        debugPrint(
+          '$saveStackTrace',
+        );
+      }
+    } catch (error, stackTrace) {
       debugPrint('================================');
       debugPrint('IDENTIFY PLANT ERROR');
-      debugPrint('ERROR: $e');
+      debugPrint('ERROR: $error');
       debugPrint('STACK TRACE:');
       debugPrint('$stackTrace');
       debugPrint('================================');
@@ -133,16 +223,15 @@ class IdentifyNotifier extends Notifier<IdentifyState> {
       state = state.copyWith(
         isLoading: false,
         clearResult: true,
-        errorMessage: 'AI Error: $e',
-        clearError: false,
+        errorMessage: 'AI Error: $error',
       );
     }
   }
 }
 
-// ==========================================
+// ============================================================
 // IDENTIFY STATE
-// ==========================================
+// ============================================================
 
 class IdentifyState {
   final Uint8List? imageBytes;
@@ -168,14 +257,12 @@ class IdentifyState {
     return IdentifyState(
       imageBytes: imageBytes ?? this.imageBytes,
       isLoading: isLoading ?? this.isLoading,
-
       result: clearResult
           ? null
-          : (result ?? this.result),
-
+          : result ?? this.result,
       errorMessage: clearError
           ? null
-          : (errorMessage ?? this.errorMessage),
+          : errorMessage ?? this.errorMessage,
     );
   }
 }

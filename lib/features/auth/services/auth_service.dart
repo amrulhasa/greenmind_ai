@@ -14,8 +14,7 @@ class AuthService {
     required String password,
     String? name,
   }) async {
-    final credential =
-        await _auth.createUserWithEmailAndPassword(
+    final credential = await _auth.createUserWithEmailAndPassword(
       email: email.trim(),
       password: password,
     );
@@ -23,10 +22,7 @@ class AuthService {
     final user = credential.user;
 
     if (user != null) {
-      await UserService.createUserProfile(
-        user: user,
-        name: name,
-      );
+      await UserService.createUserProfile(user: user, name: name);
     }
 
     return credential;
@@ -46,11 +42,7 @@ class AuthService {
     await _auth.signOut();
   }
 
-  Future<void> sendPasswordResetEmail({
-    required String email,
-  }) async {
-    await _auth.sendPasswordResetEmail(
-      email: email.trim(),
-    );
+  Future<void> sendPasswordResetEmail({required String email}) async {
+    await _auth.sendPasswordResetEmail(email: email.trim());
   }
 }

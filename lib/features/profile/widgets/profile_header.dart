@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,7 +11,9 @@ import '../../../core/constants/app_text_styles.dart';
 import '../providers/profile_provider.dart';
 
 class ProfileHeader extends ConsumerStatefulWidget {
-  const ProfileHeader({super.key});
+  const ProfileHeader({
+    super.key,
+  });
 
   @override
   ConsumerState<ProfileHeader> createState() =>
@@ -35,10 +37,8 @@ class _ProfileHeaderState
         await showModalBottomSheet<ImageSource>(
       context: context,
       backgroundColor: AppColors.surface,
-      shape:
-          const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
           top: Radius.circular(24),
         ),
       ),
@@ -52,39 +52,35 @@ class _ProfileHeaderState
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Handle
+                // ==================================================
+                // HANDLE
+                // ==================================================
+
                 Container(
                   width: 40,
                   height: 4,
-                  margin:
-                      const EdgeInsets.only(
+                  margin: const EdgeInsets.only(
                     bottom: 12,
                   ),
-                  decoration:
-                      BoxDecoration(
+                  decoration: BoxDecoration(
                     color: AppColors.border,
                     borderRadius:
-                        BorderRadius.circular(
-                      10,
-                    ),
+                        BorderRadius.circular(10),
                   ),
                 ),
 
                 const Padding(
-                  padding:
-                      EdgeInsets.symmetric(
+                  padding: EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 12,
                   ),
                   child: Align(
-                    alignment:
-                        Alignment.centerLeft,
+                    alignment: Alignment.centerLeft,
                     child: Text(
                       'Change Profile Picture',
                       style: TextStyle(
                         fontSize: 20,
-                        fontWeight:
-                            FontWeight.w700,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
@@ -102,28 +98,23 @@ class _ProfileHeaderState
                   leading: Container(
                     width: 46,
                     height: 46,
-                    decoration:
-                        BoxDecoration(
-                      color: AppColors.primary
-                          .withValues(
+                    decoration: BoxDecoration(
+                      color:
+                          AppColors.primary.withValues(
                         alpha: 0.10,
                       ),
                       borderRadius:
-                          BorderRadius.circular(
-                        14,
-                      ),
+                          BorderRadius.circular(14),
                     ),
                     child: const Icon(
                       Icons.camera_alt_rounded,
-                      color:
-                          AppColors.primary,
+                      color: AppColors.primary,
                     ),
                   ),
                   title: const Text(
                     'Take a Photo',
                     style: TextStyle(
-                      fontWeight:
-                          FontWeight.w600,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   subtitle: const Text(
@@ -149,28 +140,23 @@ class _ProfileHeaderState
                   leading: Container(
                     width: 46,
                     height: 46,
-                    decoration:
-                        BoxDecoration(
-                      color: AppColors.primary
-                          .withValues(
+                    decoration: BoxDecoration(
+                      color:
+                          AppColors.primary.withValues(
                         alpha: 0.10,
                       ),
                       borderRadius:
-                          BorderRadius.circular(
-                        14,
-                      ),
+                          BorderRadius.circular(14),
                     ),
                     child: const Icon(
                       Icons.photo_library_rounded,
-                      color:
-                          AppColors.primary,
+                      color: AppColors.primary,
                     ),
                   ),
                   title: const Text(
                     'Choose from Gallery',
                     style: TextStyle(
-                      fontWeight:
-                          FontWeight.w600,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   subtitle: const Text(
@@ -202,8 +188,8 @@ class _ProfileHeaderState
       await ref
           .read(profileProvider.notifier)
           .changeProfilePicture(
-        source: source,
-      );
+            source: source,
+          );
 
       if (!mounted) {
         return;
@@ -213,8 +199,7 @@ class _ProfileHeaderState
           ref.read(profileProvider).errorMessage;
 
       if (error != null) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(error),
           ),
@@ -225,8 +210,7 @@ class _ProfileHeaderState
         return;
       }
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
             'Unable to change profile picture.',
@@ -248,23 +232,15 @@ class _ProfileHeaderState
 
   @override
   Widget build(BuildContext context) {
-    final state =
-        ref.watch(profileProvider);
-
+    final state = ref.watch(profileProvider);
     final profile = state.profile;
 
-    final imagePath =
+    final imageBase64 =
         profile.profileImagePath;
-
-    final hasImage =
-        imagePath != null &&
-        imagePath.isNotEmpty &&
-        File(imagePath).existsSync();
 
     return Container(
       width: double.infinity,
-      padding:
-          const EdgeInsets.all(
+      padding: const EdgeInsets.all(
         AppSpacing.lg,
       ),
       decoration: BoxDecoration(
@@ -290,56 +266,23 @@ class _ProfileHeaderState
           GestureDetector(
             onTap: _changeProfilePicture,
             child: Stack(
-              clipBehavior:
-                  Clip.none,
+              clipBehavior: Clip.none,
               children: [
                 Container(
                   width: 88,
                   height: 88,
-                  decoration:
-                      BoxDecoration(
-                    color:
-                        AppColors.primary,
-                    shape:
-                        BoxShape.circle,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
                     border: Border.all(
-                      color:
-                          AppColors.surface,
+                      color: AppColors.surface,
                       width: 4,
                     ),
                   ),
                   child: ClipOval(
-                    child: hasImage
-                        ? Image.file(
-                            File(imagePath),
-                            key: ValueKey(
-                              imagePath,
-                            ),
-                            width: 88,
-                            height: 88,
-                            fit: BoxFit.cover,
-                            errorBuilder:
-                                (
-                              context,
-                              error,
-                              stackTrace,
-                            ) {
-                              return const Icon(
-                                Icons
-                                    .person_rounded,
-                                color:
-                                    Colors.white,
-                                size: 48,
-                              );
-                            },
-                          )
-                        : const Icon(
-                            Icons
-                                .person_rounded,
-                            color:
-                                Colors.white,
-                            size: 48,
-                          ),
+                    child: _ProfileImage(
+                      imageBase64: imageBase64,
+                    ),
                   ),
                 ),
 
@@ -355,34 +298,25 @@ class _ProfileHeaderState
                     height: 38,
                     decoration:
                         const BoxDecoration(
-                      color:
-                          AppColors.primary,
-                      shape:
-                          BoxShape.circle,
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
                     ),
-                    child:
-                        _isPickingImage
-                            ? const Padding(
-                                padding:
-                                    EdgeInsets
-                                        .all(
-                                  9,
-                                ),
-                                child:
-                                    CircularProgressIndicator(
-                                  strokeWidth:
-                                      2,
-                                  color:
-                                      Colors.white,
-                                ),
-                              )
-                            : const Icon(
-                                Icons
-                                    .camera_alt_rounded,
-                                color:
-                                    Colors.white,
-                                size: 20,
-                              ),
+                    child: _isPickingImage
+                        ? const Padding(
+                            padding:
+                                EdgeInsets.all(9),
+                            child:
+                                CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(
+                            Icons
+                                .camera_alt_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                   ),
                 ),
               ],
@@ -398,11 +332,11 @@ class _ProfileHeaderState
           // ========================================================
 
           Text(
-            profile.name,
-            style:
-                AppTextStyles.heading2,
-            textAlign:
-                TextAlign.center,
+            profile.name.isEmpty
+                ? 'Plant Lover'
+                : profile.name,
+            style: AppTextStyles.heading2,
+            textAlign: TextAlign.center,
           ),
 
           const SizedBox(
@@ -416,8 +350,7 @@ class _ProfileHeaderState
           Text(
             profile.email,
             style: AppTextStyles.body,
-            textAlign:
-                TextAlign.center,
+            textAlign: TextAlign.center,
           ),
 
           // ========================================================
@@ -430,10 +363,8 @@ class _ProfileHeaderState
             ),
             Text(
               profile.bio,
-              style:
-                  AppTextStyles.caption,
-              textAlign:
-                  TextAlign.center,
+              style: AppTextStyles.caption,
+              textAlign: TextAlign.center,
             ),
           ],
 
@@ -446,29 +377,81 @@ class _ProfileHeaderState
               height: AppSpacing.sm,
             ),
             Row(
-              mainAxisSize:
-                  MainAxisSize.min,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(
-                  Icons
-                      .location_on_outlined,
+                  Icons.location_on_outlined,
                   size: 17,
-                  color: AppColors
-                      .textSecondary,
+                  color: AppColors.textSecondary,
                 ),
                 const SizedBox(
                   width: 4,
                 ),
-                Text(
-                  profile.location,
-                  style:
-                      AppTextStyles.caption,
+                Flexible(
+                  child: Text(
+                    profile.location,
+                    style:
+                        AppTextStyles.caption,
+                    overflow:
+                        TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
           ],
         ],
       ),
+    );
+  }
+}
+
+// ============================================================
+// PROFILE IMAGE
+// ============================================================
+
+class _ProfileImage extends StatelessWidget {
+  final String? imageBase64;
+
+  const _ProfileImage({
+    required this.imageBase64,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final encodedImage = imageBase64;
+
+    if (encodedImage == null ||
+        encodedImage.isEmpty) {
+      return _placeholder();
+    }
+
+    try {
+      final bytes =
+          base64Decode(encodedImage);
+
+      return Image.memory(
+        bytes,
+        width: 88,
+        height: 88,
+        fit: BoxFit.cover,
+        errorBuilder: (
+          BuildContext context,
+          Object error,
+          StackTrace? stackTrace,
+        ) {
+          return _placeholder();
+        },
+      );
+    } catch (_) {
+      return _placeholder();
+    }
+  }
+
+  Widget _placeholder() {
+    return const Icon(
+      Icons.person_rounded,
+      color: Colors.white,
+      size: 48,
     );
   }
 }

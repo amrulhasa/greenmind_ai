@@ -15,24 +15,15 @@ import '../features/splash/splash_screen.dart';
 class AppRouter {
   AppRouter._();
 
-  static final GoRouter router = GoRouter(
+  static final GoRouter router =
+      GoRouter(
     initialLocation: '/',
-
-    // ==========================================================
-    // AUTH STATE REFRESH
-    // ==========================================================
 
     refreshListenable:
         authRefreshNotifier,
 
-    // ==========================================================
-    // AUTH REDIRECT
-    // ==========================================================
-
-    redirect: (
-      context,
-      state,
-    ) {
+    redirect:
+        (context, state) {
       final container =
           ProviderScope.containerOf(
         context,
@@ -50,32 +41,24 @@ class AppRouter {
       final location =
           state.matchedLocation;
 
+      final isSplashPage =
+          location == '/';
+
       final isLoginPage =
           location == '/login';
 
       final isRegisterPage =
           location == '/register';
 
-      final isSplashPage =
-          location == '/';
-
       final isPublicPage =
-          isLoginPage ||
-          isRegisterPage ||
-          isSplashPage;
-
-      // ========================================================
-      // NOT LOGGED IN
-      // ========================================================
+          isSplashPage ||
+              isLoginPage ||
+              isRegisterPage;
 
       if (!isLoggedIn &&
           !isPublicPage) {
         return '/login';
       }
-
-      // ========================================================
-      // ALREADY LOGGED IN
-      // ========================================================
 
       if (isLoggedIn &&
           (isLoginPage ||
@@ -86,135 +69,68 @@ class AppRouter {
       return null;
     },
 
-    // ==========================================================
-    // ROUTES
-    // ==========================================================
-
     routes: [
-      // ========================================================
-      // SPLASH
-      // ========================================================
-
       GoRoute(
         path: '/',
-        builder: (
-          context,
-          state,
-        ) {
-          return const SplashScreen();
-        },
+        builder:
+            (context, state) =>
+                const SplashScreen(),
       ),
-
-      // ========================================================
-      // LOGIN
-      // ========================================================
 
       GoRoute(
         path: '/login',
-        builder: (
-          context,
-          state,
-        ) {
-          return const LoginScreen();
-        },
+        builder:
+            (context, state) =>
+                const LoginScreen(),
       ),
-
-      // ========================================================
-      // REGISTER
-      // ========================================================
 
       GoRoute(
         path: '/register',
-        builder: (
-          context,
-          state,
-        ) {
-          return const RegisterScreen();
-        },
+        builder:
+            (context, state) =>
+                const RegisterScreen(),
       ),
-
-      // ========================================================
-      // HOME
-      // ========================================================
 
       GoRoute(
         path: '/home',
-        builder: (
-          context,
-          state,
-        ) {
-          return const HomeScreen();
-        },
+        builder:
+            (context, state) =>
+                const HomeScreen(),
       ),
-
-      // ========================================================
-      // IDENTIFY
-      // ========================================================
 
       GoRoute(
         path: '/identify',
-        builder: (
-          context,
-          state,
-        ) {
-          return const IdentifyScreen();
-        },
+        builder:
+            (context, state) =>
+                const IdentifyScreen(),
       ),
-
-      // ========================================================
-      // DISEASE
-      // ========================================================
 
       GoRoute(
         path: '/disease',
-        builder: (
-          context,
-          state,
-        ) {
-          return const DiseaseScreen();
-        },
+        builder:
+            (context, state) =>
+                const DiseaseScreen(),
       ),
-
-      // ========================================================
-      // AI CHAT
-      // ========================================================
 
       GoRoute(
         path: '/chatbot',
-        builder: (
-          context,
-          state,
-        ) {
-          return const ChatbotScreen();
-        },
+        builder:
+            (context, state) =>
+                const ChatbotScreen(),
       ),
-
-      // ========================================================
-      // REMINDERS
-      // ========================================================
 
       GoRoute(
         path: '/reminders',
-        builder: (
-          context,
-          state,
-        ) {
-          return const ReminderScreen();
-        },
+        builder:
+            (context, state) =>
+                const ReminderScreen(),
       ),
-
-      // ========================================================
-      // PROFILE
-      // ========================================================
 
       GoRoute(
         path: '/profile',
-        builder: (
-          context,
-          state,
-        ) {
-          return const ProfileScreen();
-        },
+        builder:
+            (context, state) =>
+                const ProfileScreen(),
       ),
     ],
   );

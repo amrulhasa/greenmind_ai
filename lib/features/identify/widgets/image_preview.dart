@@ -6,26 +6,47 @@ import '../../../core/constants/app_radius.dart';
 import '../providers/identify_provider.dart';
 
 class ImagePreview extends ConsumerWidget {
-  const ImagePreview({super.key});
+  const ImagePreview({
+    super.key,
+  });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(identifyProvider);
-    final notifier = ref.read(identifyProvider.notifier);
+  Widget build(
+    BuildContext context,
+    WidgetRef ref,
+  ) {
+    final state =
+        ref.watch(identifyProvider);
 
-    if (state.imageBytes == null) {
+    final notifier =
+        ref.read(
+      identifyProvider.notifier,
+    );
+
+    final bytes =
+        state.imageBytes;
+
+    if (bytes == null ||
+        bytes.isEmpty) {
       return Container(
         width: double.infinity,
         height: 250,
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.card),
+        decoration:
+            BoxDecoration(
+          color:
+              AppColors.surface,
+          borderRadius:
+              BorderRadius.circular(
+            AppRadius.card,
+          ),
           border: Border.all(
-            color: AppColors.border,
+            color:
+                AppColors.border,
           ),
         ),
         child: const Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment:
+              MainAxisAlignment.center,
           children: [
             Icon(
               Icons.image_outlined,
@@ -48,12 +69,30 @@ class ImagePreview extends ConsumerWidget {
     return Stack(
       children: [
         ClipRRect(
-          borderRadius: BorderRadius.circular(AppRadius.card),
+          borderRadius:
+              BorderRadius.circular(
+            AppRadius.card,
+          ),
           child: Image.memory(
-            state.imageBytes!,
-            width: double.infinity,
+            bytes,
+            width:
+                double.infinity,
             height: 250,
             fit: BoxFit.cover,
+            errorBuilder:
+                (context, error, stackTrace) {
+              return Container(
+                width:
+                    double.infinity,
+                height: 250,
+                color: Colors.grey.shade200,
+                alignment:
+                    Alignment.center,
+                child: const Text(
+                  'Unable to display image',
+                ),
+              );
+            },
           ),
         ),
 
@@ -62,12 +101,15 @@ class ImagePreview extends ConsumerWidget {
           right: 10,
           child: CircleAvatar(
             radius: 20,
-            backgroundColor: Colors.black54,
+            backgroundColor:
+                Colors.black54,
             child: IconButton(
-              onPressed: notifier.clearImage,
+              onPressed:
+                  notifier.clearImage,
               icon: const Icon(
                 Icons.close,
-                color: Colors.white,
+                color:
+                    Colors.white,
                 size: 18,
               ),
             ),

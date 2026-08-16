@@ -10,8 +10,7 @@ import '../widgets/reminder_card.dart';
 import '../widgets/reminder_empty_state.dart';
 import '../widgets/reminder_form.dart';
 
-class ReminderScreen
-    extends ConsumerWidget {
+class ReminderScreen extends ConsumerWidget {
   const ReminderScreen({super.key});
 
   // ============================================================
@@ -26,14 +25,11 @@ class ReminderScreen
   // OPEN REMINDER FORM
   // ============================================================
 
-  Future<void> _openReminderForm(
-    BuildContext context,
-  ) async {
+  Future<void> _openReminderForm(BuildContext context) async {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor:
-          AppColors.surface,
+      backgroundColor: AppColors.surface,
       builder: (context) {
         return const ReminderForm();
       },
@@ -44,41 +40,27 @@ class ReminderScreen
   // CONFIRM CLEAR ALL
   // ============================================================
 
-  Future<void> _confirmClearAll(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
-    final shouldClear =
-        await showDialog<bool>(
+  Future<void> _confirmClearAll(BuildContext context, WidgetRef ref) async {
+    final shouldClear = await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text(
-            'Clear all reminders?',
-          ),
+          title: const Text('Clear all reminders?'),
           content: const Text(
             'All saved reminders will be permanently removed.',
           ),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(
-                  context,
-                ).pop(false);
+                Navigator.of(context).pop(false);
               },
-              child: const Text(
-                'Cancel',
-              ),
+              child: const Text('Cancel'),
             ),
             FilledButton(
               onPressed: () {
-                Navigator.of(
-                  context,
-                ).pop(true);
+                Navigator.of(context).pop(true);
               },
-              child: const Text(
-                'Clear All',
-              ),
+              child: const Text('Clear All'),
             ),
           ],
         );
@@ -86,11 +68,7 @@ class ReminderScreen
     );
 
     if (shouldClear == true) {
-      await ref
-          .read(
-            reminderProvider.notifier,
-          )
-          .clearAllReminders();
+      await ref.read(reminderProvider.notifier).clearAllReminders();
     }
   }
 
@@ -99,19 +77,12 @@ class ReminderScreen
   // ============================================================
 
   @override
-  Widget build(
-    BuildContext context,
-    WidgetRef ref,
-  ) {
-    final state =
-        ref.watch(reminderProvider);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(reminderProvider);
 
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (
-        didPop,
-        result,
-      ) {
+      onPopInvokedWithResult: (didPop, result) {
         if (didPop) {
           return;
         }
@@ -123,35 +94,24 @@ class ReminderScreen
           // ======================================================
           // BACK
           // ======================================================
-
           leading: IconButton(
             onPressed: () {
               _goHome(context);
             },
-            icon: const Icon(
-              Icons.arrow_back_rounded,
-            ),
+            icon: const Icon(Icons.arrow_back_rounded),
             tooltip: 'Back',
           ),
 
           // ======================================================
           // TITLE
           // ======================================================
-
           title: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment
-                    .start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Plant Reminders',
-                style:
-                    AppTextStyles.title,
-              ),
+              Text('Plant Reminders', style: AppTextStyles.title),
               Text(
                 'Stay on top of your plant care',
-                style:
-                    AppTextStyles.caption,
+                style: AppTextStyles.caption,
               ),
             ],
           ),
@@ -159,23 +119,14 @@ class ReminderScreen
           // ======================================================
           // CLEAR ALL
           // ======================================================
-
           actions: [
-            if (state.reminders
-                .isNotEmpty)
+            if (state.reminders.isNotEmpty)
               IconButton(
-                tooltip:
-                    'Clear all reminders',
+                tooltip: 'Clear all reminders',
                 onPressed: () {
-                  _confirmClearAll(
-                    context,
-                    ref,
-                  );
+                  _confirmClearAll(context, ref);
                 },
-                icon: const Icon(
-                  Icons
-                      .delete_sweep_outlined,
-                ),
+                icon: const Icon(Icons.delete_sweep_outlined),
               ),
           ],
         ),
@@ -183,35 +134,20 @@ class ReminderScreen
         // ========================================================
         // ADD REMINDER
         // ========================================================
-
-        floatingActionButton:
-            FloatingActionButton.extended(
+        floatingActionButton: FloatingActionButton.extended(
           onPressed: () {
-            _openReminderForm(
-              context,
-            );
+            _openReminderForm(context);
           },
-          backgroundColor:
-              AppColors.primary,
-          foregroundColor:
-              Colors.white,
-          icon: const Icon(
-            Icons
-                .add_alert_rounded,
-          ),
-          label: const Text(
-            'Add Reminder',
-          ),
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          icon: const Icon(Icons.add_alert_rounded),
+          label: const Text('Add Reminder'),
         ),
 
         // ========================================================
         // BODY
         // ========================================================
-
-        body: _buildBody(
-          context,
-          state,
-        ),
+        body: _buildBody(context, state),
       ),
     );
   }
@@ -220,55 +156,38 @@ class ReminderScreen
   // BODY
   // ============================================================
 
-  Widget _buildBody(
-    BuildContext context,
-    ReminderState state,
-  ) {
+  Widget _buildBody(BuildContext context, ReminderState state) {
     // ==========================================================
     // LOADING
     // ==========================================================
 
     if (state.isLoading) {
-      return const Center(
-        child:
-            CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     // ==========================================================
     // ERROR
     // ==========================================================
 
-    if (state.errorMessage !=
-        null) {
+    if (state.errorMessage != null) {
       return Center(
         child: Padding(
-          padding:
-              const EdgeInsets.all(
-            AppSpacing.lg,
-          ),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
-            mainAxisSize:
-                MainAxisSize.min,
+            mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(
-                Icons
-                    .error_outline_rounded,
+                Icons.error_outline_rounded,
                 size: 52,
-                color:
-                    AppColors.error,
+                color: AppColors.error,
               ),
 
-              const SizedBox(
-                height: AppSpacing.md,
-              ),
+              const SizedBox(height: AppSpacing.md),
 
               Text(
                 state.errorMessage!,
-                style:
-                    AppTextStyles.body,
-                textAlign:
-                    TextAlign.center,
+                style: AppTextStyles.body,
+                textAlign: TextAlign.center,
               ),
             ],
           ),
@@ -288,35 +207,23 @@ class ReminderScreen
     // SORT
     // ==========================================================
 
-    final reminders = [
-      ...state.reminders,
-    ]..sort(
-        (a, b) =>
-            a.scheduledAt.compareTo(
-          b.scheduledAt,
-        ),
-      );
+    final reminders = [...state.reminders]
+      ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
 
     // ==========================================================
     // LIST
     // ==========================================================
 
     return ListView.builder(
-      padding:
-          const EdgeInsets.fromLTRB(
+      padding: const EdgeInsets.fromLTRB(
         AppSpacing.md,
         AppSpacing.lg,
         AppSpacing.md,
         100,
       ),
-      itemCount:
-          reminders.length,
-      itemBuilder:
-          (context, index) {
-        return ReminderCard(
-          reminder:
-              reminders[index],
-        );
+      itemCount: reminders.length,
+      itemBuilder: (context, index) {
+        return ReminderCard(reminder: reminders[index]);
       },
     );
   }

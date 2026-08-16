@@ -9,10 +9,7 @@ import '../models/user_profile.dart';
 class ProfileInfoCard extends StatelessWidget {
   final UserProfile profile;
 
-  const ProfileInfoCard({
-    super.key,
-    required this.profile,
-  });
+  const ProfileInfoCard({super.key, required this.profile});
 
   @override
   Widget build(BuildContext context) {
@@ -21,9 +18,7 @@ class ProfileInfoCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(
-          AppRadius.card,
-        ),
+        borderRadius: BorderRadius.circular(AppRadius.card),
         boxShadow: const [
           BoxShadow(
             color: AppColors.shadow,
@@ -35,10 +30,7 @@ class ProfileInfoCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Personal Information',
-            style: AppTextStyles.heading3,
-          ),
+          Text('Personal Information', style: AppTextStyles.heading3),
 
           const SizedBox(height: AppSpacing.md),
 
@@ -61,9 +53,7 @@ class ProfileInfoCard extends StatelessWidget {
           _InfoRow(
             icon: Icons.location_on_outlined,
             label: 'Location',
-            value: profile.location.isEmpty
-                ? 'Not set'
-                : profile.location,
+            value: profile.location.isEmpty ? 'Not set' : profile.location,
           ),
 
           const Divider(height: 24),
@@ -95,11 +85,7 @@ class _InfoRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          size: 22,
-          color: AppColors.primary,
-        ),
+        Icon(icon, size: 22, color: AppColors.primary),
 
         const SizedBox(width: AppSpacing.md),
 
@@ -107,15 +93,9 @@ class _InfoRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                label,
-                style: AppTextStyles.caption,
-              ),
+              Text(label, style: AppTextStyles.caption),
               const SizedBox(height: AppSpacing.xs),
-              Text(
-                value,
-                style: AppTextStyles.body,
-              ),
+              Text(value, style: AppTextStyles.body),
             ],
           ),
         ),

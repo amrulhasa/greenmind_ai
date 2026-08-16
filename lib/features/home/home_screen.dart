@@ -4,9 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'widgets/bottom_nav.dart';
 import 'widgets/feature_card.dart';
 import 'widgets/home_header.dart';
+import 'widgets/recent_plants.dart';
 
 class HomeScreen extends ConsumerWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({
+    super.key,
+  });
 
   @override
   Widget build(
@@ -14,19 +17,34 @@ class HomeScreen extends ConsumerWidget {
     WidgetRef ref,
   ) {
     return Scaffold(
-      bottomNavigationBar: const BottomNav(),
+      bottomNavigationBar:
+          const BottomNav(),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+        child:
+            SingleChildScrollView(
+          padding:
+              const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment:
                 CrossAxisAlignment.start,
             children: const [
               HomeHeader(),
 
-              SizedBox(height: 24),
+              SizedBox(
+                height: 24,
+              ),
 
               FeatureCard(),
+
+              SizedBox(
+                height: 32,
+              ),
+
+              RecentPlants(),
+
+              SizedBox(
+                height: 24,
+              ),
             ],
           ),
         ),

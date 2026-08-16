@@ -4,14 +4,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 class UserService {
   UserService._();
 
-  static final FirebaseFirestore _firestore =
-      FirebaseFirestore.instance;
+  static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  static final FirebaseAuth _auth =
-      FirebaseAuth.instance;
+  static final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  static CollectionReference<Map<String, dynamic>>
-      get _usersCollection => _firestore.collection('users');
+  static CollectionReference<Map<String, dynamic>> get _usersCollection =>
+      _firestore.collection('users');
 
   /// Creates a Firestore profile for a newly registered user.
   /// Every normal registration gets the "user" role.
@@ -35,8 +33,7 @@ class UserService {
       return null;
     }
 
-    final document =
-        await _usersCollection.doc(user.uid).get();
+    final document = await _usersCollection.doc(user.uid).get();
 
     if (!document.exists) {
       return null;
@@ -62,8 +59,7 @@ class UserService {
       return null;
     }
 
-    final document =
-        await _usersCollection.doc(user.uid).get();
+    final document = await _usersCollection.doc(user.uid).get();
 
     if (!document.exists) {
       return null;

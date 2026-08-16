@@ -19,28 +19,17 @@ class DiseasePreview extends ConsumerWidget {
         height: 250,
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(
-            AppRadius.card,
-          ),
-          border: Border.all(
-            color: AppColors.border,
-          ),
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          border: Border.all(color: AppColors.border),
         ),
         child: const Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.image_outlined,
-              size: 70,
-              color: Colors.grey,
-            ),
+            Icon(Icons.image_outlined, size: 70, color: Colors.grey),
             SizedBox(height: 12),
             Text(
               'No image selected',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
           ],
         ),
@@ -50,9 +39,7 @@ class DiseasePreview extends ConsumerWidget {
     return Stack(
       children: [
         ClipRRect(
-          borderRadius: BorderRadius.circular(
-            AppRadius.card,
-          ),
+          borderRadius: BorderRadius.circular(AppRadius.card),
           child: Image.memory(
             state.imageBytes!,
             width: double.infinity,
@@ -69,11 +56,7 @@ class DiseasePreview extends ConsumerWidget {
             backgroundColor: Colors.black54,
             child: IconButton(
               onPressed: notifier.clearImage,
-              icon: const Icon(
-                Icons.close,
-                color: Colors.white,
-                size: 18,
-              ),
+              icon: const Icon(Icons.close, color: Colors.white, size: 18),
             ),
           ),
         ),

@@ -20,9 +20,7 @@ class DiseasePickerCard extends ConsumerWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.30),
-        ),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.30)),
       ),
       child: Column(
         children: [
@@ -34,10 +32,7 @@ class DiseasePickerCard extends ConsumerWidget {
 
           const SizedBox(height: AppSpacing.md),
 
-          Text(
-            'Upload Leaf Image',
-            style: AppTextStyles.heading3,
-          ),
+          Text('Upload Leaf Image', style: AppTextStyles.heading3),
 
           const SizedBox(height: AppSpacing.sm),
 

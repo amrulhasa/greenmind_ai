@@ -19,10 +19,7 @@ class DiseaseScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (
-        didPop,
-        result,
-      ) {
+      onPopInvokedWithResult: (didPop, result) {
         if (didPop) {
           return;
         }
@@ -35,62 +32,40 @@ class DiseaseScreen extends StatelessWidget {
             onPressed: () {
               _goHome(context);
             },
-            icon: const Icon(
-              Icons.arrow_back_rounded,
-            ),
+            icon: const Icon(Icons.arrow_back_rounded),
             tooltip: 'Back',
           ),
-          title: const Text(
-            'Disease Detection',
-          ),
+          title: const Text('Disease Detection'),
           centerTitle: true,
         ),
         body: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(
-              AppSpacing.lg,
-            ),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Detect Plant Disease',
-                  style:
-                      AppTextStyles.heading1,
-                ),
+                Text('Detect Plant Disease', style: AppTextStyles.heading1),
 
-                const SizedBox(
-                  height: AppSpacing.sm,
-                ),
+                const SizedBox(height: AppSpacing.sm),
 
                 Text(
                   'Upload a clear leaf image to detect diseases using AI.',
-                  style:
-                      AppTextStyles.body,
+                  style: AppTextStyles.body,
                 ),
 
-                const SizedBox(
-                  height: AppSpacing.xl,
-                ),
+                const SizedBox(height: AppSpacing.xl),
 
                 const DiseasePickerCard(),
 
-                const SizedBox(
-                  height: AppSpacing.lg,
-                ),
+                const SizedBox(height: AppSpacing.lg),
 
                 const DiseasePreview(),
 
-                const SizedBox(
-                  height: AppSpacing.lg,
-                ),
+                const SizedBox(height: AppSpacing.lg),
 
                 const DetectButton(),
 
-                const SizedBox(
-                  height: AppSpacing.xl,
-                ),
+                const SizedBox(height: AppSpacing.xl),
 
                 const DiseaseResultCard(),
               ],

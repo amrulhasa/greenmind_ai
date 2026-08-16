@@ -24,13 +24,9 @@ class SuggestionChip extends StatelessWidget {
         vertical: AppSpacing.xs,
       ),
       backgroundColor: AppColors.surface,
-      side: BorderSide(
-        color: AppColors.primary.withValues(alpha: 0.25),
-      ),
+      side: BorderSide(color: AppColors.primary.withValues(alpha: 0.25)),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(
-          AppRadius.card,
-        ),
+        borderRadius: BorderRadius.circular(AppRadius.card),
       ),
     );
   }

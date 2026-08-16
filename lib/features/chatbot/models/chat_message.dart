@@ -1,7 +1,4 @@
-enum ChatMessageRole {
-  user,
-  assistant,
-}
+enum ChatMessageRole { user, assistant }
 
 class ChatMessage {
   final String id;
