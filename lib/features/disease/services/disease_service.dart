@@ -9,19 +9,22 @@ import '../models/disease_result.dart';
 
 class DiseaseService {
   DiseaseService() {
-    _model = FirebaseAI.googleAI().generativeModel(model: 'gemini-3.5-flash');
+    _model = FirebaseAI.googleAI().generativeModel(
+      model: 'gemini-3.5-flash',
+    );
   }
 
   late final GenerativeModel _model;
 
-  static const String _cacheKey = 'greenmind_disease_cache';
+  static const String _cacheKey =
+      'greenmind_disease_cache';
 
   Map<String, DiseaseResult> _cache = {};
 
   bool _initialized = false;
 
   // ============================================================
-  // INITIALIZE PERSISTENT CACHE
+  // INITIALIZE CACHE
   // ============================================================
 
   Future<void> _initializeCache() async {
@@ -30,49 +33,60 @@ class DiseaseService {
     }
 
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs =
+          await SharedPreferences.getInstance();
 
-      final savedCache = prefs.getString(_cacheKey);
+      final savedCache =
+          prefs.getString(_cacheKey);
 
-      if (savedCache != null && savedCache.isNotEmpty) {
-        final Map<String, dynamic> decoded =
-            jsonDecode(savedCache) as Map<String, dynamic>;
-
-        final Map<String, DiseaseResult> loadedCache = {};
-
-        for (final entry in decoded.entries) {
-          try {
-            final value = entry.value;
-
-            if (value is Map<String, dynamic>) {
-              loadedCache[entry.key] = DiseaseResult.fromJson(value);
-            } else if (value is Map) {
-              loadedCache[entry.key] = DiseaseResult.fromJson(
-                Map<String, dynamic>.from(value),
-              );
-            }
-          } catch (e) {
-            debugPrint('Could not load cached result for ${entry.key}: $e');
-          }
-        }
-
-        _cache = loadedCache;
-
-        debugPrint('==============================');
-        debugPrint('PERSISTENT CACHE INITIALIZED');
-        debugPrint('Cached results: ${_cache.length}');
-        debugPrint('==============================');
-      } else {
-        debugPrint('==============================');
-        debugPrint('PERSISTENT CACHE EMPTY');
-        debugPrint('==============================');
+      if (savedCache == null ||
+          savedCache.isEmpty) {
+        _cache = {};
+        _initialized = true;
+        return;
       }
+
+      final decoded =
+          jsonDecode(savedCache);
+
+      if (decoded is! Map) {
+        _cache = {};
+        _initialized = true;
+        return;
+      }
+
+      final loadedCache =
+          <String, DiseaseResult>{};
+
+      for (final entry
+          in Map<String, dynamic>.from(decoded)
+              .entries) {
+        try {
+          final value = entry.value;
+
+          if (value is Map) {
+            loadedCache[entry.key] =
+                DiseaseResult.fromJson(
+              Map<String, dynamic>.from(value),
+            );
+          }
+        } catch (e) {
+          debugPrint(
+            'Could not load cached result '
+            'for ${entry.key}: $e',
+          );
+        }
+      }
+
+      _cache = loadedCache;
     } catch (e, stackTrace) {
-      debugPrint('==============================');
-      debugPrint('CACHE INITIALIZATION ERROR');
-      debugPrint(e.toString());
-      debugPrint(stackTrace.toString());
-      debugPrint('==============================');
+      debugPrint(
+        'CACHE INITIALIZATION ERROR: $e',
+      );
+
+      debugPrint(
+        '$stackTrace',
+      );
 
       _cache = {};
     }
@@ -86,26 +100,29 @@ class DiseaseService {
 
   Future<void> _saveCache() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs =
+          await SharedPreferences.getInstance();
 
-      final Map<String, dynamic> encodedCache = {};
+      final encodedCache =
+          <String, dynamic>{};
 
       for (final entry in _cache.entries) {
-        encodedCache[entry.key] = entry.value.toJson();
+        encodedCache[entry.key] =
+            entry.value.toJson();
       }
 
-      await prefs.setString(_cacheKey, jsonEncode(encodedCache));
-
-      debugPrint('==============================');
-      debugPrint('PERSISTENT CACHE SAVED');
-      debugPrint('Cached results: ${_cache.length}');
-      debugPrint('==============================');
+      await prefs.setString(
+        _cacheKey,
+        jsonEncode(encodedCache),
+      );
     } catch (e, stackTrace) {
-      debugPrint('==============================');
-      debugPrint('CACHE SAVE ERROR');
-      debugPrint(e.toString());
-      debugPrint(stackTrace.toString());
-      debugPrint('==============================');
+      debugPrint(
+        'CACHE SAVE ERROR: $e',
+      );
+
+      debugPrint(
+        '$stackTrace',
+      );
     }
   }
 
@@ -113,124 +130,107 @@ class DiseaseService {
   // DETECT DISEASE
   // ============================================================
 
-  Future<DiseaseResult> detectDisease(Uint8List imageBytes) async {
+  Future<DiseaseResult> detectDisease(
+    Uint8List imageBytes,
+  ) async {
+    if (imageBytes.isEmpty) {
+      throw Exception(
+        'Image data is empty.',
+      );
+    }
+
     // ----------------------------------------------------------
-    // 1. Initialize persistent cache first
+    // INITIALIZE CACHE
     // ----------------------------------------------------------
 
     await _initializeCache();
 
     // ----------------------------------------------------------
-    // 2. Generate SHA-256 hash
+    // GENERATE IMAGE HASH
     // ----------------------------------------------------------
 
-    final imageHash = sha256.convert(imageBytes).toString();
+    final imageHash =
+        sha256.convert(imageBytes).toString();
 
-    debugPrint('==============================');
-    debugPrint('IMAGE HASH');
-    debugPrint(imageHash);
-    debugPrint('==============================');
+    debugPrint(
+      'Disease image hash: $imageHash',
+    );
 
     // ----------------------------------------------------------
-    // 3. Check persistent cache
+    // CHECK CACHE
     // ----------------------------------------------------------
 
-    final cachedResult = _cache[imageHash];
+    final cachedResult =
+        _cache[imageHash];
 
     if (cachedResult != null) {
-      debugPrint('==============================');
-      debugPrint('PERSISTENT CACHE HIT');
-      debugPrint('Using saved detection result.');
-      debugPrint('Disease: ${cachedResult.diseaseName}');
-      debugPrint('Confidence: ${cachedResult.confidence}');
-      debugPrint('==============================');
+      debugPrint(
+        'Disease cache hit.',
+      );
 
       return cachedResult;
     }
 
-    // ----------------------------------------------------------
-    // 4. Cache miss
-    // ----------------------------------------------------------
-
-    debugPrint('==============================');
-    debugPrint('PERSISTENT CACHE MISS');
-    debugPrint('Sending image to Gemini...');
-    debugPrint('==============================');
+    debugPrint(
+      'Disease cache miss. Calling Gemini...',
+    );
 
     // ----------------------------------------------------------
-    // 5. Prompt
+    // PROMPT
     // ----------------------------------------------------------
 
-    final prompt = TextPart('''
+    final prompt = TextPart(
+      '''
 You are an expert plant health and disease analysis assistant.
 
 Analyze the provided plant image carefully.
 
-Your task is to determine whether the visible plant appears healthy
-or shows signs of disease, infection, pest damage, nutrient deficiency,
-or other significant health problems.
+Determine whether the visible plant appears healthy or shows signs of:
+disease, infection, pest damage, nutrient deficiency, or serious stress.
 
-IMPORTANT RULES:
+Analyze ONLY what is visually supported by the image.
 
-1. Analyze ONLY what is visually supported by the image.
+Carefully examine:
+leaf color, spots, lesions, discoloration, holes, curling,
+wilting, fungal-looking growth, pest damage, unusual patterns,
+stem condition, and overall plant appearance.
 
-2. Carefully examine:
-leaf color
-spots
-lesions
-discoloration
-holes
-curling
-wilting
-mold or fungal-looking growth
-pest damage
-unusual patterns
-stem condition
-overall plant appearance
+Do not invent symptoms that are not visible.
 
-3. Do NOT invent symptoms that are not visible.
+Minor natural leaf splitting, small tears, dry edges, or mechanical
+damage should not automatically be classified as disease.
 
-4. Minor natural leaf splitting, small tears, dry edges, or mechanical
-damage should NOT automatically be classified as disease.
-
-5. If the plant appears healthy, use:
-
+If the plant appears healthy, use:
 Disease Name: Healthy Plant
 
-6. If a disease or health problem is suspected, provide the most likely
-condition based on visible evidence.
+If a disease or health problem is suspected, provide the most likely
+condition based only on visible evidence.
 
-7. If the image is unclear or there is not enough evidence to identify
-a specific disease:
+If the image is unclear or there is not enough evidence to identify
+a specific disease, clearly mention uncertainty and use a lower
+confidence score.
 
-clearly mention the uncertainty
-use a lower confidence score
-avoid claiming a definitive diagnosis
-
-8. Confidence must realistically reflect the visual evidence:
-
+Confidence rules:
 90-100 = very strong visual evidence
 75-89 = strong indication
 50-74 = possible but uncertain
-below 50 = weak indication
+0-49 = weak indication
 
-9. Do NOT provide a confidence score above 90 unless strong visual
-evidence supports the diagnosis.
+Do not provide confidence above 90 unless strong visual evidence
+supports the conclusion.
 
-10. Treatment advice must be practical and general.
+Treatment advice must be practical and general.
+
 Do not recommend dangerous chemicals or unsafe applications.
 
-11. Prevention advice should focus on safe plant-care practices such as:
-proper watering, light, airflow, sanitation, removing affected leaves,
-and monitoring the plant.
+Prevention advice should focus on safe practices such as:
+proper watering, suitable light, airflow, sanitation,
+removing affected leaves, and monitoring the plant.
 
-12. Compare the visible symptoms against possible disease patterns
-before selecting the most likely condition.
+Do not claim a specific pathogen when the image does not provide
+enough visual evidence.
 
-13. Do not claim a specific pathogen or disease when the image does not
-provide enough visual evidence.
-
-Return ONLY these fields:
+Return ONLY these seven fields:
 
 Disease Name:
 Confidence:
@@ -240,95 +240,179 @@ Treatment:
 Prevention:
 Healthy:
 
-OUTPUT RULES:
-
-Do not use Markdown.
-Do not use bullet points.
-Do not add extra fields.
-Confidence must be a number from 0 to 100.
-Healthy must be exactly true or false.
-Description should explain what is visible in the image.
-Symptoms should describe only visible symptoms.
-Treatment should provide practical care guidance.
-Prevention should provide practical prevention guidance.
-''');
+Rules:
+- Do not use Markdown.
+- Do not use bullet points.
+- Do not add extra fields.
+- Confidence must be a number from 0 to 100.
+- Healthy must be exactly true or false.
+- Description should explain visible evidence.
+- Symptoms should describe only visible symptoms.
+- Treatment should provide practical care guidance.
+- Prevention should provide practical prevention guidance.
+- Keep each field on its own line.
+''',
+    );
 
     // ----------------------------------------------------------
-    // 6. Image
+    // IMAGE
     // ----------------------------------------------------------
 
-    final imagePart = InlineDataPart('image/jpeg', imageBytes);
+    final imagePart = InlineDataPart(
+      _detectMimeType(imageBytes),
+      imageBytes,
+    );
 
     try {
       // --------------------------------------------------------
-      // 7. Gemini request
+      // GEMINI REQUEST
       // --------------------------------------------------------
 
-      final response = await _model.generateContent([
-        Content.multi([prompt, imagePart]),
+      final response =
+          await _model.generateContent([
+        Content.multi([
+          prompt,
+          imagePart,
+        ]),
       ]);
 
-      final text = response.text;
+      final String? responseText =
+          response.text;
 
-      debugPrint('==============================');
-      debugPrint('GREENMIND DISEASE AI RESPONSE');
-      debugPrint('==============================');
-      debugPrint(text ?? 'NULL RESPONSE');
-      debugPrint('==============================');
+      debugPrint(
+        '==============================',
+      );
 
-      if (text == null || text.trim().isEmpty) {
-        throw Exception('AI returned an empty response.');
+      debugPrint(
+        'GREENMIND DISEASE AI RESPONSE',
+      );
+
+      debugPrint(
+        responseText ?? 'NULL RESPONSE',
+      );
+
+      debugPrint(
+        '==============================',
+      );
+
+      if (responseText == null ||
+          responseText.trim().isEmpty) {
+        throw Exception(
+          'AI returned an empty response.',
+        );
       }
 
       // --------------------------------------------------------
-      // 8. Parse result
+      // PARSE
       // --------------------------------------------------------
 
-      final result = _parseResult(text);
+      final result =
+          _parseResult(responseText);
 
       // --------------------------------------------------------
-      // 9. Save result to memory cache
+      // SAVE CACHE
       // --------------------------------------------------------
 
       _cache[imageHash] = result;
 
-      // --------------------------------------------------------
-      // 10. Save result permanently
-      // --------------------------------------------------------
-
       await _saveCache();
 
-      debugPrint('==============================');
-      debugPrint('RESULT SAVED TO PERSISTENT CACHE');
-      debugPrint('Disease: ${result.diseaseName}');
-      debugPrint('Confidence: ${result.confidence}');
-      debugPrint('==============================');
+      debugPrint(
+        'Disease result saved to cache.',
+      );
 
       return result;
     } catch (e, stackTrace) {
-      debugPrint('==============================');
-      debugPrint('DISEASE AI ERROR');
-      debugPrint('==============================');
-      debugPrint(e.toString());
-      debugPrint('------------------------------');
-      debugPrint(stackTrace.toString());
-      debugPrint('==============================');
+      debugPrint(
+        '==============================',
+      );
+
+      debugPrint(
+        'DISEASE AI ERROR',
+      );
+
+      debugPrint(
+        '$e',
+      );
+
+      debugPrint(
+        '$stackTrace',
+      );
+
+      debugPrint(
+        '==============================',
+      );
 
       rethrow;
     }
   }
 
   // ============================================================
-  // ROBUST MULTILINE PARSER
+  // MIME TYPE
   // ============================================================
 
-  DiseaseResult _parseResult(String text) {
-    String cleanedText = text
+  String _detectMimeType(
+    Uint8List bytes,
+  ) {
+    // JPEG
+    if (bytes.length >= 3 &&
+        bytes[0] == 0xFF &&
+        bytes[1] == 0xD8 &&
+        bytes[2] == 0xFF) {
+      return 'image/jpeg';
+    }
+
+    // PNG
+    if (bytes.length >= 8 &&
+        bytes[0] == 0x89 &&
+        bytes[1] == 0x50 &&
+        bytes[2] == 0x4E &&
+        bytes[3] == 0x47 &&
+        bytes[4] == 0x0D &&
+        bytes[5] == 0x0A &&
+        bytes[6] == 0x1A &&
+        bytes[7] == 0x0A) {
+      return 'image/png';
+    }
+
+    // GIF
+    if (bytes.length >= 6 &&
+        bytes[0] == 0x47 &&
+        bytes[1] == 0x49 &&
+        bytes[2] == 0x46) {
+      return 'image/gif';
+    }
+
+    // WEBP
+    if (bytes.length >= 12 &&
+        bytes[0] == 0x52 &&
+        bytes[1] == 0x49 &&
+        bytes[2] == 0x46 &&
+        bytes[3] == 0x46 &&
+        bytes[8] == 0x57 &&
+        bytes[9] == 0x45 &&
+        bytes[10] == 0x42 &&
+        bytes[11] == 0x50) {
+      return 'image/webp';
+    }
+
+    return 'image/jpeg';
+  }
+
+  // ============================================================
+  // PARSE AI RESULT
+  // ============================================================
+
+  DiseaseResult _parseResult(
+    String text,
+  ) {
+    var cleanedText = text
         .replaceAll('```text', '')
+        .replaceAll('```plaintext', '')
         .replaceAll('```', '')
         .trim();
 
-    final labels = <String>[
+    const labels = [
       'Disease Name:',
       'Confidence:',
       'Description:',
@@ -338,30 +422,49 @@ Prevention should provide practical prevention guidance.
       'Healthy:',
     ];
 
+    // ----------------------------------------------------------
+    // Normalize field labels
+    // ----------------------------------------------------------
+
     for (final label in labels) {
       cleanedText = cleanedText.replaceAll(
-        RegExp(RegExp.escape(label), caseSensitive: false),
+        RegExp(
+          RegExp.escape(label),
+          caseSensitive: false,
+        ),
         '\n$label',
       );
     }
 
     final lines = cleanedText
         .split('\n')
-        .map((line) => line.trim())
-        .where((line) => line.isNotEmpty)
+        .map(
+          (line) => line.trim(),
+        )
+        .where(
+          (line) => line.isNotEmpty,
+        )
         .toList();
 
-    final Map<String, String> values = {};
+    final values =
+        <String, String>{};
 
     String? currentLabel;
 
+    // ----------------------------------------------------------
+    // Read fields
+    // ----------------------------------------------------------
+
     for (final line in lines) {
-      final lower = line.toLowerCase();
+      final lowerLine =
+          line.toLowerCase();
 
       String? matchedLabel;
 
       for (final label in labels) {
-        if (lower.startsWith(label.toLowerCase())) {
+        if (lowerLine.startsWith(
+          label.toLowerCase(),
+        )) {
           matchedLabel = label;
           break;
         }
@@ -370,39 +473,109 @@ Prevention should provide practical prevention guidance.
       if (matchedLabel != null) {
         currentLabel = matchedLabel;
 
-        final colonIndex = line.indexOf(':');
+        final colonIndex =
+            line.indexOf(':');
 
-        if (colonIndex != -1) {
-          values[currentLabel] = line.substring(colonIndex + 1).trim();
+        if (colonIndex >= 0) {
+          values[currentLabel] =
+              line
+                  .substring(
+                    colonIndex + 1,
+                  )
+                  .trim();
         }
       } else if (currentLabel != null) {
-        values[currentLabel] = '${values[currentLabel] ?? ''} $line'.trim();
+        final previous =
+            values[currentLabel] ?? '';
+
+        values[currentLabel] =
+            previous.isEmpty
+                ? line
+                : '$previous $line';
       }
     }
 
-    final diseaseName = values['Disease Name:']?.trim() ?? '';
+    // ----------------------------------------------------------
+    // Extract values
+    // ----------------------------------------------------------
 
-    final confidenceText = values['Confidence:']?.trim() ?? '';
+    final diseaseName =
+        values['Disease Name:']
+                ?.trim() ??
+            '';
 
-    final description = values['Description:']?.trim() ?? '';
+    final confidenceText =
+        values['Confidence:']
+                ?.trim() ??
+            '0';
 
-    final symptoms = values['Symptoms:']?.trim() ?? '';
+    final description =
+        values['Description:']
+                ?.trim() ??
+            '';
 
-    final treatment = values['Treatment:']?.trim() ?? '';
+    final symptoms =
+        values['Symptoms:']
+                ?.trim() ??
+            '';
 
-    final prevention = values['Prevention:']?.trim() ?? '';
+    final treatment =
+        values['Treatment:']
+                ?.trim() ??
+            '';
 
-    final healthyText = values['Healthy:']?.trim() ?? '';
+    final prevention =
+        values['Prevention:']
+                ?.trim() ??
+            '';
 
-    double confidence =
-        double.tryParse(confidenceText.replaceAll('%', '').trim()) ?? 0;
+    final healthyText =
+        values['Healthy:']
+                ?.trim() ??
+            '';
 
-    confidence = confidence.clamp(0.0, 100.0);
+    // ----------------------------------------------------------
+    // Parse confidence
+    // ----------------------------------------------------------
 
-    final isHealthy = healthyText.toLowerCase() == 'true';
+    var confidence =
+        double.tryParse(
+              confidenceText
+                  .replaceAll('%', '')
+                  .trim(),
+            ) ??
+            0.0;
+
+    confidence =
+        confidence.clamp(
+      0.0,
+      100.0,
+    );
+
+    // ----------------------------------------------------------
+    // Parse health
+    // ----------------------------------------------------------
+
+    final normalizedHealthy =
+        healthyText
+            .toLowerCase()
+            .replaceAll(
+              RegExp(r'[^a-z]'),
+              '',
+            )
+            .trim();
+
+    final isHealthy =
+        normalizedHealthy == 'true';
+
+    // ----------------------------------------------------------
+    // Validate
+    // ----------------------------------------------------------
 
     if (diseaseName.isEmpty) {
-      throw Exception('AI response could not be parsed.');
+      throw Exception(
+        'AI response could not be parsed.',
+      );
     }
 
     return DiseaseResult(
@@ -417,12 +590,13 @@ Prevention should provide practical prevention guidance.
   }
 
   // ============================================================
-  // CLEAR ALL CACHE
+  // CLEAR CACHE
   // ============================================================
 
   Future<void> clearCache() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs =
+          await SharedPreferences.getInstance();
 
       await prefs.remove(_cacheKey);
 
@@ -430,11 +604,13 @@ Prevention should provide practical prevention guidance.
 
       _initialized = false;
 
-      debugPrint('==============================');
-      debugPrint('PERSISTENT CACHE CLEARED');
-      debugPrint('==============================');
+      debugPrint(
+        'Disease cache cleared.',
+      );
     } catch (e) {
-      debugPrint('CACHE CLEAR ERROR: $e');
+      debugPrint(
+        'CACHE CLEAR ERROR: $e',
+      );
     }
   }
 

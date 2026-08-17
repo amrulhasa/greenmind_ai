@@ -1,42 +1,119 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image/image.dart' as img;
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/user_profile.dart';
 
 class ProfileStorageService {
-  static const String _storageKey = 'user_profile';
+  ProfileStorageService();
+
+  static final FirebaseFirestore _firestore =
+      FirebaseFirestore.instance;
+
+  static final FirebaseAuth _auth =
+      FirebaseAuth.instance;
+
+  static CollectionReference<Map<String, dynamic>>
+      get _usersCollection {
+    return _firestore.collection('users');
+  }
+
+  // ============================================================
+  // CURRENT USER
+  // ============================================================
+
+  User? get currentUser {
+    return _auth.currentUser;
+  }
+
+  // ============================================================
+  // CURRENT USER ID
+  // ============================================================
+
+  String? get currentUserId {
+    return _auth.currentUser?.uid;
+  }
 
   // ============================================================
   // LOAD PROFILE
   // ============================================================
 
-  Future<UserProfile> loadProfile() async {
-    final preferences =
-        await SharedPreferences.getInstance();
-
-    final storedData =
-        preferences.getString(_storageKey);
-
-    if (storedData == null ||
-        storedData.isEmpty) {
-      return const UserProfile();
-    }
+  Future<UserProfile> loadProfile({
+    required String userId,
+  }) async {
+    _validateUser(userId);
 
     try {
-      final decoded = jsonDecode(storedData);
+      final document =
+          await _usersCollection
+              .doc(userId)
+              .get()
+              .timeout(
+                const Duration(seconds: 15),
+              );
 
-      if (decoded is! Map) {
-        return const UserProfile();
+      // ----------------------------------------------------------
+      // PROFILE DOES NOT EXIST
+      // ----------------------------------------------------------
+
+      if (!document.exists) {
+        final user = _auth.currentUser;
+
+        final profile = UserProfile(
+          name: _defaultName(user),
+          email: user?.email ?? '',
+        );
+
+        await saveProfile(
+          userId: userId,
+          profile: profile,
+          createIfMissing: true,
+        );
+
+        return profile;
       }
 
-      return _fromJson(
-        Map<String, dynamic>.from(decoded),
+      // ----------------------------------------------------------
+      // PROFILE EXISTS
+      // ----------------------------------------------------------
+
+      final data = document.data();
+
+      if (data == null) {
+        return UserProfile(
+          email: _auth.currentUser?.email ?? '',
+        );
+      }
+
+      final profileData =
+          Map<String, dynamic>.from(data);
+
+      // Firebase Authentication is ALWAYS
+      // the source of truth for email.
+      final authEmail =
+          _auth.currentUser?.email ?? '';
+
+      if (authEmail.isNotEmpty) {
+        profileData['email'] = authEmail;
+      }
+
+      return UserProfile.fromJson(
+        profileData,
       );
-    } catch (_) {
-      return const UserProfile();
+    } on FirebaseException catch (e) {
+      throw Exception(
+        'Unable to load profile: '
+        '${e.message ?? e.code}',
+      );
+    } on Exception {
+      rethrow;
+    } catch (e) {
+      throw Exception(
+        'Unable to load profile: $e',
+      );
     }
   }
 
@@ -44,40 +121,151 @@ class ProfileStorageService {
   // SAVE PROFILE
   // ============================================================
 
-  Future<void> saveProfile(
-    UserProfile profile,
-  ) async {
-    final preferences =
-        await SharedPreferences.getInstance();
+  Future<void> saveProfile({
+    required String userId,
+    required UserProfile profile,
+    bool createIfMissing = false,
+  }) async {
+    _validateUser(userId);
 
-    final encoded = jsonEncode(
-      _toJson(profile),
-    );
+    try {
+      final user = _auth.currentUser;
 
-    await preferences.setString(
-      _storageKey,
-      encoded,
-    );
+      if (user == null) {
+        throw Exception(
+          'No authenticated user found.',
+        );
+      }
+
+      // ----------------------------------------------------------
+      // EMAIL
+      // ----------------------------------------------------------
+      //
+      // Never trust manually entered profile email.
+      // Firebase Auth owns the account email.
+      //
+
+      final email =
+          user.email ?? profile.email;
+
+      // ----------------------------------------------------------
+      // PROFILE DATA
+      // ----------------------------------------------------------
+
+      final data = <String, dynamic>{
+        'name': profile.name.trim(),
+
+        'email': email,
+
+        'location':
+            profile.location.trim(),
+
+        'phone':
+            profile.phone.trim(),
+
+        'bio':
+            profile.bio.trim(),
+
+        'profileImagePath':
+            profile.profileImagePath,
+
+        'notificationsEnabled':
+            profile.notificationsEnabled,
+
+        'darkModeEnabled':
+            profile.darkModeEnabled,
+
+        'updatedAt':
+            FieldValue.serverTimestamp(),
+      };
+
+      // ----------------------------------------------------------
+      // CREATE-ONLY FIELDS
+      // ----------------------------------------------------------
+
+      if (createIfMissing) {
+        data['createdAt'] =
+            FieldValue.serverTimestamp();
+
+        data['role'] = 'user';
+      }
+
+      // ----------------------------------------------------------
+      // FIRESTORE SAVE
+      // ----------------------------------------------------------
+
+      await _usersCollection
+          .doc(userId)
+          .set(
+            data,
+            SetOptions(
+              merge: true,
+            ),
+          )
+          .timeout(
+            const Duration(seconds: 15),
+          );
+    } on FirebaseException catch (e) {
+      throw Exception(
+        'Unable to save profile: '
+        '${e.message ?? e.code}',
+      );
+    } on Exception {
+      rethrow;
+    } catch (e) {
+      throw Exception(
+        'Unable to save profile: $e',
+      );
+    }
   }
 
   // ============================================================
-  // SAVE PROFILE IMAGE
+  // ENSURE PROFILE
   // ============================================================
-  //
-  // The image is:
-  // 1. Decoded
-  // 2. Resized
-  // 3. Compressed
-  // 4. Converted to Base64
-  //
-  // No dart:io.
-  // No File.
-  // No path_provider.
-  //
-  // Therefore this works on:
-  // Android
-  // Windows
-  // Chrome/Web
+
+  Future<UserProfile> ensureProfile({
+    required User user,
+  }) async {
+    _validateUser(user.uid);
+
+    try {
+      final document =
+          await _usersCollection
+              .doc(user.uid)
+              .get()
+              .timeout(
+                const Duration(seconds: 15),
+              );
+
+      // Existing profile
+      if (document.exists) {
+        return loadProfile(
+          userId: user.uid,
+        );
+      }
+
+      // New profile
+      final profile = UserProfile(
+        name: _defaultName(user),
+        email: user.email ?? '',
+      );
+
+      await saveProfile(
+        userId: user.uid,
+        profile: profile,
+        createIfMissing: true,
+      );
+
+      return profile;
+    } catch (e) {
+      throw Exception(
+        'Unable to initialize profile: $e',
+      );
+    }
+  }
+
+  // ============================================================
+  // PROFILE IMAGE
   // ============================================================
 
   Future<String> saveProfileImage(
@@ -98,20 +286,19 @@ class ProfileStorageService {
       );
     }
 
-    // Keep the image reasonably small
-    // for SharedPreferences storage.
+    // Keep image reasonably small.
     final resizedImage =
-        decodedImage.width > 700
+        decodedImage.width > 600
             ? img.copyResize(
                 decodedImage,
-                width: 700,
+                width: 600,
               )
             : decodedImage;
 
     final compressedBytes =
         img.encodeJpg(
       resizedImage,
-      quality: 75,
+      quality: 70,
     );
 
     if (compressedBytes.isEmpty) {
@@ -128,22 +315,18 @@ class ProfileStorageService {
   // ============================================================
   // DELETE PROFILE IMAGE
   // ============================================================
-  //
-  // There is no physical file.
-  // The image is stored inside profile JSON.
-  //
-  // Removing profileImagePath from UserProfile
-  // effectively removes the image.
-  // ============================================================
 
   Future<void> deleteProfileImage(
     String? imageBase64,
   ) async {
-    // Nothing to delete physically.
+    // The image is stored in profileImagePath.
+    //
+    // Removing profileImagePath from the profile
+    // effectively removes the image.
   }
 
   // ============================================================
-  // CHECK PROFILE IMAGE
+  // PROFILE IMAGE EXISTS
   // ============================================================
 
   Future<bool> profileImageExists(
@@ -154,76 +337,140 @@ class ProfileStorageService {
   }
 
   // ============================================================
-  // CLEAR PROFILE
+  // RESET PROFILE DATA
+  // ============================================================
+  //
+  // IMPORTANT:
+  // We DO NOT delete users/{uid}.
+  //
+  // The Firebase account must remain active.
+  // Role and createdAt must also remain safe.
   // ============================================================
 
-  Future<void> clearProfile() async {
-    final preferences =
-        await SharedPreferences.getInstance();
+  Future<void> resetProfile({
+    required String userId,
+  }) async {
+    _validateUser(userId);
 
-    await preferences.remove(
-      _storageKey,
+    try {
+      final user = _auth.currentUser;
+
+      if (user == null) {
+        throw Exception(
+          'No authenticated user found.',
+        );
+      }
+
+      await _usersCollection
+          .doc(userId)
+          .set(
+            {
+              'name': _defaultName(user),
+              'email': user.email ?? '',
+              'location': '',
+              'phone': '',
+              'bio':
+                  'GreenMind AI plant enthusiast',
+              'profileImagePath': null,
+              'notificationsEnabled': true,
+              'darkModeEnabled': false,
+              'updatedAt':
+                  FieldValue.serverTimestamp(),
+            },
+            SetOptions(
+              merge: true,
+            ),
+          )
+          .timeout(
+            const Duration(seconds: 15),
+          );
+    } on FirebaseException catch (e) {
+      throw Exception(
+        'Unable to reset profile: '
+        '${e.message ?? e.code}',
+      );
+    } on Exception {
+      rethrow;
+    } catch (e) {
+      throw Exception(
+        'Unable to reset profile: $e',
+      );
+    }
+  }
+
+  // ============================================================
+  // LEGACY CLEAR PROFILE
+  // ============================================================
+  //
+  // Kept for compatibility with older provider code.
+  //
+  // DO NOT use this for normal logout.
+  // ============================================================
+
+  Future<void> clearProfile({
+    required String userId,
+  }) async {
+    await resetProfile(
+      userId: userId,
     );
   }
 
   // ============================================================
-  // PROFILE → JSON
+  // VALIDATE USER
   // ============================================================
 
-  Map<String, dynamic> _toJson(
-    UserProfile profile,
+  void _validateUser(
+    String userId,
   ) {
-    return {
-      'name': profile.name,
-      'email': profile.email,
-      'location': profile.location,
-      'bio': profile.bio,
-      'profileImagePath':
-          profile.profileImagePath,
-      'notificationsEnabled':
-          profile.notificationsEnabled,
-      'darkModeEnabled':
-          profile.darkModeEnabled,
-    };
+    final user = _auth.currentUser;
+
+    if (user == null) {
+      throw Exception(
+        'No authenticated user found.',
+      );
+    }
+
+    if (user.uid != userId) {
+      throw Exception(
+        'Unauthorized profile operation.',
+      );
+    }
   }
 
   // ============================================================
-  // JSON → PROFILE
+  // DEFAULT NAME
   // ============================================================
 
-  UserProfile _fromJson(
-    Map<String, dynamic> json,
+  String _defaultName(
+    User? user,
   ) {
-    return UserProfile(
-      name:
-          json['name'] as String? ??
-              'Plant Lover',
+    if (user == null) {
+      return 'Plant Lover';
+    }
 
-      email:
-          json['email'] as String? ??
-              'user@example.com',
+    // Firebase display name
+    final displayName =
+        user.displayName?.trim();
 
-      location:
-          json['location'] as String? ??
-              '',
+    if (displayName != null &&
+        displayName.isNotEmpty) {
+      return displayName;
+    }
 
-      bio:
-          json['bio'] as String? ??
-              'GreenMind AI plant enthusiast',
+    // Email username
+    final email =
+        user.email?.trim();
 
-      profileImagePath:
-          json['profileImagePath']
-              as String?,
+    if (email != null &&
+        email.isNotEmpty) {
+      final username =
+          email.split('@').first.trim();
 
-      notificationsEnabled:
-          json['notificationsEnabled']
-                  as bool? ??
-              true,
+      if (username.isNotEmpty) {
+        return username;
+      }
+    }
 
-      darkModeEnabled:
-          json['darkModeEnabled']
-                  as bool? ??
-              false,
-    );
+    return 'Plant Lover';
   }
 }

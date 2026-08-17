@@ -2,6 +2,7 @@ class UserProfile {
   final String name;
   final String email;
   final String location;
+  final String phone;
   final String bio;
   final String? profileImagePath;
   final bool notificationsEnabled;
@@ -9,10 +10,10 @@ class UserProfile {
 
   const UserProfile({
     this.name = 'Plant Lover',
-    this.email = 'user@example.com',
+    this.email = '',
     this.location = '',
-    this.bio =
-        'GreenMind AI plant enthusiast',
+    this.phone = '',
+    this.bio = 'GreenMind AI plant enthusiast',
     this.profileImagePath,
     this.notificationsEnabled = true,
     this.darkModeEnabled = false,
@@ -22,6 +23,7 @@ class UserProfile {
     String? name,
     String? email,
     String? location,
+    String? phone,
     String? bio,
     String? profileImagePath,
     bool clearProfileImage = false,
@@ -31,20 +33,71 @@ class UserProfile {
     return UserProfile(
       name: name ?? this.name,
       email: email ?? this.email,
-      location:
-          location ?? this.location,
+      location: location ?? this.location,
+      phone: phone ?? this.phone,
       bio: bio ?? this.bio,
-      profileImagePath:
-          clearProfileImage
-              ? null
-              : profileImagePath ??
-                  this.profileImagePath,
+      profileImagePath: clearProfileImage
+          ? null
+          : profileImagePath ?? this.profileImagePath,
       notificationsEnabled:
-          notificationsEnabled ??
-              this.notificationsEnabled,
+          notificationsEnabled ?? this.notificationsEnabled,
       darkModeEnabled:
-          darkModeEnabled ??
-              this.darkModeEnabled,
+          darkModeEnabled ?? this.darkModeEnabled,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'email': email,
+      'location': location,
+      'phone': phone,
+      'bio': bio,
+      'profileImagePath': profileImagePath,
+      'notificationsEnabled': notificationsEnabled,
+      'darkModeEnabled': darkModeEnabled,
+    };
+  }
+
+  factory UserProfile.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final name =
+        json['name']?.toString().trim() ?? '';
+
+    final bio =
+        json['bio']?.toString().trim() ?? '';
+
+    return UserProfile(
+      name: name.isNotEmpty
+          ? name
+          : 'Plant Lover',
+
+      email:
+          json['email']?.toString() ?? '',
+
+      location:
+          json['location']?.toString() ?? '',
+
+      phone:
+          json['phone']?.toString() ?? '',
+
+      bio: bio.isNotEmpty
+          ? bio
+          : 'GreenMind AI plant enthusiast',
+
+      profileImagePath:
+          json['profileImagePath']?.toString(),
+
+      notificationsEnabled:
+          json['notificationsEnabled'] is bool
+              ? json['notificationsEnabled'] as bool
+              : true,
+
+      darkModeEnabled:
+          json['darkModeEnabled'] is bool
+              ? json['darkModeEnabled'] as bool
+              : false,
     );
   }
 }

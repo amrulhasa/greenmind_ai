@@ -5,64 +5,95 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/plant_reminder.dart';
 
 class ReminderStorageService {
-  static const String _storageKey = 'plant_reminders';
+  static const String _storageKey =
+      'plant_reminders';
+
+  // ============================================================
+  // LOAD
+  // ============================================================
 
   Future<List<PlantReminder>> loadReminders() async {
-    final preferences = await SharedPreferences.getInstance();
+    final preferences =
+        await SharedPreferences.getInstance();
 
-    final storedData = preferences.getString(_storageKey);
+    final storedData =
+        preferences.getString(_storageKey);
 
-    if (storedData == null || storedData.isEmpty) {
+    if (storedData == null ||
+        storedData.trim().isEmpty) {
       return [];
     }
 
-    final List<dynamic> decodedData = jsonDecode(storedData);
+    try {
+      final decoded =
+          jsonDecode(storedData);
 
-    return decodedData
-        .map((item) => _fromJson(Map<String, dynamic>.from(item as Map)))
-        .toList();
+      if (decoded is! List) {
+        return [];
+      }
+
+      final reminders =
+          <PlantReminder>[];
+
+      for (final item in decoded) {
+        if (item is! Map) {
+          continue;
+        }
+
+        try {
+          final reminder =
+              PlantReminder.fromJson(
+            Map<String, dynamic>.from(item),
+          );
+
+          reminders.add(reminder);
+        } catch (_) {
+          // Ignore invalid reminder.
+        }
+      }
+
+      return reminders;
+    } catch (_) {
+      return [];
+    }
   }
 
-  Future<void> saveReminders(List<PlantReminder> reminders) async {
-    final preferences = await SharedPreferences.getInstance();
+  // ============================================================
+  // SAVE
+  // ============================================================
 
-    final encodedData = jsonEncode(reminders.map(_toJson).toList());
+  Future<void> saveReminders(
+    List<PlantReminder> reminders,
+  ) async {
+    final preferences =
+        await SharedPreferences.getInstance();
 
-    await preferences.setString(_storageKey, encodedData);
-  }
-
-  Future<void> clearReminders() async {
-    final preferences = await SharedPreferences.getInstance();
-
-    await preferences.remove(_storageKey);
-  }
-
-  Map<String, dynamic> _toJson(PlantReminder reminder) {
-    return {
-      'id': reminder.id,
-      'plantName': reminder.plantName,
-      'title': reminder.title,
-      'description': reminder.description,
-      'type': reminder.type.name,
-      'scheduledAt': reminder.scheduledAt.toIso8601String(),
-      'isCompleted': reminder.isCompleted,
-    };
-  }
-
-  PlantReminder _fromJson(Map<String, dynamic> json) {
-    final reminderType = ReminderType.values.firstWhere(
-      (type) => type.name == json['type'],
-      orElse: () => ReminderType.custom,
+    final encoded =
+        jsonEncode(
+      reminders
+          .map(
+            (reminder) =>
+                reminder.toJson(),
+          )
+          .toList(),
     );
 
-    return PlantReminder(
-      id: json['id'] as String,
-      plantName: json['plantName'] as String,
-      title: json['title'] as String,
-      description: json['description'] as String,
-      type: reminderType,
-      scheduledAt: DateTime.parse(json['scheduledAt'] as String),
-      isCompleted: json['isCompleted'] as bool? ?? false,
+    await preferences.setString(
+      _storageKey,
+      encoded,
+    );
+  }
+
+  // ============================================================
+  // CLEAR
+  // ============================================================
+
+  Future<void> clearReminders() async {
+    final preferences =
+        await SharedPreferences.getInstance();
+
+    await preferences.remove(
+      _storageKey,
     );
   }
 }

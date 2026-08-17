@@ -12,7 +12,10 @@ import '../providers/reminder_provider.dart';
 class ReminderCard extends ConsumerWidget {
   final PlantReminder reminder;
 
-  const ReminderCard({super.key, required this.reminder});
+  const ReminderCard({
+    super.key,
+    required this.reminder,
+  });
 
   IconData _getIcon() {
     switch (reminder.type) {
@@ -45,20 +48,28 @@ class ReminderCard extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final notifier = ref.read(reminderProvider.notifier);
+  Widget build(
+    BuildContext context,
+    WidgetRef ref,
+  ) {
     final color = _getColor();
 
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 250),
-      opacity: reminder.isCompleted ? 0.55 : 1,
+      opacity: reminder.isCompleted ? 0.55 : 1.0,
       child: Container(
         width: double.infinity,
-        margin: const EdgeInsets.only(bottom: AppSpacing.md),
-        padding: const EdgeInsets.all(AppSpacing.md),
+        margin: const EdgeInsets.only(
+          bottom: AppSpacing.md,
+        ),
+        padding: const EdgeInsets.all(
+          AppSpacing.md,
+        ),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.card),
+          borderRadius: BorderRadius.circular(
+            AppRadius.card,
+          ),
           boxShadow: const [
             BoxShadow(
               color: AppColors.shadow,
@@ -68,73 +79,184 @@ class ReminderCard extends ConsumerWidget {
           ],
         ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
           children: [
             Container(
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(14),
+                color: color.withValues(
+                  alpha: 0.12,
+                ),
+                borderRadius:
+                    BorderRadius.circular(14),
               ),
-              child: Icon(_getIcon(), color: color),
+              child: Icon(
+                _getIcon(),
+                color: color,
+              ),
             ),
-            const SizedBox(width: AppSpacing.md),
+
+            const SizedBox(
+              width: AppSpacing.md,
+            ),
+
             Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
                 children: [
                   Text(
                     reminder.title,
-                    style: AppTextStyles.title.copyWith(
-                      decoration: reminder.isCompleted
-                          ? TextDecoration.lineThrough
-                          : null,
+                    style:
+                        AppTextStyles.title.copyWith(
+                      decoration:
+                          reminder.isCompleted
+                              ? TextDecoration
+                                  .lineThrough
+                              : null,
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(reminder.plantName, style: AppTextStyles.body),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(reminder.description, style: AppTextStyles.caption),
-                  const SizedBox(height: AppSpacing.sm),
+
+                  const SizedBox(
+                    height: AppSpacing.xs,
+                  ),
+
+                  Text(
+                    reminder.plantName,
+                    style: AppTextStyles.body,
+                  ),
+
+                  const SizedBox(
+                    height: AppSpacing.xs,
+                  ),
+
+                  if (reminder.description
+                      .trim()
+                      .isNotEmpty)
+                    Text(
+                      reminder.description,
+                      style:
+                          AppTextStyles.caption,
+                      maxLines: 2,
+                      overflow:
+                          TextOverflow.ellipsis,
+                    ),
+
+                  const SizedBox(
+                    height: AppSpacing.sm,
+                  ),
+
                   Row(
                     children: [
                       const Icon(
                         Icons.schedule_rounded,
                         size: 16,
-                        color: AppColors.textSecondary,
+                        color:
+                            AppColors.textSecondary,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          DateFormat(
+                            'dd MMM yyyy, hh:mm a',
+                          ).format(
+                            reminder.scheduledAt,
+                          ),
+                          style:
+                              AppTextStyles.caption,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(
+                    height: AppSpacing.xs,
+                  ),
+
+                  Row(
+                    children: [
+                      Icon(
+                        reminder.isAlarm
+                            ? Icons.alarm_rounded
+                            : Icons
+                                .notifications_none_rounded,
+                        size: 15,
+                        color: color,
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        DateFormat(
-                          'dd MMM yyyy, hh:mm a',
-                        ).format(reminder.scheduledAt),
-                        style: AppTextStyles.caption,
+                        reminder.modeLabel,
+                        style:
+                            AppTextStyles.caption
+                                .copyWith(
+                          color: color,
+                        ),
                       ),
+
+                      if (reminder.hasCustomSound) ...[
+                        const SizedBox(width: 10),
+                        const Icon(
+                          Icons.music_note_rounded,
+                          size: 15,
+                          color:
+                              AppColors
+                                  .textSecondary,
+                        ),
+                        const SizedBox(width: 3),
+                        Expanded(
+                          child: Text(
+                            reminder.soundName ??
+                                'Custom sound',
+                            maxLines: 1,
+                            overflow:
+                                TextOverflow.ellipsis,
+                            style:
+                                AppTextStyles.caption,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ],
               ),
             ),
+
             PopupMenuButton<String>(
-              onSelected: (value) {
+              onSelected: (value) async {
+                final notifier = ref.read(
+                  reminderProvider.notifier,
+                );
+
                 if (value == 'complete') {
-                  notifier.toggleCompleted(reminder.id);
-                } else if (value == 'delete') {
-                  notifier.deleteReminder(reminder.id);
+                  await notifier.toggleCompleted(
+                    reminder.id,
+                  );
+                }
+
+                if (value == 'delete') {
+                  await notifier.deleteReminder(
+                    reminder.id,
+                  );
                 }
               },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'complete',
-                  child: Text(
-                    reminder.isCompleted
-                        ? 'Mark as Pending'
-                        : 'Mark as Complete',
+              itemBuilder: (context) {
+                return [
+                  PopupMenuItem<String>(
+                    value: 'complete',
+                    child: Text(
+                      reminder.isCompleted
+                          ? 'Mark as Pending'
+                          : 'Mark as Complete',
+                    ),
                   ),
-                ),
-                const PopupMenuItem(value: 'delete', child: Text('Delete')),
-              ],
+                  const PopupMenuItem<String>(
+                    value: 'delete',
+                    child: Text('Delete'),
+                  ),
+                ];
+              },
             ),
           ],
         ),

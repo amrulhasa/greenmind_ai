@@ -7,6 +7,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_text_styles.dart';
+
 import '../models/recent_plant.dart';
 import '../providers/recent_plants_provider.dart';
 import 'recent_plant_details_screen.dart';
@@ -21,9 +22,8 @@ class RecentPlants extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
   ) {
-    final state = ref.watch(
-      recentPlantsProvider,
-    );
+    final state =
+        ref.watch(recentPlantsProvider);
 
     // ==========================================================
     // LOADING
@@ -33,7 +33,8 @@ class RecentPlants extends ConsumerWidget {
       return const SizedBox(
         height: 100,
         child: Center(
-          child: CircularProgressIndicator(),
+          child:
+              CircularProgressIndicator(),
         ),
       );
     }
@@ -46,11 +47,14 @@ class RecentPlants extends ConsumerWidget {
         state.plants.isEmpty) {
       return Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(
+        padding:
+            const EdgeInsets.all(
           AppSpacing.md,
         ),
-        decoration: BoxDecoration(
-          color: Colors.red.withValues(
+        decoration:
+            BoxDecoration(
+          color:
+              Colors.red.withValues(
             alpha: 0.06,
           ),
           borderRadius:
@@ -60,7 +64,8 @@ class RecentPlants extends ConsumerWidget {
         ),
         child: Text(
           state.errorMessage!,
-          style: AppTextStyles.body.copyWith(
+          style:
+              AppTextStyles.body.copyWith(
             color: Colors.red,
           ),
         ),
@@ -76,7 +81,7 @@ class RecentPlants extends ConsumerWidget {
     }
 
     // ==========================================================
-    // RECENT PLANTS
+    // RECENT SCANS
     // ==========================================================
 
     return Column(
@@ -92,7 +97,7 @@ class RecentPlants extends ConsumerWidget {
               MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Recent Plants',
+              'Recent Scans',
               style:
                   AppTextStyles.heading2,
             ),
@@ -106,9 +111,8 @@ class RecentPlants extends ConsumerWidget {
                     )
                     .clearAll();
               },
-              child: const Text(
-                'Clear',
-              ),
+              child:
+                  const Text('Clear'),
             ),
           ],
         ),
@@ -127,18 +131,15 @@ class RecentPlants extends ConsumerWidget {
               const NeverScrollableScrollPhysics(),
           itemCount:
               state.plants.length,
-          separatorBuilder: (
-            _,
-            _,
-          ) {
+          separatorBuilder:
+              // ignore: unnecessary_underscores
+              (_, __) {
             return const SizedBox(
               height: AppSpacing.sm,
             );
           },
-          itemBuilder: (
-            context,
-            index,
-          ) {
+          itemBuilder:
+              (context, index) {
             final plant =
                 state.plants[index];
 
@@ -153,7 +154,7 @@ class RecentPlants extends ConsumerWidget {
 }
 
 // ============================================================
-// RECENT PLANT CARD
+// RECENT CARD
 // ============================================================
 
 class _RecentPlantCard
@@ -174,13 +175,17 @@ class _RecentPlantCard
       100.0,
     );
 
+    final bool isDisease =
+        plant.isDiseaseDetection;
+
     return Material(
       color: Colors.transparent,
       borderRadius:
           BorderRadius.circular(
         AppRadius.card,
       ),
-      clipBehavior: Clip.antiAlias,
+      clipBehavior:
+          Clip.antiAlias,
       child: InkWell(
         borderRadius:
             BorderRadius.circular(
@@ -224,7 +229,7 @@ class _RecentPlantCard
           child: Row(
             children: [
               // ==================================================
-              // ACTUAL PLANT IMAGE
+              // IMAGE
               // ==================================================
 
               _PlantImage(
@@ -237,7 +242,7 @@ class _RecentPlantCard
               ),
 
               // ==================================================
-              // PLANT INFORMATION
+              // INFORMATION
               // ==================================================
 
               Expanded(
@@ -246,9 +251,15 @@ class _RecentPlantCard
                       CrossAxisAlignment.start,
                   children: [
                     Text(
-                      plant.plantName.isEmpty
-                          ? 'Unknown Plant'
-                          : plant.plantName,
+                      isDisease
+                          ? (plant.diseaseName
+                                  .isEmpty
+                              ? 'Plant Health Scan'
+                              : plant.diseaseName)
+                          : (plant.plantName
+                                  .isEmpty
+                              ? 'Unknown Plant'
+                              : plant.plantName),
                       maxLines: 1,
                       overflow:
                           TextOverflow.ellipsis,
@@ -256,13 +267,32 @@ class _RecentPlantCard
                           AppTextStyles.heading3,
                     ),
 
-                    if (plant
-                        .scientificName
-                        .isNotEmpty) ...[
+                    const SizedBox(
+                      height: 4,
+                    ),
+
+                    // Scan type
+                    Text(
+                      isDisease
+                          ? 'Disease Detection'
+                          : 'Plant Identification',
+                      style:
+                          AppTextStyles.caption
+                              .copyWith(
+                        color:
+                            AppColors.primary,
+                        fontWeight:
+                            FontWeight.w600,
+                      ),
+                    ),
+
+                    if (!isDisease &&
+                        plant
+                            .scientificName
+                            .isNotEmpty) ...[
                       const SizedBox(
                         height: 3,
                       ),
-
                       Text(
                         plant.scientificName,
                         maxLines: 1,
@@ -311,7 +341,7 @@ class _RecentPlantCard
               ),
 
               // ==================================================
-              // HEALTH STATUS
+              // HEALTH
               // ==================================================
 
               Icon(
@@ -320,9 +350,10 @@ class _RecentPlantCard
                         .check_circle_rounded
                     : Icons
                         .warning_amber_rounded,
-                color: plant.isHealthy
-                    ? Colors.green
-                    : Colors.orange,
+                color:
+                    plant.isHealthy
+                        ? Colors.green
+                        : Colors.orange,
                 size: 24,
               ),
             ],
@@ -334,7 +365,7 @@ class _RecentPlantCard
 }
 
 // ============================================================
-// PLANT IMAGE
+// IMAGE
 // ============================================================
 
 class _PlantImage
@@ -349,40 +380,28 @@ class _PlantImage
   Widget build(
     BuildContext context,
   ) {
-    final encodedImage =
-        imageBase64;
-
-    // ==========================================================
-    // NO IMAGE
-    // ==========================================================
-
-    if (encodedImage == null ||
-        encodedImage.isEmpty) {
+    if (imageBase64 == null ||
+        imageBase64!.isEmpty) {
       return _placeholder();
     }
-
-    // ==========================================================
-    // DECODE BASE64
-    // ==========================================================
 
     try {
       final bytes =
           base64Decode(
-        encodedImage,
+        imageBase64!,
       );
 
       return ClipRRect(
         borderRadius:
-            BorderRadius.circular(
-          16,
-        ),
+            BorderRadius.circular(16),
         child: Image.memory(
           bytes,
           width: 72,
           height: 72,
           fit: BoxFit.cover,
           gaplessPlayback: true,
-          errorBuilder: (
+          errorBuilder:
+              (
             context,
             error,
             stackTrace,
@@ -395,10 +414,6 @@ class _PlantImage
       return _placeholder();
     }
   }
-
-  // ============================================================
-  // PLACEHOLDER
-  // ============================================================
 
   Widget _placeholder() {
     return Container(
@@ -417,7 +432,8 @@ class _PlantImage
         ),
       ),
       child: const Icon(
-        Icons.local_florist_rounded,
+        Icons
+            .local_florist_rounded,
         color:
             AppColors.primary,
         size: 32,

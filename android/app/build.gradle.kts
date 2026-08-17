@@ -1,47 +1,125 @@
 plugins {
+    // ============================================================
+    // ANDROID APPLICATION
+    // ============================================================
+
     id("com.android.application")
-    // START: FlutterFire Configuration
+
+    // ============================================================
+    // FIREBASE / GOOGLE SERVICES
+    // ============================================================
+
     id("com.google.gms.google-services")
-    // END: FlutterFire Configuration
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+
+    // ============================================================
+    // FLUTTER
+    // ============================================================
+
     id("dev.flutter.flutter-gradle-plugin")
 }
 
 android {
     namespace = "com.example.greenmind_ai"
+
     compileSdk = flutter.compileSdkVersion
+
     ndkVersion = flutter.ndkVersion
 
+    // ============================================================
+    // JAVA / DESUGARING
+    // ============================================================
+
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility =
+            JavaVersion.VERSION_17
+
+        targetCompatibility =
+            JavaVersion.VERSION_17
+
+        isCoreLibraryDesugaringEnabled = true
     }
 
+    // ============================================================
+    // DEFAULT CONFIG
+    // ============================================================
+
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.greenmind_ai"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        applicationId =
+            "com.example.greenmind_ai"
+
+        minSdk =
+            flutter.minSdkVersion
+
+        targetSdk =
+            flutter.targetSdkVersion
+
+        versionCode =
+            flutter.versionCode
+
+        versionName =
+            flutter.versionName
     }
+
+    // ============================================================
+    // BUILD TYPES
+    // ============================================================
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // Debug signing for now.
+            // Replace with a proper release keystore later.
+            signingConfig =
+                signingConfigs.getByName(
+                    "debug"
+                )
         }
+    }
+
+    // ============================================================
+    // PACKAGING
+    // ============================================================
+
+    packaging {
+        resources {
+            excludes +=
+                "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
+
+    // ============================================================
+    // LINT
+    // ============================================================
+
+    lint {
+        checkReleaseBuilds = false
     }
 }
 
+// ================================================================
+// KOTLIN
+// ================================================================
+
 kotlin {
     compilerOptions {
-        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+        jvmTarget =
+            org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
 }
+
+// ================================================================
+// DEPENDENCIES
+// ================================================================
+
+dependencies {
+    // Required for flutter_local_notifications
+    coreLibraryDesugaring(
+        "com.android.tools:desugar_jdk_libs:2.1.5"
+    )
+}
+
+// ================================================================
+// FLUTTER
+// ================================================================
 
 flutter {
     source = "../.."

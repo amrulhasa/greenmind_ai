@@ -1,84 +1,204 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image/image.dart' as img;
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/recent_plant.dart';
 
 class RecentPlantsStorageService {
-  static const String _storageKey =
-      'recent_plants';
+  RecentPlantsStorageService();
+
+  static final FirebaseFirestore _firestore =
+      FirebaseFirestore.instance;
+
+  static final FirebaseAuth _auth =
+      FirebaseAuth.instance;
 
   // ============================================================
-  // LOAD
+  // COLLECTION
   // ============================================================
 
-  Future<List<RecentPlant>>
-      loadRecentPlants() async {
-    final preferences =
-        await SharedPreferences
-            .getInstance();
+  CollectionReference<Map<String, dynamic>>
+      _recentPlantsCollection(
+    String userId,
+  ) {
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('recentPlants');
+  }
 
-    final storedData =
-        preferences.getString(
-      _storageKey,
-    );
+  // ============================================================
+  // CURRENT USER
+  // ============================================================
 
-    if (storedData == null ||
-        storedData.isEmpty) {
-      return [];
+  User? get currentUser {
+    return _auth.currentUser;
+  }
+
+  // ============================================================
+  // VALIDATE USER
+  // ============================================================
+
+  void _validateUser(
+    String userId,
+  ) {
+    final user = _auth.currentUser;
+
+    if (user == null) {
+      throw Exception(
+        'No authenticated user found.',
+      );
     }
 
-    try {
-      final decoded =
-          jsonDecode(storedData);
-
-      if (decoded is! List) {
-        return [];
-      }
-
-      return decoded
-          .whereType<Map>()
-          .map(
-            (item) =>
-                RecentPlant.fromJson(
-              Map<String, dynamic>.from(
-                item,
-              ),
-            ),
-          )
-          .toList();
-    } catch (_) {
-      return [];
+    if (user.uid != userId) {
+      throw Exception(
+        'Unauthorized recent plants operation.',
+      );
     }
   }
 
   // ============================================================
-  // SAVE
+  // LOAD RECENT PLANTS
   // ============================================================
 
-  Future<void> saveRecentPlants(
-    List<RecentPlant> plants,
-  ) async {
-    final preferences =
-        await SharedPreferences
-            .getInstance();
+  Future<List<RecentPlant>> loadRecentPlants({
+    required String userId,
+  }) async {
+    _validateUser(userId);
 
-    final encoded =
-        jsonEncode(
-      plants
-          .map(
-            (plant) =>
-                plant.toJson(),
-          )
-          .toList(),
-    );
+    try {
+      final snapshot =
+          await _recentPlantsCollection(
+        userId,
+      )
+              .orderBy(
+                'identifiedAt',
+                descending: true,
+              )
+              .limit(5)
+              .get();
 
-    await preferences.setString(
-      _storageKey,
-      encoded,
-    );
+      final plants =
+          <RecentPlant>[];
+
+      for (final document
+          in snapshot.docs) {
+        try {
+          final data =
+              document.data();
+
+          final plant =
+              RecentPlant.fromJson(
+            data,
+          );
+
+          plants.add(
+            plant,
+          );
+        } catch (e) {
+          // Ignore malformed documents.
+          continue;
+        }
+      }
+
+      plants.sort(
+        (a, b) =>
+            b.identifiedAt.compareTo(
+          a.identifiedAt,
+        ),
+      );
+
+      return plants
+          .take(5)
+          .toList();
+    } on FirebaseException catch (e) {
+      throw Exception(
+        'Unable to load recent plants: '
+        '${e.message ?? e.code}',
+      );
+    } catch (e) {
+      throw Exception(
+        'Unable to load recent plants.',
+      );
+    }
+  }
+
+  // ============================================================
+  // SAVE RECENT PLANTS
+  // ============================================================
+
+  Future<void> saveRecentPlants({
+    required String userId,
+    required List<RecentPlant> plants,
+  }) async {
+    _validateUser(userId);
+
+    try {
+      final collection =
+          _recentPlantsCollection(
+        userId,
+      );
+
+      final limitedPlants =
+          plants
+              .take(5)
+              .toList();
+
+      final existingSnapshot =
+          await collection.get();
+
+      final batch =
+          _firestore.batch();
+
+      // --------------------------------------------------------
+      // DELETE OLD RECORDS
+      // --------------------------------------------------------
+
+      for (final document
+          in existingSnapshot.docs) {
+        batch.delete(
+          document.reference,
+        );
+      }
+
+      // --------------------------------------------------------
+      // SAVE LATEST 5 RECORDS
+      // --------------------------------------------------------
+
+      for (final plant
+          in limitedPlants) {
+        final document =
+            collection.doc();
+
+        final data = <
+            String,
+            dynamic>{
+          ...plant.toJson(),
+
+          'savedAt':
+              FieldValue.serverTimestamp(),
+        };
+
+        batch.set(
+          document,
+          data,
+        );
+      }
+
+      await batch.commit();
+    } on FirebaseException catch (e) {
+      throw Exception(
+        'Unable to save recent plants: '
+        '${e.message ?? e.code}',
+      );
+    } catch (e) {
+      throw Exception(
+        'Unable to save recent plants.',
+      );
+    }
   }
 
   // ============================================================
@@ -95,7 +215,9 @@ class RecentPlantsStorageService {
     }
 
     final decodedImage =
-        img.decodeImage(bytes);
+        img.decodeImage(
+      bytes,
+    );
 
     if (decodedImage == null) {
       throw Exception(
@@ -103,24 +225,39 @@ class RecentPlantsStorageService {
       );
     }
 
+    // Keep image reasonably small for Firestore.
     final resizedImage =
-        img.copyResize(
-      decodedImage,
-      width:
-          decodedImage.width > 700
-              ? 700
-              : decodedImage.width,
-    );
+        decodedImage.width > 500
+            ? img.copyResize(
+                decodedImage,
+                width: 500,
+              )
+            : decodedImage;
 
     final compressedBytes =
         img.encodeJpg(
       resizedImage,
-      quality: 70,
+      quality: 50,
     );
 
-    return base64Encode(
+    if (compressedBytes.isEmpty) {
+      throw Exception(
+        'Unable to compress plant image.',
+      );
+    }
+
+    final base64Image =
+        base64Encode(
       compressedBytes,
     );
+
+    if (base64Image.isEmpty) {
+      throw Exception(
+        'Unable to encode plant image.',
+      );
+    }
+
+    return base64Image;
   }
 
   // ============================================================
@@ -130,23 +267,76 @@ class RecentPlantsStorageService {
   Uint8List base64ToBytes(
     String base64Image,
   ) {
-    return base64Decode(
-      base64Image,
-    );
+    if (base64Image.isEmpty) {
+      throw Exception(
+        'Image data is empty.',
+      );
+    }
+
+    try {
+      return base64Decode(
+        base64Image,
+      );
+    } catch (_) {
+      throw Exception(
+        'Invalid image data.',
+      );
+    }
   }
 
   // ============================================================
-  // CLEAR
+  // CHECK IMAGE
   // ============================================================
 
-  Future<void>
-      clearRecentPlants() async {
-    final preferences =
-        await SharedPreferences
-            .getInstance();
+  bool imageExists(
+    String? imageBase64,
+  ) {
+    return imageBase64 != null &&
+        imageBase64.isNotEmpty;
+  }
 
-    await preferences.remove(
-      _storageKey,
-    );
+  // ============================================================
+  // CLEAR RECENT PLANTS
+  // ============================================================
+
+  Future<void> clearRecentPlants({
+    required String userId,
+  }) async {
+    _validateUser(userId);
+
+    try {
+      final collection =
+          _recentPlantsCollection(
+        userId,
+      );
+
+      final snapshot =
+          await collection.get();
+
+      if (snapshot.docs.isEmpty) {
+        return;
+      }
+
+      final batch =
+          _firestore.batch();
+
+      for (final document
+          in snapshot.docs) {
+        batch.delete(
+          document.reference,
+        );
+      }
+
+      await batch.commit();
+    } on FirebaseException catch (e) {
+      throw Exception(
+        'Unable to clear recent plants: '
+        '${e.message ?? e.code}',
+      );
+    } catch (e) {
+      throw Exception(
+        'Unable to clear recent plants.',
+      );
+    }
   }
 }
