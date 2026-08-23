@@ -4,17 +4,34 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image/image.dart' as img;
+import 'package:logger/logger.dart';
 
 import '../models/recent_plant.dart';
 
 class RecentPlantsStorageService {
   RecentPlantsStorageService();
 
+  final Logger _logger = Logger();
+
+  // ============================================================
+  // FIREBASE
+  // ============================================================
+
   static final FirebaseFirestore _firestore =
       FirebaseFirestore.instance;
 
   static final FirebaseAuth _auth =
       FirebaseAuth.instance;
+
+  // ============================================================
+  // CONSTANTS
+  // ============================================================
+
+  static const int _maxRecentPlants = 5;
+
+  static const int _imageMaxWidth = 500;
+
+  static const int _imageQuality = 50;
 
   // ============================================================
   // COLLECTION
@@ -70,56 +87,66 @@ class RecentPlantsStorageService {
     _validateUser(userId);
 
     try {
-      final snapshot =
-          await _recentPlantsCollection(
-        userId,
-      )
-              .orderBy(
-                'identifiedAt',
-                descending: true,
-              )
-              .limit(5)
-              .get();
+      final collection =
+          _recentPlantsCollection(userId);
 
-      final plants =
-          <RecentPlant>[];
+      QuerySnapshot<Map<String, dynamic>>
+          snapshot;
 
-      for (final document
-          in snapshot.docs) {
+      try {
+        snapshot = await collection
+            .orderBy(
+              'identifiedAt',
+              descending: true,
+            )
+            .limit(_maxRecentPlants)
+            .get();
+      } on FirebaseException catch (error) {
+        if (error.code == 'failed-precondition' ||
+            error.code == 'invalid-argument') {
+          snapshot = await collection.get();
+        } else {
+          rethrow;
+        }
+      }
+
+      final plants = <RecentPlant>[];
+
+      for (final document in snapshot.docs) {
         try {
-          final data =
-              document.data();
+          final data = document.data();
 
-          final plant =
-              RecentPlant.fromJson(
-            data,
-          );
+          if (data.isEmpty) {
+            continue;
+          }
 
           plants.add(
-            plant,
+            RecentPlant.fromJson(data),
           );
-        } catch (e) {
-          // Ignore malformed documents.
-          continue;
+        } catch (error) {
+          _logger.w(
+            '[RecentPlants] '
+            'Skipping malformed document '
+            '${document.id}: $error',
+          );
         }
       }
 
       plants.sort(
-        (a, b) =>
-            b.identifiedAt.compareTo(
+        (a, b) => b.identifiedAt.compareTo(
           a.identifiedAt,
         ),
       );
 
       return plants
-          .take(5)
+          .take(_maxRecentPlants)
           .toList();
-    } on FirebaseException catch (e) {
+    } on FirebaseException catch (error) {
       throw Exception(
         'Unable to load recent plants: '
-        '${e.message ?? e.code}',
+        '${error.message ?? error.code}',
       );
-    } catch (e) {
+    } catch (error) {
       throw Exception(
         'Unable to load recent plants.',
       );
@@ -138,23 +165,44 @@ class RecentPlantsStorageService {
 
     try {
       final collection =
-          _recentPlantsCollection(
-        userId,
+          _recentPlantsCollection(userId);
+
+      // --------------------------------------------------------
+      // SORT NEWEST FIRST
+      // --------------------------------------------------------
+
+      final sortedPlants = [...plants];
+
+      sortedPlants.sort(
+        (a, b) => b.identifiedAt.compareTo(
+          a.identifiedAt,
+        ),
       );
 
-      final limitedPlants =
-          plants
-              .take(5)
-              .toList();
+      final plantsToSave = sortedPlants
+          .take(_maxRecentPlants)
+          .toList();
+
+      // --------------------------------------------------------
+      // EXISTING DOCUMENTS
+      // --------------------------------------------------------
 
       final existingSnapshot =
           await collection.get();
 
-      final batch =
-          _firestore.batch();
+      // --------------------------------------------------------
+      // BATCH
+      // --------------------------------------------------------
+
+      final batch = _firestore.batch();
 
       // --------------------------------------------------------
-      // DELETE OLD RECORDS
+      // DELETE EXISTING
+      //
+      // We keep this only for compatibility with
+      // the existing list-based save system.
+      // The important part is that state is updated
+      // after the operation completes.
       // --------------------------------------------------------
 
       for (final document
@@ -165,40 +213,61 @@ class RecentPlantsStorageService {
       }
 
       // --------------------------------------------------------
-      // SAVE LATEST 5 RECORDS
+      // CREATE DOCUMENTS
       // --------------------------------------------------------
 
-      for (final plant
-          in limitedPlants) {
-        final document =
-            collection.doc();
-
-        final data = <
-            String,
-            dynamic>{
-          ...plant.toJson(),
-
-          'savedAt':
-              FieldValue.serverTimestamp(),
-        };
+      for (final plant in plantsToSave) {
+        final document = collection.doc();
 
         batch.set(
           document,
-          data,
+          _buildFirestoreData(plant),
         );
       }
 
+      // --------------------------------------------------------
+      // COMMIT
+      // --------------------------------------------------------
+
       await batch.commit();
-    } on FirebaseException catch (e) {
+
+      _logger.i(
+        '[RecentPlants] '
+        'Saved ${plantsToSave.length} recent plants.',
+      );
+    } on FirebaseException catch (error) {
       throw Exception(
         'Unable to save recent plants: '
-        '${e.message ?? e.code}',
+        '${error.message ?? error.code}',
       );
-    } catch (e) {
+    } catch (error) {
       throw Exception(
-        'Unable to save recent plants.',
+        'Unable to save recent plants: $error',
       );
     }
+  }
+
+  // ============================================================
+  // FIRESTORE DATA
+  // ============================================================
+
+  Map<String, dynamic> _buildFirestoreData(
+    RecentPlant plant,
+  ) {
+    final data =
+        Map<String, dynamic>.from(
+      plant.toJson(),
+    );
+
+    data['identifiedAt'] =
+        Timestamp.fromDate(
+      plant.identifiedAt,
+    );
+
+    data['savedAt'] =
+        FieldValue.serverTimestamp();
+
+    return data;
   }
 
   // ============================================================
@@ -214,50 +283,55 @@ class RecentPlantsStorageService {
       );
     }
 
-    final decodedImage =
-        img.decodeImage(
-      bytes,
-    );
+    try {
+      final decodedImage =
+          img.decodeImage(bytes);
 
-    if (decodedImage == null) {
-      throw Exception(
-        'Unable to process plant image.',
+      if (decodedImage == null) {
+        throw Exception(
+          'Unable to process plant image.',
+        );
+      }
+
+      final resizedImage =
+          decodedImage.width > _imageMaxWidth
+              ? img.copyResize(
+                  decodedImage,
+                  width: _imageMaxWidth,
+                )
+              : decodedImage;
+
+      final compressedBytes =
+          img.encodeJpg(
+        resizedImage,
+        quality: _imageQuality,
       );
-    }
 
-    // Keep image reasonably small for Firestore.
-    final resizedImage =
-        decodedImage.width > 500
-            ? img.copyResize(
-                decodedImage,
-                width: 500,
-              )
-            : decodedImage;
+      if (compressedBytes.isEmpty) {
+        throw Exception(
+          'Unable to compress plant image.',
+        );
+      }
 
-    final compressedBytes =
-        img.encodeJpg(
-      resizedImage,
-      quality: 50,
-    );
-
-    if (compressedBytes.isEmpty) {
-      throw Exception(
-        'Unable to compress plant image.',
+      final base64Image =
+          base64Encode(
+        compressedBytes,
       );
-    }
 
-    final base64Image =
-        base64Encode(
-      compressedBytes,
-    );
+      if (base64Image.isEmpty) {
+        throw Exception(
+          'Unable to encode plant image.',
+        );
+      }
 
-    if (base64Image.isEmpty) {
-      throw Exception(
-        'Unable to encode plant image.',
+      return base64Image;
+    } catch (error) {
+      _logger.e(
+        '[RecentPlants] IMAGE CONVERSION ERROR: $error',
       );
-    }
 
-    return base64Image;
+      rethrow;
+    }
   }
 
   // ============================================================
@@ -267,15 +341,18 @@ class RecentPlantsStorageService {
   Uint8List base64ToBytes(
     String base64Image,
   ) {
-    if (base64Image.isEmpty) {
+    final value =
+        base64Image.trim();
+
+    if (value.isEmpty) {
       throw Exception(
         'Image data is empty.',
       );
     }
 
     try {
-      return base64Decode(
-        base64Image,
+      return Uint8List.fromList(
+        base64Decode(value),
       );
     } catch (_) {
       throw Exception(
@@ -285,18 +362,18 @@ class RecentPlantsStorageService {
   }
 
   // ============================================================
-  // CHECK IMAGE
+  // IMAGE EXISTS
   // ============================================================
 
   bool imageExists(
     String? imageBase64,
   ) {
     return imageBase64 != null &&
-        imageBase64.isNotEmpty;
+        imageBase64.trim().isNotEmpty;
   }
 
   // ============================================================
-  // CLEAR RECENT PLANTS
+  // CLEAR
   // ============================================================
 
   Future<void> clearRecentPlants({
@@ -306,9 +383,7 @@ class RecentPlantsStorageService {
 
     try {
       final collection =
-          _recentPlantsCollection(
-        userId,
-      );
+          _recentPlantsCollection(userId);
 
       final snapshot =
           await collection.get();
@@ -317,8 +392,7 @@ class RecentPlantsStorageService {
         return;
       }
 
-      final batch =
-          _firestore.batch();
+      final batch = _firestore.batch();
 
       for (final document
           in snapshot.docs) {
@@ -328,12 +402,17 @@ class RecentPlantsStorageService {
       }
 
       await batch.commit();
-    } on FirebaseException catch (e) {
+
+      _logger.i(
+        '[RecentPlants] '
+        'All recent plants cleared.',
+      );
+    } on FirebaseException catch (error) {
       throw Exception(
         'Unable to clear recent plants: '
-        '${e.message ?? e.code}',
+        '${error.message ?? error.code}',
       );
-    } catch (e) {
+    } catch (error) {
       throw Exception(
         'Unable to clear recent plants.',
       );

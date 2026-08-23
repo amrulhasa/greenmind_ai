@@ -1,48 +1,49 @@
-<manifest
-    xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- ====================================================== -->
     <!-- LOCATION                                               -->
     <!-- ====================================================== -->
 
-    <!-- Required for nearby nursery location -->
     <uses-permission
         android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <uses-permission
         android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
+
     <!-- ====================================================== -->
-    <!-- NOTIFICATION PERMISSION                                -->
+    <!-- NOTIFICATION                                           -->
     <!-- ====================================================== -->
 
     <uses-permission
         android:name="android.permission.POST_NOTIFICATIONS" />
 
-    <!-- ====================================================== -->
-    <!-- VIBRATION                                               -->
-    <!-- ====================================================== -->
-
     <uses-permission
         android:name="android.permission.VIBRATE" />
 
+
     <!-- ====================================================== -->
-    <!-- SCHEDULED NOTIFICATIONS                                 -->
+    <!-- SCHEDULED NOTIFICATIONS                                -->
     <!-- ====================================================== -->
 
     <uses-permission
         android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
-    <!-- Exact alarms -->
     <uses-permission
         android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
+
     <!-- ====================================================== -->
-    <!-- FULL SCREEN ALARM                                       -->
+    <!-- FULL SCREEN ALARM                                      -->
     <!-- ====================================================== -->
 
     <uses-permission
         android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+
+
+    <!-- ====================================================== -->
+    <!-- APPLICATION                                            -->
+    <!-- ====================================================== -->
 
     <application
         android:label="greenmind_ai"
@@ -81,6 +82,7 @@
 
         </activity>
 
+
         <!-- ================================================== -->
         <!-- FLUTTER EMBEDDING                                  -->
         <!-- ================================================== -->
@@ -89,17 +91,18 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
+
         <!-- ================================================== -->
         <!-- FLUTTER LOCAL NOTIFICATIONS                        -->
         <!-- ================================================== -->
 
         <receiver
-            android:exported="false"
-            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"
+            android:exported="false" />
 
         <receiver
-            android:exported="false"
-            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver"
+            android:exported="false">
 
             <intent-filter>
 
@@ -119,6 +122,7 @@
 
         </receiver>
 
+
         <!-- ================================================== -->
         <!-- ALARM PLUGIN / FULL SCREEN                         -->
         <!-- ================================================== -->
@@ -131,18 +135,66 @@
 
     </application>
 
+
     <!-- ====================================================== -->
-    <!-- PACKAGE VISIBILITY                                     -->
+    <!-- PACKAGE VISIBILITY / EXTERNAL APPS                    -->
     <!-- ====================================================== -->
 
     <queries>
 
+        <!-- Flutter text processing -->
         <intent>
             <action
                 android:name="android.intent.action.PROCESS_TEXT" />
 
             <data
                 android:mimeType="text/plain" />
+        </intent>
+
+
+        <!-- Open Google Maps / Browser using HTTPS -->
+        <intent>
+            <action
+                android:name="android.intent.action.VIEW" />
+
+            <category
+                android:name="android.intent.category.BROWSABLE" />
+
+            <data
+                android:scheme="https" />
+        </intent>
+
+
+        <!-- Open normal HTTP map links -->
+        <intent>
+            <action
+                android:name="android.intent.action.VIEW" />
+
+            <category
+                android:name="android.intent.category.BROWSABLE" />
+
+            <data
+                android:scheme="http" />
+        </intent>
+
+
+        <!-- Open geo:// links -->
+        <intent>
+            <action
+                android:name="android.intent.action.VIEW" />
+
+            <data
+                android:scheme="geo" />
+        </intent>
+
+
+        <!-- Google Maps application -->
+        <intent>
+            <action
+                android:name="android.intent.action.VIEW" />
+
+            <data
+                android:scheme="google.navigation" />
         </intent>
 
     </queries>

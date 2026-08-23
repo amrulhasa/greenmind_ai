@@ -41,7 +41,9 @@ class UserService {
         'updatedAt':
             FieldValue.serverTimestamp(),
       },
-      SetOptions(merge: true),
+      SetOptions(
+        merge: true,
+      ),
     );
   }
 
@@ -55,7 +57,8 @@ class UserService {
     required String phone,
     required String bio,
   }) async {
-    final user = _auth.currentUser;
+    final user =
+        _auth.currentUser;
 
     if (user == null) {
       throw Exception(
@@ -75,7 +78,9 @@ class UserService {
         'updatedAt':
             FieldValue.serverTimestamp(),
       },
-      SetOptions(merge: true),
+      SetOptions(
+        merge: true,
+      ),
     );
   }
 
@@ -83,8 +88,10 @@ class UserService {
   // GET CURRENT USER ROLE
   // ============================================================
 
-  static Future<String?> getCurrentUserRole() async {
-    final user = _auth.currentUser;
+  static Future<String?>
+      getCurrentUserRole() async {
+    final user =
+        _auth.currentUser;
 
     if (user == null) {
       return null;
@@ -99,9 +106,17 @@ class UserService {
       return null;
     }
 
-    final data = document.data();
+    final data =
+        document.data();
 
-    return data?['role'] as String?;
+    final role =
+        data?['role'];
+
+    if (role is String) {
+      return role.trim();
+    }
+
+    return null;
   }
 
   // ============================================================
@@ -112,16 +127,19 @@ class UserService {
     final role =
         await getCurrentUserRole();
 
-    return role == 'admin';
+    return role?.toLowerCase() ==
+        'admin';
   }
 
   // ============================================================
   // GET CURRENT USER DATA
   // ============================================================
 
-  static Future<Map<String, dynamic>?>
+  static Future<
+          Map<String, dynamic>?>
       getCurrentUserData() async {
-    final user = _auth.currentUser;
+    final user =
+        _auth.currentUser;
 
     if (user == null) {
       return null;
@@ -143,8 +161,10 @@ class UserService {
   // ENSURE PROFILE EXISTS
   // ============================================================
 
-  static Future<void> ensureUserProfile() async {
-    final user = _auth.currentUser;
+  static Future<void>
+      ensureUserProfile() async {
+    final user =
+        _auth.currentUser;
 
     if (user == null) {
       return;
@@ -161,5 +181,13 @@ class UserService {
         name: user.displayName,
       );
     }
+  }
+
+  // ============================================================
+  // LOGOUT
+  // ============================================================
+
+  static Future<void> logout() async {
+    await _auth.signOut();
   }
 }

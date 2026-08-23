@@ -46,3 +46,12 @@ app.*.map.json
 
 # Local secrets
 secrets.properties
+
+# Firebase / Google service configuration
+**/google-services.json
+**/GoogleService-Info.plist
+
+# Environment / secrets
+.env
+.env.*
+secrets.properties

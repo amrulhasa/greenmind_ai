@@ -26,13 +26,31 @@ class RecentPlantDetailsScreen
         Theme.of(context);
 
     final confidence =
-        plant.confidence.clamp(
-      0.0,
-      100.0,
-    );
+        plant.confidence
+            .clamp(
+              0.0,
+              100.0,
+            )
+            .toDouble();
 
     final isDisease =
         plant.isDiseaseDetection;
+
+    final title = isDisease
+        ? (
+            plant.diseaseName
+                    .trim()
+                    .isEmpty
+                ? 'Plant Health Scan'
+                : plant.diseaseName.trim()
+          )
+        : (
+            plant.plantName
+                    .trim()
+                    .isEmpty
+                ? 'Unknown Plant'
+                : plant.plantName.trim()
+          );
 
     return Scaffold(
       backgroundColor:
@@ -51,10 +69,12 @@ class RecentPlantDetailsScreen
             theme.colorScheme.onSurface,
       ),
 
-      body: SingleChildScrollView(
+      body:
+          SingleChildScrollView(
         padding:
-            const EdgeInsets.all(20),
-
+            const EdgeInsets.all(
+          20,
+        ),
         child: Column(
           crossAxisAlignment:
               CrossAxisAlignment.start,
@@ -118,7 +138,8 @@ class RecentPlantDetailsScreen
                         ? 'Disease Detection'
                         : 'Plant Identification',
                     style:
-                        AppTextStyles.caption
+                        AppTextStyles
+                            .caption
                             .copyWith(
                       color:
                           AppColors.primary,
@@ -139,15 +160,7 @@ class RecentPlantDetailsScreen
             // ==================================================
 
             Text(
-              isDisease
-                  ? (plant.diseaseName
-                          .isEmpty
-                      ? 'Plant Health Scan'
-                      : plant.diseaseName)
-                  : (plant.plantName
-                          .isEmpty
-                      ? 'Unknown Plant'
-                      : plant.plantName),
+              title,
               style:
                   AppTextStyles.heading1,
             ),
@@ -157,15 +170,14 @@ class RecentPlantDetailsScreen
             // ==================================================
 
             if (!isDisease &&
-                plant
-                    .scientificName
+                plant.scientificName
+                    .trim()
                     .isNotEmpty) ...[
               const SizedBox(
                 height: 6,
               ),
-
               Text(
-                plant.scientificName,
+                plant.scientificName.trim(),
                 style:
                     AppTextStyles.body
                         .copyWith(
@@ -196,8 +208,7 @@ class RecentPlantDetailsScreen
             Row(
               children: [
                 Expanded(
-                  child:
-                      ClipRRect(
+                  child: ClipRRect(
                     borderRadius:
                         BorderRadius.circular(
                       10,
@@ -208,8 +219,7 @@ class RecentPlantDetailsScreen
                           confidence / 100,
                       minHeight: 10,
                       backgroundColor:
-                          AppColors
-                              .primary
+                          AppColors.primary
                               .withValues(
                         alpha: 0.10,
                       ),
@@ -241,13 +251,12 @@ class RecentPlantDetailsScreen
             // DESCRIPTION
             // ==================================================
 
-            if (plant
-                .description
+            if (plant.description
+                .trim()
                 .isNotEmpty) ...[
               const SizedBox(
                 height: 28,
               ),
-
               _Section(
                 icon:
                     Icons.info_outline_rounded,
@@ -267,14 +276,12 @@ class RecentPlantDetailsScreen
             // ==================================================
 
             if (isDisease) ...[
-              // Symptoms
-              if (plant
-                  .symptoms
+              if (plant.symptoms
+                  .trim()
                   .isNotEmpty) ...[
                 const SizedBox(
                   height: 28,
                 ),
-
                 _Section(
                   icon:
                       Icons.visibility_outlined,
@@ -289,17 +296,16 @@ class RecentPlantDetailsScreen
                 ),
               ],
 
-              // Treatment
-              if (plant
-                  .treatment
+              if (plant.treatment
+                  .trim()
                   .isNotEmpty) ...[
                 const SizedBox(
                   height: 28,
                 ),
-
                 _Section(
                   icon:
-                      Icons.medical_services_outlined,
+                      Icons
+                          .medical_services_outlined,
                   title:
                       'Treatment',
                   child:
@@ -311,14 +317,12 @@ class RecentPlantDetailsScreen
                 ),
               ],
 
-              // Prevention
-              if (plant
-                  .prevention
+              if (plant.prevention
+                  .trim()
                   .isNotEmpty) ...[
                 const SizedBox(
                   height: 28,
                 ),
-
                 _Section(
                   icon:
                       Icons.shield_outlined,
@@ -338,8 +342,8 @@ class RecentPlantDetailsScreen
             // CARE TIPS
             // ==================================================
 
-            if (plant
-                .careTips
+            if (plant.careTips
+                .trim()
                 .isNotEmpty) ...[
               const SizedBox(
                 height: 28,
@@ -467,26 +471,34 @@ class _PlantDetailsImage
   Widget build(
     BuildContext context,
   ) {
-    if (imageBase64 == null ||
-        imageBase64!.isEmpty) {
+    final value =
+        imageBase64?.trim();
+
+    if (value == null ||
+        value.isEmpty) {
       return _placeholder();
     }
 
     try {
       final bytes =
-          base64Decode(
-        imageBase64!,
-      );
+          base64Decode(value);
+
+      if (bytes.isEmpty) {
+        return _placeholder();
+      }
 
       return ClipRRect(
         borderRadius:
-            BorderRadius.circular(20),
+            BorderRadius.circular(
+          20,
+        ),
         child: Image.memory(
           bytes,
           width:
               double.infinity,
           height: 280,
           fit: BoxFit.cover,
+          gaplessPlayback: true,
           errorBuilder:
               (
             context,
@@ -520,8 +532,7 @@ class _PlantDetailsImage
         ),
       ),
       child: const Icon(
-        Icons
-            .local_florist_rounded,
+        Icons.local_florist_rounded,
         size: 80,
         color:
             AppColors.primary,

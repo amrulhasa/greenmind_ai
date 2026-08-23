@@ -1,248 +1,206 @@
-import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_radius.dart';
-import '../../../core/constants/app_spacing.dart';
-import '../../../core/constants/app_text_styles.dart';
+import '../../announcements/providers/announcement_badge_provider.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../../reminder/providers/notification_badge_provider.dart';
-import '../../reminder/providers/reminder_provider.dart';
 
-class HomeHeader extends ConsumerStatefulWidget {
-  const HomeHeader({
-    super.key,
-  });
+class HomeHeader extends ConsumerWidget {
+  const HomeHeader({super.key});
 
-  @override
-  ConsumerState<HomeHeader> createState() => _HomeHeaderState();
-}
+  Future<void> _openAnnouncements(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    await ref
+        .read(announcementBadgeProvider.notifier)
+        .markAllAsRead();
 
-class _HomeHeaderState extends ConsumerState<HomeHeader> {
-  Timer? _refreshTimer;
+    if (!context.mounted) return;
 
-  // ============================================================
-  // INIT
-  // ============================================================
-
-  @override
-  void initState() {
-    super.initState();
-
-    // ----------------------------------------------------------
-    // Refresh notification badge periodically.
-    // ----------------------------------------------------------
-
-    _refreshTimer = Timer.periodic(
-      const Duration(seconds: 10),
-      (_) {
-        if (!mounted) {
-          return;
-        }
-
-        ref
-            .read(notificationBadgeProvider.notifier)
-            .refresh();
-      },
-    );
-
-    // ----------------------------------------------------------
-    // Initial badge refresh.
-    // ----------------------------------------------------------
-
-    Future.microtask(() {
-      if (!mounted) {
-        return;
-      }
-
-      ref
-          .read(notificationBadgeProvider.notifier)
-          .refresh();
-    });
+    await context.push('/announcements');
   }
 
-  // ============================================================
-  // DISPOSE
-  // ============================================================
+  Future<void> _openReminders(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    await ref
+        .read(notificationBadgeProvider.notifier)
+        .markAllAsRead();
 
-  @override
-  void dispose() {
-    _refreshTimer?.cancel();
-    super.dispose();
+    if (!context.mounted) return;
+
+    await context.push('/reminders');
   }
-
-  // ============================================================
-  // GREETING
-  // ============================================================
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
 
     if (hour >= 5 && hour < 12) {
-      return 'Good Morning 👋';
+      return 'Good Morning';
     }
 
     if (hour >= 12 && hour < 17) {
-      return 'Good Afternoon ☀️';
+      return 'Good Afternoon';
     }
 
     if (hour >= 17 && hour < 21) {
-      return 'Good Evening 🌆';
+      return 'Good Evening';
     }
 
-    return 'Good Night 🌙';
+    return 'Good Night';
   }
 
-  // ============================================================
-  // OPEN REMINDERS
-  // ============================================================
+  IconData _getGreetingIcon() {
+    final hour = DateTime.now().hour;
 
-  void _openReminders(BuildContext context) {
-    context.push('/reminders');
-  }
-
-  // ============================================================
-  // MARK NOTIFICATIONS AS READ + OPEN REMINDERS
-  // ============================================================
-
-  Future<void> _openNotifications(
-    BuildContext context,
-  ) async {
-    // ----------------------------------------------------------
-    // First clear the notification badge.
-    // ----------------------------------------------------------
-
-    await ref
-        .read(notificationBadgeProvider.notifier)
-        .markAllAsRead();
-
-    // ----------------------------------------------------------
-    // Make sure widget is still mounted.
-    // ----------------------------------------------------------
-
-    if (!context.mounted) {
-      return;
+    if (hour >= 5 && hour < 12) {
+      return Icons.wb_sunny_rounded;
     }
 
-    // ----------------------------------------------------------
-    // Then open reminders.
-    // ----------------------------------------------------------
+    if (hour >= 12 && hour < 17) {
+      return Icons.wb_sunny_outlined;
+    }
 
-    _openReminders(context);
+    if (hour >= 17 && hour < 21) {
+      return Icons.wb_twilight_rounded;
+    }
+
+    return Icons.nightlight_round;
   }
-
-  // ============================================================
-  // BUILD
-  // ============================================================
 
   @override
   Widget build(
     BuildContext context,
+    WidgetRef ref,
   ) {
-    final profile = ref.watch(
-      profileProvider,
-    ).profile;
+    final profileState = ref.watch(profileProvider);
+    final profile = profileState.profile;
 
-    final reminderState = ref.watch(
-      reminderProvider,
-    );
-
-    final notificationCount = ref.watch(
+    final reminderCount = ref.watch(
       notificationBadgeProvider,
     );
 
-    // ----------------------------------------------------------
-    // Keep notification badge synchronized whenever
-    // reminder state changes.
-    // ----------------------------------------------------------
-
-    ref.listen<ReminderState>(
-      reminderProvider,
-      (previous, next) {
-        if (previous?.reminders != next.reminders) {
-          Future.microtask(() {
-            if (!mounted) {
-              return;
-            }
-
-            ref
-                .read(
-                  notificationBadgeProvider.notifier,
-                )
-                .refresh();
-          });
-        }
-      },
+    final announcementCount = ref.watch(
+      announcementBadgeProvider,
     );
 
-    // Keep provider subscription active.
-    reminderState;
+    final displayName = profile.name.trim().isEmpty
+        ? 'Welcome Back'
+        : 'Welcome, ${profile.name.trim()}';
 
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // ========================================================
-        // PROFILE AVATAR
-        // ========================================================
+        // =========================================================
+        // PROFILE
+        // =========================================================
 
         GestureDetector(
-          onTap: () {
-            context.push('/profile');
-          },
+          behavior: HitTestBehavior.opaque,
+          onTap: () => context.push('/profile'),
           child: _ProfileAvatar(
             imageBase64: profile.profileImagePath,
           ),
         ),
 
-        const SizedBox(
-          width: AppSpacing.md,
-        ),
+        const SizedBox(width: 14),
 
-        // ========================================================
+        // =========================================================
         // GREETING
-        // ========================================================
+        // =========================================================
 
         Expanded(
           child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                _getGreeting(),
-                style: AppTextStyles.subtitle,
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 9,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEAF5EC),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: const Color(0xFFDDEBDF),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _getGreetingIcon(),
+                      size: 14,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      _getGreeting(),
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF3E6B43),
+                      ),
+                    ),
+                  ],
+                ),
               ),
 
-              const SizedBox(
-                height: AppSpacing.xs,
-              ),
+              const SizedBox(height: 7),
 
               Text(
-                profile.name.isEmpty
-                    ? 'Welcome Back'
-                    : 'Welcome, ${profile.name}',
+                displayName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.heading2,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.65,
+                  color: Color(0xFF172018),
+                ),
               ),
             ],
           ),
         ),
 
-        const SizedBox(
-          width: AppSpacing.sm,
+        const SizedBox(width: 10),
+
+        // =========================================================
+        // ANNOUNCEMENTS
+        // =========================================================
+
+        _HeaderActionButton(
+          icon: Icons.campaign_outlined,
+          tooltip: 'Announcements',
+          backgroundColor: const Color(0xFFEAF5EC),
+          iconColor: AppColors.primary,
+          badgeCount: announcementCount,
+          onPressed: () {
+            _openAnnouncements(context, ref);
+          },
         ),
 
-        // ========================================================
-        // NOTIFICATION BUTTON
-        // ========================================================
+        const SizedBox(width: 8),
 
-        _NotificationButton(
-          count: notificationCount,
+        // =========================================================
+        // REMINDERS
+        // =========================================================
+
+        _HeaderActionButton(
+          icon: Icons.notifications_none_rounded,
+          tooltip: 'Plant Reminders',
+          backgroundColor: Colors.white,
+          iconColor: const Color(0xFF344139),
+          badgeCount: reminderCount,
           onPressed: () {
-            _openNotifications(context);
+            _openReminders(context, ref);
           },
         ),
       ],
@@ -250,92 +208,78 @@ class _HomeHeaderState extends ConsumerState<HomeHeader> {
   }
 }
 
-// ============================================================
-// NOTIFICATION BUTTON
-// ============================================================
+// ============================================================================
+// HEADER ACTION
+// ============================================================================
 
-class _NotificationButton extends StatelessWidget {
-  final int count;
-  final VoidCallback onPressed;
-
-  const _NotificationButton({
-    required this.count,
+class _HeaderActionButton extends StatelessWidget {
+  const _HeaderActionButton({
+    required this.icon,
+    required this.tooltip,
+    required this.backgroundColor,
+    required this.iconColor,
     required this.onPressed,
+    this.badgeCount = 0,
   });
 
+  final IconData icon;
+  final String tooltip;
+  final Color backgroundColor;
+  final Color iconColor;
+  final VoidCallback onPressed;
+  final int badgeCount;
+
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return SizedBox(
-      width: 56,
-      height: 56,
+      width: 48,
+      height: 48,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // ----------------------------------------------------
-          // BUTTON
-          // ----------------------------------------------------
-
           Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(
-                  AppRadius.circular,
-                ),
-                border: Border.all(
-                  color: AppColors.border,
-                ),
-              ),
-              child: IconButton(
-                onPressed: onPressed,
-                tooltip: 'Notifications',
-                icon: const Icon(
-                  Icons.notifications_none_rounded,
-                  color: AppColors.textPrimary,
-                  size: 28,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onPressed,
+                borderRadius: BorderRadius.circular(16),
+                child: Ink(
+                  decoration: BoxDecoration(
+                    color: backgroundColor,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: const Color(0xFFE0E9E1),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF18351C)
+                            .withValues(alpha: 0.035),
+                        blurRadius: 13,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Tooltip(
+                    message: tooltip,
+                    child: Center(
+                      child: Icon(
+                        icon,
+                        size: 22,
+                        color: iconColor,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
 
-          // ----------------------------------------------------
-          // BADGE
-          // ----------------------------------------------------
-
-          if (count > 0)
+          if (badgeCount > 0)
             Positioned(
-              right: -3,
-              top: -5,
-              child: Container(
-                constraints: const BoxConstraints(
-                  minWidth: 21,
-                  minHeight: 21,
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 5,
-                  vertical: 2,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: AppColors.surface,
-                    width: 2,
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    count > 99 ? '99+' : '$count',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      height: 1,
-                    ),
-                  ),
-                ),
+              right: -5,
+              top: -7,
+              child: _NotificationBadge(
+                count: badgeCount,
               ),
             ),
         ],
@@ -344,57 +288,125 @@ class _NotificationButton extends StatelessWidget {
   }
 }
 
-// ============================================================
+// ============================================================================
+// NOTIFICATION BADGE
+// ============================================================================
+
+class _NotificationBadge extends StatelessWidget {
+  const _NotificationBadge({
+    required this.count,
+  });
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = count > 99 ? '99+' : '$count';
+
+    return Container(
+      constraints: const BoxConstraints(
+        minWidth: 21,
+        minHeight: 21,
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 5,
+        vertical: 2,
+      ),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFF8A00),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white,
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFFF8A00)
+                .withValues(alpha: 0.24),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Text(
+          text,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 9.5,
+            fontWeight: FontWeight.w800,
+            height: 1,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================================
 // PROFILE AVATAR
-// ============================================================
+// ============================================================================
 
 class _ProfileAvatar extends StatelessWidget {
-  final String? imageBase64;
-
   const _ProfileAvatar({
     required this.imageBase64,
   });
 
+  final String? imageBase64;
+
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
+    final hasImage =
+        imageBase64 != null &&
+        imageBase64!.trim().isNotEmpty;
+
     return Container(
-      width: 56,
-      height: 56,
+      width: 58,
+      height: 58,
+      padding: const EdgeInsets.all(2.5),
       decoration: BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.circular(
-          AppRadius.circular,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF55A35B),
+            Color(0xFF267331),
+          ],
         ),
+        borderRadius: BorderRadius.circular(19),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.18),
+            blurRadius: 17,
+            offset: const Offset(0, 7),
+          ),
+        ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(
-          AppRadius.circular,
-        ),
-        child: imageBase64 != null &&
-                imageBase64!.isNotEmpty
+        borderRadius: BorderRadius.circular(16),
+        child: hasImage
             ? _buildImage()
             : _placeholder(),
       ),
     );
   }
 
-  // ============================================================
-  // PROFILE IMAGE
-  // ============================================================
-
   Widget _buildImage() {
     try {
-      final bytes = base64Decode(
-        imageBase64!,
-      );
+      var value = imageBase64!.trim();
+
+      if (value.contains(',')) {
+        value = value.split(',').last;
+      }
+
+      final Uint8List bytes = base64Decode(value);
 
       return Image.memory(
         bytes,
-        width: 56,
-        height: 56,
+        width: 58,
+        height: 58,
         fit: BoxFit.cover,
+        gaplessPlayback: true,
         errorBuilder: (
           context,
           error,
@@ -408,15 +420,16 @@ class _ProfileAvatar extends StatelessWidget {
     }
   }
 
-  // ============================================================
-  // PROFILE PLACEHOLDER
-  // ============================================================
-
   Widget _placeholder() {
-    return const Icon(
-      Icons.person,
-      color: Colors.white,
-      size: 30,
+    return Container(
+      color: const Color(0xFF2E7D32),
+      child: const Center(
+        child: Icon(
+          Icons.person_rounded,
+          color: Colors.white,
+          size: 30,
+        ),
+      ),
     );
   }
 }

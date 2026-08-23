@@ -1,17 +1,192 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:firebase_ai/firebase_ai.dart';
+import 'package:logger/logger.dart';
 
 import '../models/identify_result.dart';
 
 class IdentifyService {
-  IdentifyService() {
-    _model = FirebaseAI.googleAI().generativeModel(
-      model: 'gemini-3.6-flash',
-    );
-  }
+  final Logger _logger = Logger();
 
-  late final GenerativeModel _model;
+  IdentifyService();
+
+  // ============================================================
+  // CONFIGURATION
+  // ============================================================
+
+  static const String _modelName =
+      'gemini-3.6-flash';
+
+  static const int _maxAttempts = 2;
+
+  static const Duration _retryDelay =
+      Duration(seconds: 3);
+
+  // ============================================================
+  // GEMINI MODEL
+  // ============================================================
+
+  late final GenerativeModel _model =
+      FirebaseAI.googleAI().generativeModel(
+    model: _modelName,
+
+    generationConfig:
+        GenerationConfig(
+      responseMimeType:
+          'application/json',
+
+      responseSchema:
+          _identifySchema,
+
+      temperature: 0.15,
+
+      maxOutputTokens: 1200,
+    ),
+
+    systemInstruction:
+        Content.text(
+      '''
+You are GreenMind AI, an expert botanical visual analysis assistant.
+
+Your job is to identify plants from photographs and assess only
+their visibly observable condition.
+
+IDENTIFICATION RULES
+
+1. The attached image is the primary evidence.
+
+2. Never return a hardcoded plant name.
+
+3. Never assume a plant species without visual evidence.
+
+4. Do not identify a plant merely because it is common.
+
+5. If the image does not clearly contain a plant:
+   - return an empty plantName
+   - return an empty scientificName
+   - return confidence 0
+
+6. If species-level identification is uncertain:
+   - use the most defensible common-level identification
+   - reduce confidence appropriately
+
+7. Never invent a scientific name.
+
+8. Confidence must represent visual identification confidence.
+
+9. Health assessment must be based ONLY on visible evidence.
+
+10. Do not claim:
+    - laboratory diagnosis
+    - microscopic diagnosis
+    - genetic identification
+    - root-level diagnosis
+    - internal plant condition
+    - definitive disease diagnosis
+
+11. Care recommendations must be appropriate for the identified
+    plant and must not contradict visible evidence.
+
+12. If visual evidence is insufficient, explicitly indicate
+    insufficient evidence.
+
+13. Do not use static or predefined answers.
+
+14. Return ONLY JSON matching the supplied response schema.
+
+HEALTH RULES
+
+Only assess visible characteristics such as:
+
+- discoloration
+- yellowing
+- browning
+- wilting
+- holes
+- spots
+- damaged leaves
+- visible pests
+- fungal-like surface symptoms
+- abnormal leaf shape
+- visible stress
+
+Do not claim a definitive disease unless the image provides
+strong enough evidence.
+
+OUTPUT RULES
+
+Keep descriptions useful but concise.
+
+Care tips should be practical.
+
+Scientific name should only be provided when sufficiently
+supported by the visual evidence.
+
+If identification is unreliable, confidence must be low.
+''',
+    ),
+  );
+
+  // ============================================================
+  // RESPONSE SCHEMA
+  // ============================================================
+
+  static final Schema _identifySchema =
+      Schema.object(
+    properties: {
+      'plantName':
+          Schema.string(
+        description:
+            'Common name of the visually identified plant. '
+            'Return empty string when identification is unreliable.',
+      ),
+
+      'scientificName':
+          Schema.string(
+        description:
+            'Scientific name only when sufficiently supported '
+            'by visual evidence. Otherwise return empty string.',
+      ),
+
+      'confidence':
+          Schema.number(
+        minimum: 0,
+        maximum: 100,
+        description:
+            'Visual identification confidence from 0 to 100.',
+      ),
+
+      'description':
+          Schema.string(
+        description:
+            'Concise description of visible plant characteristics.',
+      ),
+
+      'careTips':
+          Schema.string(
+        description:
+            'Practical general care guidance appropriate for '
+            'the identified plant.',
+      ),
+
+      'isHealthy':
+          Schema.boolean(
+        description:
+            'True when no significant visible health problem '
+            'is detected.',
+      ),
+    },
+
+    propertyOrdering: [
+      'plantName',
+      'scientificName',
+      'confidence',
+      'description',
+      'careTips',
+      'isHealthy',
+    ],
+  );
 
   // ============================================================
   // IDENTIFY PLANT
@@ -21,224 +196,570 @@ class IdentifyService {
     Uint8List imageBytes,
   ) async {
     if (imageBytes.isEmpty) {
-      throw Exception(
+      throw const IdentifyException(
+        IdentifyErrorType.invalidImage,
         'Image data is empty.',
       );
     }
 
-    final prompt = TextPart(
-      '''
-You are a professional botanist and plant identification expert.
+    final String mimeType =
+        _detectMimeType(imageBytes);
 
-Your task is to identify the plant shown in the image as accurately
-and scientifically as possible.
-
-============================================================
-1. VISUAL EVIDENCE ONLY
-============================================================
-
-Analyze ONLY characteristics that are actually visible in the image.
-
-Consider:
-leaf shape, leaf size, leaf texture, leaf arrangement, leaf margin,
-leaf tip, leaf base, veins, petioles, stems, growth pattern,
-coloration, variegation, flowers, fruits, spadix, spathe, buds,
-and other clearly visible botanical characteristics.
-
-Never assume or invent a feature that cannot be seen.
-
-If the image shows only leaves, base your identification primarily
-on leaf characteristics.
-
-============================================================
-2. SPECIES-LEVEL IDENTIFICATION
-============================================================
-
-First determine the most likely plant family or genus from the
-visible characteristics.
-
-Then determine the most likely species.
-
-If multiple species have very similar visible characteristics,
-choose the species that best matches the available evidence, but
-do NOT pretend that the species is certain.
-
-If species-level evidence is insufficient, still provide the most
-likely species, but lower the confidence score.
-
-Important:
-If only leaves are visible and the plant has visually similar
-species, do not give extremely high species-level confidence.
-
-Do not use the presence of a common leaf shape alone as proof of
-an exact species.
-
-If distinctive species-level features such as flowers, fruits,
-spathe, spadix, or other diagnostic structures are not visible,
-consider this when assigning confidence.
-
-============================================================
-3. CONFIDENCE
-============================================================
-
-Confidence must represent visual identification confidence.
-
-90-100 = extremely strong species-level visual evidence;
-distinctive diagnostic features are clearly visible.
-
-75-89 = strong identification; most visible characteristics match,
-but some species-level uncertainty remains.
-
-50-74 = reasonable identification; several characteristics match,
-but important evidence is missing or similar species are possible.
-
-25-49 = weak identification; limited visual evidence or substantial
-similarity with other plants.
-
-0-24 = very uncertain, not enough evidence, or the image may not
-contain a recognizable plant.
-
-Do not automatically use high confidence.
-
-If only a leaf is visible and there are no distinctive
-species-level structures, normally keep confidence below 90 unless
-the visible characteristics are exceptionally distinctive.
-
-============================================================
-4. SCIENTIFIC NAME CONSISTENCY
-============================================================
-
-The common name and scientific name MUST refer to the same plant
-species.
-
-Use a scientifically valid scientific name when possible.
-
-Do not combine the common name of one species with the scientific
-name of another species.
-
-============================================================
-5. HEALTH ASSESSMENT
-============================================================
-
-Determine whether the plant appears healthy based ONLY on visible
-evidence.
-
-Healthy:
-true = no obvious serious visible disease, pest damage, severe
-nutrient deficiency, or major stress is visible.
-
-Healthy:
-false = obvious visible disease symptoms, significant pest damage,
-severe discoloration, extensive necrosis, or serious visible stress
-is present.
-
-Important:
-Do NOT diagnose an underlying cause unless the image provides
-strong visible evidence.
-
-For example, yellowing alone does NOT prove:
-overwatering, underwatering, root rot, nutrient deficiency, fungal
-infection, bacterial infection, or viral infection.
-
-A visible symptom may have multiple possible causes.
-
-============================================================
-6. DESCRIPTION
-============================================================
-
-Description should explain what is visibly present in the image.
-
-Focus on:
-- distinctive plant characteristics
-- visible leaf characteristics
-- visible flowers or reproductive structures
-- visible discoloration or damage
-- other useful botanical evidence
-
-Do not state uncertain causes as confirmed facts.
-
-============================================================
-7. CARE TIPS
-============================================================
-
-Provide practical general care advice appropriate for the identified
-plant.
-
-If the plant shows visible damage, provide sensible supportive care.
-
-Do not claim that a specific disease, pathogen, root problem,
-nutrient deficiency, or pest is confirmed unless it can reasonably
-be established from visible evidence.
-
-If the cause is uncertain, phrase the advice conservatively.
-
-============================================================
-8. NON-PLANT IMAGES
-============================================================
-
-If the image is not a plant, or there is not enough evidence to
-reasonably identify a plant:
-
-Plant Name: Unknown Plant
-Scientific Name: Unknown
-Confidence: 0
-Description: The image does not provide sufficient evidence for reliable plant identification.
-Care Tips: Unable to provide plant-specific care advice without a reliable identification.
-Healthy: true
-
-============================================================
-9. OUTPUT FORMAT
-============================================================
-
-Return ONLY these six fields:
-
-Plant Name:
-Scientific Name:
-Confidence:
-Description:
-Care Tips:
-Healthy:
-
-Strict rules:
-
-- Do not use Markdown.
-- Do not use bullet points.
-- Do not add extra headings.
-- Do not add explanations before or after the six fields.
-- Confidence must be a number from 0 to 100.
-- Do not include the % symbol in Confidence.
-- Healthy must be exactly true or false.
-- Keep each field on its own line.
-- Description should be concise but informative.
-- Care Tips should be practical and conservative.
-''',
-    );
-
-    final imagePart = InlineDataPart(
-      _detectMimeType(imageBytes),
+    final InlineDataPart imagePart =
+        InlineDataPart(
+      mimeType,
       imageBytes,
     );
 
-    final response = await _model.generateContent([
-      Content.multi([
-        prompt,
-        imagePart,
-      ]),
-    ]);
+    final TextPart prompt =
+        TextPart(
+      '''
+Analyze this plant photograph for GreenMind AI.
 
-    final text = response.text;
+Perform a real visual identification using the attached image.
 
-    if (text == null || text.trim().isEmpty) {
-      throw Exception(
-        'AI returned an empty response.',
+Analyze:
+
+- leaf shape
+- leaf arrangement
+- leaf color
+- venation
+- stem characteristics
+- flower or fruit if visible
+- overall plant structure
+- distinctive visual features
+- visible signs of stress
+- visible damage
+- visible pests
+- disease-like symptoms
+
+Determine:
+
+1. Most likely common plant name.
+2. Scientific name only if adequately supported.
+3. Visual identification confidence from 0 to 100.
+4. Concise visual description.
+5. Practical plant-specific care tips.
+6. Whether significant visible health problems are present.
+
+IMPORTANT:
+
+Do not use a predefined or hardcoded answer.
+
+If the photograph does not contain enough visual evidence
+for reliable identification:
+
+plantName = ""
+scientificName = ""
+confidence = 0
+
+Do not diagnose a disease with certainty from an image alone.
+
+Return ONLY the JSON object required by the response schema.
+''',
+    );
+
+    try {
+      return await _generateWithRetry(
+        prompt: prompt,
+        imagePart: imagePart,
+      );
+    } on IdentifyException {
+      rethrow;
+    } catch (
+      error,
+      stackTrace
+    ) {
+      _logError(
+        'UNEXPECTED IDENTIFICATION ERROR',
+        error,
+        stackTrace,
+      );
+
+      throw const IdentifyException(
+        IdentifyErrorType.unknown,
+        'Unable to identify the plant. Please try again.',
       );
     }
-
-    return _parseResult(text);
   }
 
   // ============================================================
-  // MIME TYPE DETECTION
+  // GENERATE WITH RETRY
+  // ============================================================
+
+  Future<IdentifyResult> _generateWithRetry({
+    required TextPart prompt,
+    required InlineDataPart imagePart,
+  }) async {
+    Object? lastError;
+    StackTrace? lastStackTrace;
+
+    for (
+      int attempt = 1;
+      attempt <= _maxAttempts;
+      attempt++
+    ) {
+      try {
+        _log(
+          'AI REQUEST ATTEMPT '
+          '$attempt/$_maxAttempts',
+        );
+
+        final response =
+            await _model.generateContent([
+          Content.multi([
+            prompt,
+            imagePart,
+          ]),
+        ]);
+
+        final String? text =
+            response.text?.trim();
+
+        if (text == null ||
+            text.isEmpty) {
+          throw const IdentifyException(
+            IdentifyErrorType.emptyResponse,
+            'Gemini returned an empty response.',
+          );
+        }
+
+        final IdentifyResult result =
+            _parseResult(text);
+
+        _log(
+          'AI IDENTIFICATION SUCCESS | '
+          'Plant: ${result.plantName} | '
+          'Scientific: ${result.scientificName} | '
+          'Confidence: '
+          '${result.confidence.toStringAsFixed(1)}',
+        );
+
+        return result;
+      } on IdentifyException {
+        rethrow;
+      } on FirebaseAIException catch (
+        error,
+        stackTrace
+      ) {
+        lastError = error;
+        lastStackTrace = stackTrace;
+
+        _logError(
+          'FIREBASE AI ERROR - ATTEMPT $attempt',
+          error,
+          stackTrace,
+        );
+
+        final IdentifyErrorType errorType =
+            _classifyFirebaseError(
+          error,
+        );
+
+        if (errorType ==
+                IdentifyErrorType
+                    .temporaryLimit &&
+            attempt < _maxAttempts) {
+          _log(
+            'Temporary AI limit detected. '
+            'Waiting '
+            '${_retryDelay.inSeconds}s '
+            'before retry...',
+          );
+
+          await Future<void>.delayed(
+            _retryDelay,
+          );
+
+          continue;
+        }
+
+        throw IdentifyException(
+          errorType,
+          _userMessageFor(
+            errorType,
+          ),
+        );
+      } catch (
+        error,
+        stackTrace
+      ) {
+        lastError = error;
+        lastStackTrace = stackTrace;
+
+        _logError(
+          'UNKNOWN AI ERROR - ATTEMPT $attempt',
+          error,
+          stackTrace,
+        );
+
+        throw const IdentifyException(
+          IdentifyErrorType.unknown,
+          'Unable to identify the plant. Please try again.',
+        );
+      }
+    }
+
+    _logError(
+      'AI REQUEST FAILED AFTER ALL ATTEMPTS',
+      lastError,
+      lastStackTrace,
+    );
+
+    throw const IdentifyException(
+      IdentifyErrorType.temporaryLimit,
+      'GreenMind AI is temporarily unavailable. Please try again later.',
+    );
+  }
+
+  // ============================================================
+  // CLASSIFY FIREBASE ERROR
+  // ============================================================
+
+  IdentifyErrorType _classifyFirebaseError(
+    FirebaseAIException error,
+  ) {
+    final String message =
+        error.message.toLowerCase();
+
+    final String raw =
+        error.toString().toLowerCase();
+
+    final String combined =
+        '$message $raw';
+
+    if (_containsAny(
+      combined,
+      [
+        '429',
+        'quota',
+        'resource exhausted',
+        'rate limit',
+        'too many requests',
+        'usage limit',
+        'temporarily reached',
+        'try again later',
+      ],
+    )) {
+      return IdentifyErrorType
+          .temporaryLimit;
+    }
+
+    if (_containsAny(
+      combined,
+      [
+        'timeout',
+        'timed out',
+        'deadline exceeded',
+      ],
+    )) {
+      return IdentifyErrorType.timeout;
+    }
+
+    if (_containsAny(
+      combined,
+      [
+        'network',
+        'connection',
+        'socket',
+        'failed host lookup',
+        'internet',
+        'connection reset',
+        'connection refused',
+      ],
+    )) {
+      return IdentifyErrorType.network;
+    }
+
+    if (_containsAny(
+      combined,
+      [
+        'api not configured',
+        'service disabled',
+        'not configured',
+        'invalid api key',
+        'permission',
+        'unauthorized',
+      ],
+    )) {
+      return IdentifyErrorType.configuration;
+    }
+
+    if (_containsAny(
+      combined,
+      [
+        'blocked',
+        'safety',
+        'prompt blocked',
+        'content blocked',
+      ],
+    )) {
+      return IdentifyErrorType.blocked;
+    }
+
+    if (_containsAny(
+      combined,
+      [
+        'server error',
+        'internal server error',
+        '500',
+        '502',
+        '503',
+        '504',
+      ],
+    )) {
+      return IdentifyErrorType.server;
+    }
+
+    return IdentifyErrorType.unknown;
+  }
+
+  // ============================================================
+  // USER FRIENDLY ERROR
+  // ============================================================
+
+  String _userMessageFor(
+    IdentifyErrorType type,
+  ) {
+    switch (type) {
+      case IdentifyErrorType.invalidImage:
+        return 'The selected image is invalid. Please choose another image.';
+
+      case IdentifyErrorType.unsupportedImage:
+        return 'This image format is not supported. Please use JPEG, PNG, or WEBP.';
+
+      case IdentifyErrorType.emptyResponse:
+        return 'GreenMind AI returned an empty response. Please try again.';
+
+      case IdentifyErrorType.temporaryLimit:
+        return 'GreenMind AI is temporarily busy or has reached its usage limit. Please wait a little while and try again.';
+
+      case IdentifyErrorType.network:
+        return 'Unable to connect to GreenMind AI. Please check your internet connection and try again.';
+
+      case IdentifyErrorType.timeout:
+        return 'The AI request took too long. Please try again.';
+
+      case IdentifyErrorType.configuration:
+        return 'GreenMind AI is not properly configured. Please check the Firebase AI configuration.';
+
+      case IdentifyErrorType.blocked:
+        return 'The image or request could not be processed by the AI service. Please try another plant image.';
+
+      case IdentifyErrorType.server:
+        return 'GreenMind AI is temporarily unavailable. Please try again later.';
+
+      case IdentifyErrorType.invalidResponse:
+        return 'GreenMind AI returned an invalid result. Please try again.';
+
+      case IdentifyErrorType.unknown:
+        return 'Unable to identify the plant. Please try again.';
+    }
+  }
+
+  // ============================================================
+  // PARSE RESULT
+  // ============================================================
+
+  IdentifyResult _parseResult(
+    String rawText,
+  ) {
+    final String cleaned =
+        _cleanJson(rawText);
+
+    dynamic decoded;
+
+    try {
+      decoded = jsonDecode(
+        cleaned,
+      );
+    } catch (
+      error,
+      stackTrace
+    ) {
+      _logError(
+        'JSON PARSE ERROR',
+        error,
+        stackTrace,
+      );
+
+      throw const IdentifyException(
+        IdentifyErrorType.invalidResponse,
+        'Gemini returned invalid JSON.',
+      );
+    }
+
+    if (decoded is! Map) {
+      throw const IdentifyException(
+        IdentifyErrorType.invalidResponse,
+        'Gemini response is not a JSON object.',
+      );
+    }
+
+    final Map<String, dynamic> data =
+        Map<String, dynamic>.from(
+      decoded,
+    );
+
+    final String plantName =
+        _stringValue(
+      data['plantName'],
+    );
+
+    final String scientificName =
+        _stringValue(
+      data['scientificName'],
+    );
+
+    final double confidence =
+        _doubleValue(
+      data['confidence'],
+    );
+
+    final String description =
+        _stringValue(
+      data['description'],
+    );
+
+    final String careTips =
+        _stringValue(
+      data['careTips'],
+    );
+
+    final bool isHealthy =
+        _boolValue(
+      data['isHealthy'],
+    );
+
+    // ----------------------------------------------------------
+    // INVALID CONFIDENCE
+    // ----------------------------------------------------------
+
+    if (!confidence.isFinite ||
+        confidence < 0 ||
+        confidence > 100) {
+      throw const IdentifyException(
+        IdentifyErrorType.invalidResponse,
+        'Gemini returned an invalid confidence value.',
+      );
+    }
+
+    // ----------------------------------------------------------
+    // EMPTY IDENTIFICATION
+    // ----------------------------------------------------------
+
+    if (plantName.isEmpty) {
+      return IdentifyResult(
+        plantName: '',
+        scientificName: '',
+        confidence: 0,
+        description: description,
+        careTips: careTips,
+        isHealthy: isHealthy,
+      );
+    }
+
+    return IdentifyResult(
+      plantName: plantName,
+      scientificName: scientificName,
+      confidence: confidence,
+      description: description,
+      careTips: careTips,
+      isHealthy: isHealthy,
+    );
+  }
+
+  // ============================================================
+  // CLEAN JSON
+  // ============================================================
+
+  String _cleanJson(
+    String text,
+  ) {
+    var cleaned = text.trim();
+
+    if (cleaned.startsWith('```')) {
+      cleaned = cleaned.replaceFirst(
+        RegExp(
+          r'^```(?:json)?\s*',
+          caseSensitive: false,
+        ),
+        '',
+      );
+
+      cleaned = cleaned.replaceFirst(
+        RegExp(
+          r'\s*```$',
+        ),
+        '',
+      );
+    }
+
+    return cleaned.trim();
+  }
+
+  // ============================================================
+  // STRING VALUE
+  // ============================================================
+
+  String _stringValue(
+    dynamic value,
+  ) {
+    if (value == null) {
+      return '';
+    }
+
+    return value
+        .toString()
+        .trim();
+  }
+
+  // ============================================================
+  // DOUBLE VALUE
+  // ============================================================
+
+  double _doubleValue(
+    dynamic value,
+  ) {
+    if (value is num) {
+      return value.toDouble();
+    }
+
+    return double.tryParse(
+          value?.toString() ?? '',
+        ) ??
+        0.0;
+  }
+
+  // ============================================================
+  // BOOLEAN VALUE
+  // ============================================================
+
+  bool _boolValue(
+    dynamic value,
+  ) {
+    if (value is bool) {
+      return value;
+    }
+
+    if (value is String) {
+      final normalized =
+          value.trim().toLowerCase();
+
+      if (normalized == 'true') {
+        return true;
+      }
+
+      if (normalized == 'false') {
+        return false;
+      }
+    }
+
+    return false;
+  }
+
+  // ============================================================
+  // MIME TYPE
   // ============================================================
 
   String _detectMimeType(
@@ -265,14 +786,6 @@ Strict rules:
       return 'image/png';
     }
 
-    // GIF
-    if (bytes.length >= 6 &&
-        bytes[0] == 0x47 &&
-        bytes[1] == 0x49 &&
-        bytes[2] == 0x46) {
-      return 'image/gif';
-    }
-
     // WEBP
     if (bytes.length >= 12 &&
         bytes[0] == 0x52 &&
@@ -286,214 +799,92 @@ Strict rules:
       return 'image/webp';
     }
 
-    // Fallback
-    return 'image/jpeg';
+    throw const IdentifyException(
+      IdentifyErrorType.unsupportedImage,
+      'Unsupported image format. Please use JPEG, PNG, or WEBP.',
+    );
   }
 
   // ============================================================
-  // PARSE AI RESULT
+  // STRING SEARCH
   // ============================================================
 
-  IdentifyResult _parseResult(
-    String text,
+  bool _containsAny(
+    String source,
+    List<String> values,
   ) {
-    final cleanedText = text
-        .replaceAll('```text', '')
-        .replaceAll('```plaintext', '')
-        .replaceAll('```', '')
-        .trim();
-
-    final values = <String, String>{};
-
-    String? currentKey;
-
-    for (final rawLine in cleanedText.split('\n')) {
-      final line = rawLine.trim();
-
-      if (line.isEmpty) {
-        continue;
-      }
-
-      final separatorIndex = line.indexOf(':');
-
-      // --------------------------------------------------------
-      // FIELD LINE
-      // --------------------------------------------------------
-
-      if (separatorIndex > 0) {
-        final rawKey = line
-            .substring(
-              0,
-              separatorIndex,
-            )
-            .trim()
-            .toLowerCase();
-
-        final value = line
-            .substring(
-              separatorIndex + 1,
-            )
-            .trim();
-
-        final normalizedKey = _normalizeKey(
-          rawKey,
-        );
-
-        if (_isSupportedKey(
-          normalizedKey,
-        )) {
-          values[normalizedKey] = value;
-          currentKey = normalizedKey;
-          continue;
-        }
-      }
-
-      // --------------------------------------------------------
-      // MULTI-LINE DESCRIPTION / CARE TIPS
-      // --------------------------------------------------------
-
-      if (currentKey != null &&
-          (currentKey == 'description' ||
-              currentKey == 'care tips')) {
-        final String key = currentKey;
-
-        final previous = values[key] ?? '';
-
-        values[key] = previous.isEmpty
-            ? line
-            : '$previous $line';
+    for (final value in values) {
+      if (source.contains(value)) {
+        return true;
       }
     }
 
-    // ==========================================================
-    // EXTRACT VALUES
-    // ==========================================================
+    return false;
+  }
 
-    final plantName =
-        values['plant name']?.trim() ?? '';
+  // ============================================================
+  // DEBUG LOG
+  // ============================================================
 
-    final scientificName =
-        values['scientific name']?.trim() ?? '';
-
-    final confidenceText =
-        values['confidence']?.trim() ?? '0';
-
-    final description =
-        values['description']?.trim() ?? '';
-
-    final careTips =
-        values['care tips']?.trim() ?? '';
-
-    final healthyText =
-        values['healthy']?.trim() ?? '';
-
-    // ==========================================================
-    // CONFIDENCE
-    // ==========================================================
-
-    var confidence = _parseConfidence(
-      confidenceText,
-    );
-
-    confidence = confidence.clamp(
-      0.0,
-      100.0,
-    );
-
-    // ==========================================================
-    // HEALTH
-    // ==========================================================
-
-    final isHealthy = _parseHealth(
-      healthyText,
-    );
-
-    // ==========================================================
-    // VALIDATION
-    // ==========================================================
-
-    if (plantName.isEmpty &&
-        scientificName.isEmpty) {
-      throw Exception(
-        'AI response could not be parsed.',
-      );
-    }
-
-    return IdentifyResult(
-      plantName: plantName.isEmpty
-          ? 'Unknown Plant'
-          : plantName,
-      scientificName: scientificName,
-      confidence: confidence,
-      description: description,
-      careTips: careTips,
-      isHealthy: isHealthy,
+  void _log(
+    String message,
+  ) {
+    _logger.d(
+      '[GreenMind AI] $message',
     );
   }
 
   // ============================================================
-  // CONFIDENCE PARSER
+  // DEBUG ERROR
   // ============================================================
 
-  double _parseConfidence(
-    String value,
+  void _logError(
+    String title,
+    Object? error,
+    StackTrace? stackTrace,
   ) {
-    final cleaned = value
-        .replaceAll('%', '')
-        .trim();
-
-    return double.tryParse(
-          cleaned,
-        ) ??
-        0;
+    _logger.e(
+      '[GreenMind AI] $title',
+      error: error,
+      stackTrace: stackTrace,
+    );
   }
+}
 
-  // ============================================================
-  // HEALTH PARSER
-  // ============================================================
+// ================================================================
+// ERROR TYPES
+// ================================================================
 
-  bool _parseHealth(
-    String value,
-  ) {
-    final normalized = value
-        .toLowerCase()
-        .replaceAll(
-          RegExp(r'[^a-z]'),
-          '',
-        );
+enum IdentifyErrorType {
+  invalidImage,
+  unsupportedImage,
+  emptyResponse,
+  temporaryLimit,
+  network,
+  timeout,
+  configuration,
+  blocked,
+  server,
+  invalidResponse,
+  unknown,
+}
 
-    return normalized == 'true';
-  }
+// ================================================================
+// IDENTIFICATION EXCEPTION
+// ================================================================
 
-  // ============================================================
-  // NORMALIZE KEY
-  // ============================================================
+class IdentifyException
+    implements Exception {
+  final IdentifyErrorType type;
+  final String message;
 
-  String _normalizeKey(
-    String key,
-  ) {
-    return key
-        .replaceAll('_', ' ')
-        .replaceAll('-', ' ')
-        .replaceAll(
-          RegExp(r'\s+'),
-          ' ',
-        )
-        .trim();
-  }
+  const IdentifyException(
+    this.type,
+    this.message,
+  );
 
-  // ============================================================
-  // SUPPORTED KEYS
-  // ============================================================
-
-  bool _isSupportedKey(
-    String key,
-  ) {
-    return key == 'plant name' ||
-        key == 'scientific name' ||
-        key == 'confidence' ||
-        key == 'description' ||
-        key == 'care tips' ||
-        key == 'healthy';
+  @override
+  String toString() {
+    return 'IdentifyException: $message';
   }
 }

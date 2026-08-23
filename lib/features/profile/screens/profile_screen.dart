@@ -27,9 +27,9 @@ class ProfileScreen extends ConsumerWidget {
     final state = ref.watch(profileProvider);
     final notifier = ref.read(profileProvider.notifier);
 
-    // ============================================================
+    // ==========================================================
     // LOADING
-    // ============================================================
+    // ==========================================================
 
     if (state.isLoading) {
       return const Scaffold(
@@ -39,14 +39,14 @@ class ProfileScreen extends ConsumerWidget {
       );
     }
 
-    // ============================================================
+    // ==========================================================
     // SCREEN
-    // ============================================================
+    // ==========================================================
 
     return Scaffold(
-      // ==========================================================
+      // ========================================================
       // APP BAR
-      // ==========================================================
+      // ========================================================
 
       appBar: AppBar(
         leading: IconButton(
@@ -68,9 +68,9 @@ class ProfileScreen extends ConsumerWidget {
         centerTitle: true,
       ),
 
-      // ==========================================================
+      // ========================================================
       // BODY
-      // ==========================================================
+      // ========================================================
 
       body: SafeArea(
         child: RefreshIndicator(
@@ -154,6 +154,12 @@ class ProfileScreen extends ConsumerWidget {
                       ref,
                     );
                   },
+                  onFeedback: () {
+                    context.push('/feedback');
+                  },
+                  onSupport: () {
+                    context.push('/support');
+                  },
                   onSignOut: () {
                     _signOut(context);
                   },
@@ -168,8 +174,7 @@ class ProfileScreen extends ConsumerWidget {
                     height: AppSpacing.md,
                   ),
                   _ErrorMessage(
-                    message:
-                        state.errorMessage!,
+                    message: state.errorMessage!,
                   ),
                 ],
 
@@ -223,10 +228,8 @@ class ProfileScreen extends ConsumerWidget {
                     sheetContext,
                   ).pop();
 
-                  await notifier
-                      .changeProfilePicture(
-                    source:
-                        ImageSource.camera,
+                  await notifier.changeProfilePicture(
+                    source: ImageSource.camera,
                   );
                 },
               ),
@@ -247,10 +250,8 @@ class ProfileScreen extends ConsumerWidget {
                     sheetContext,
                   ).pop();
 
-                  await notifier
-                      .changeProfilePicture(
-                    source:
-                        ImageSource.gallery,
+                  await notifier.changeProfilePicture(
+                    source: ImageSource.gallery,
                   );
                 },
               ),
@@ -259,10 +260,8 @@ class ProfileScreen extends ConsumerWidget {
               // REMOVE PHOTO
               // ==================================================
 
-              if (profile.profileImagePath !=
-                      null &&
-                  profile.profileImagePath!
-                      .isNotEmpty)
+              if (profile.profileImagePath != null &&
+                  profile.profileImagePath!.isNotEmpty)
                 ListTile(
                   leading: const Icon(
                     Icons.delete_outline,
@@ -279,8 +278,7 @@ class ProfileScreen extends ConsumerWidget {
                       sheetContext,
                     ).pop();
 
-                    await notifier
-                        .removeProfilePicture();
+                    await notifier.removeProfilePicture();
                   },
                 ),
 
@@ -305,8 +303,7 @@ class ProfileScreen extends ConsumerWidget {
     final profile =
         ref.read(profileProvider).profile;
 
-    final result =
-        await showDialog<bool>(
+    final result = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
@@ -319,9 +316,7 @@ class ProfileScreen extends ConsumerWidget {
             required String bio,
           }) async {
             await ref
-                .read(
-                  profileProvider.notifier,
-                )
+                .read(profileProvider.notifier)
                 .updateProfile(
                   name: name,
                   location: location,
@@ -332,21 +327,14 @@ class ProfileScreen extends ConsumerWidget {
             final updatedState =
                 ref.read(profileProvider);
 
-            return updatedState.errorMessage ==
-                null;
+            return updatedState.errorMessage == null;
           },
         );
       },
     );
 
-    // ==========================================================
-    // SUCCESS MESSAGE
-    // ==========================================================
-
-    if (result == true &&
-        context.mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
+    if (result == true && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
             'Profile updated successfully.',
@@ -364,8 +352,7 @@ class ProfileScreen extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
   ) async {
-    final confirmed =
-        await showDialog<bool>(
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
@@ -415,8 +402,7 @@ class ProfileScreen extends ConsumerWidget {
         ref.read(profileProvider);
 
     if (context.mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             state.errorMessage ??
@@ -442,8 +428,7 @@ class ProfileScreen extends ConsumerWidget {
       }
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
               'Unable to sign out. Please try again.',
@@ -459,8 +444,7 @@ class ProfileScreen extends ConsumerWidget {
 // EDIT PROFILE DIALOG
 // ============================================================================
 
-class _EditProfileDialog
-    extends StatefulWidget {
+class _EditProfileDialog extends StatefulWidget {
   final UserProfile profile;
 
   final Future<bool> Function({
@@ -486,17 +470,10 @@ class _EditProfileDialog
 
 class _EditProfileDialogState
     extends State<_EditProfileDialog> {
-  late final TextEditingController
-      _nameController;
-
-  late final TextEditingController
-      _locationController;
-
-  late final TextEditingController
-      _phoneController;
-
-  late final TextEditingController
-      _bioController;
+  late final TextEditingController _nameController;
+  late final TextEditingController _locationController;
+  late final TextEditingController _phoneController;
+  late final TextEditingController _bioController;
 
   bool _saving = false;
 
@@ -504,23 +481,19 @@ class _EditProfileDialogState
   void initState() {
     super.initState();
 
-    _nameController =
-        TextEditingController(
+    _nameController = TextEditingController(
       text: widget.profile.name,
     );
 
-    _locationController =
-        TextEditingController(
+    _locationController = TextEditingController(
       text: widget.profile.location,
     );
 
-    _phoneController =
-        TextEditingController(
+    _phoneController = TextEditingController(
       text: widget.profile.phone,
     );
 
-    _bioController =
-        TextEditingController(
+    _bioController = TextEditingController(
       text: widget.profile.bio,
     );
   }
@@ -591,8 +564,7 @@ class _EditProfileDialogState
     });
 
     try {
-      final success =
-          await widget.onSave(
+      final success = await widget.onSave(
         name: name,
         location: location,
         phone: phone,
@@ -614,10 +586,6 @@ class _EditProfileDialogState
 
         return;
       }
-
-      // ========================================================
-      // SUCCESS
-      // ========================================================
 
       Navigator.of(context).pop(true);
     } catch (_) {
@@ -646,8 +614,7 @@ class _EditProfileDialogState
       return;
     }
 
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
       ),
@@ -671,10 +638,6 @@ class _EditProfileDialogState
           mainAxisSize:
               MainAxisSize.min,
           children: [
-            // ==================================================
-            // NAME
-            // ==================================================
-
             TextField(
               controller:
                   _nameController,
@@ -693,10 +656,6 @@ class _EditProfileDialogState
             const SizedBox(
               height: 14,
             ),
-
-            // ==================================================
-            // EMAIL
-            // ==================================================
 
             TextField(
               enabled: false,
@@ -720,10 +679,6 @@ class _EditProfileDialogState
               height: 14,
             ),
 
-            // ==================================================
-            // LOCATION
-            // ==================================================
-
             TextField(
               controller:
                   _locationController,
@@ -743,10 +698,6 @@ class _EditProfileDialogState
               height: 14,
             ),
 
-            // ==================================================
-            // PHONE
-            // ==================================================
-
             TextField(
               controller:
                   _phoneController,
@@ -765,10 +716,6 @@ class _EditProfileDialogState
             const SizedBox(
               height: 14,
             ),
-
-            // ==================================================
-            // BIO
-            // ==================================================
 
             TextField(
               controller:
@@ -790,10 +737,6 @@ class _EditProfileDialogState
           ],
         ),
       ),
-
-      // ========================================================
-      // ACTIONS
-      // ========================================================
 
       actions: [
         TextButton(
@@ -893,17 +836,11 @@ class _PreferencesCard
             ),
           ),
 
-          // ==================================================
-          // NOTIFICATIONS
-          // ==================================================
-
           SwitchListTile(
-            value: state
-                .profile
-                .notificationsEnabled,
+            value:
+                state.profile.notificationsEnabled,
             onChanged: (_) {
-              notifier
-                  .toggleNotifications();
+              notifier.toggleNotifications();
             },
             title: const Text(
               'Notifications',
@@ -916,14 +853,9 @@ class _PreferencesCard
             ),
           ),
 
-          // ==================================================
-          // DARK MODE
-          // ==================================================
-
           SwitchListTile(
-            value: state
-                .profile
-                .darkModeEnabled,
+            value:
+                state.profile.darkModeEnabled,
             onChanged: (_) {
               notifier.toggleDarkMode();
             },
@@ -947,13 +879,16 @@ class _PreferencesCard
 // ACCOUNT CARD
 // ============================================================================
 
-class _AccountCard
-    extends StatelessWidget {
+class _AccountCard extends StatelessWidget {
   final VoidCallback onReset;
+  final VoidCallback onFeedback;
+  final VoidCallback onSupport;
   final VoidCallback onSignOut;
 
   const _AccountCard({
     required this.onReset,
+    required this.onFeedback,
+    required this.onSupport,
     required this.onSignOut,
   });
 
@@ -996,6 +931,54 @@ class _AccountCard
           ),
 
           // ==================================================
+          // SUPPORT
+          // ==================================================
+
+          ListTile(
+            leading: const Icon(
+              Icons.support_agent_outlined,
+            ),
+            title: const Text(
+              'Help & Support',
+            ),
+            subtitle: const Text(
+              'Get help or contact GreenMind AI support',
+            ),
+            trailing: const Icon(
+              Icons.chevron_right_rounded,
+            ),
+            onTap: onSupport,
+          ),
+
+          const Divider(
+            height: 1,
+          ),
+
+          // ==================================================
+          // FEEDBACK
+          // ==================================================
+
+          ListTile(
+            leading: const Icon(
+              Icons.feedback_outlined,
+            ),
+            title: const Text(
+              'Send Feedback',
+            ),
+            subtitle: const Text(
+              'Share your experience with GreenMind AI',
+            ),
+            trailing: const Icon(
+              Icons.chevron_right_rounded,
+            ),
+            onTap: onFeedback,
+          ),
+
+          const Divider(
+            height: 1,
+          ),
+
+          // ==================================================
           // SIGN OUT
           // ==================================================
 
@@ -1022,8 +1005,7 @@ class _AccountCard
 // ERROR MESSAGE
 // ============================================================================
 
-class _ErrorMessage
-    extends StatelessWidget {
+class _ErrorMessage extends StatelessWidget {
   final String message;
 
   const _ErrorMessage({
@@ -1036,8 +1018,7 @@ class _ErrorMessage
   ) {
     return Container(
       width: double.infinity,
-      padding:
-          const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.red.withValues(
           alpha: 0.08,
