@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="GreenMind AI - AI-powered plant assistant. Identify plants, detect diseases, analyze plant health and get care recommendations.">
+  <meta name="keywords" content="GreenMind AI, plant identification, plant disease detection, Flutter app">
+  <meta name="robots" content="index, follow">
+  <meta property="og:title" content="GreenMind AI — AI Plant Assistant">
+  <meta property="og:description" content="Identify plants, detect diseases and get intelligent plant care guidance.">
+  <title>GreenMind AI — AI Plant Assistant</title>
+  <style>
+    :root{--bg:#07110c;--card:#0d1c14;--card2:#10261a;--text:#f4fbf6;--muted:#a9b9ae;--accent:#54d889;--accent2:#2eb872;--border:#1d3a29}
+    *{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:radial-gradient(circle at 80% 10%,#173a25 0,transparent 35%),linear-gradient(135deg,var(--bg),#08150f 60%,#06100b);color:var(--text);min-height:100vh}
+    .wrap{max-width:1100px;margin:auto;padding:24px}.nav{display:flex;justify-content:space-between;align-items:center;padding:10px 0}.brand{font-weight:800;font-size:22px;letter-spacing:.2px}.brand span{color:var(--accent)}.nav a{color:var(--muted);text-decoration:none;margin-left:22px}.nav a:hover{color:var(--text)}
+    .hero{padding:92px 0 70px;text-align:center}.badge{display:inline-block;border:1px solid var(--border);background:rgba(84,216,137,.08);color:var(--accent);padding:8px 14px;border-radius:999px;font-size:14px}.hero h1{font-size:clamp(44px,8vw,78px);line-height:1;margin:20px 0 16px}.hero h1 span{color:var(--accent)}.hero p{max-width:700px;margin:0 auto;color:var(--muted);font-size:19px;line-height:1.7}.buttons{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-top:32px}.btn{display:inline-block;padding:14px 22px;border-radius:12px;text-decoration:none;font-weight:750}.primary{background:var(--accent);color:#041008}.primary:hover{background:#72e69d}.secondary{border:1px solid var(--border);background:var(--card);color:var(--text)}
+    section{padding:54px 0} h2{text-align:center;font-size:34px;margin:0 0 30px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.card{background:linear-gradient(145deg,rgba(16,38,26,.95),rgba(10,25,17,.95));border:1px solid var(--border);border-radius:18px;padding:24px}.card h3{margin:0 0 10px}.card p{color:var(--muted);line-height:1.6;margin:0}.icon{font-size:28px;margin-bottom:12px}.steps{max-width:760px;margin:auto}.step{display:flex;gap:18px;margin:16px 0;padding:20px;border:1px solid var(--border);background:rgba(13,28,20,.75);border-radius:15px}.num{min-width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#041008;font-weight:800}.step p{margin:4px 0 0;color:var(--muted);line-height:1.55}.download{background:linear-gradient(145deg,#10291b,#0b1c13);border:1px solid var(--border);border-radius:24px;padding:42px;text-align:center}.download p{color:var(--muted);line-height:1.6}.version{display:inline-block;color:var(--accent);font-weight:700;margin-bottom:8px}footer{border-top:1px solid var(--border);padding:28px 0;color:var(--muted);text-align:center}footer a{color:var(--accent);text-decoration:none}
+    @media(max-width:760px){.grid{grid-template-columns:1fr}.hero{padding-top:60px}.nav a{margin-left:10px;font-size:14px}.download{padding:28px 18px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav class="nav">
+      <div class="brand">GreenMind <span>AI</span></div>
+      <div><a href="#features">Features</a><a href="#install">Install</a></div>
+    </nav>
+
+    <main>
+      <section class="hero">
+        <div class="badge">Latest release · v1.0.0</div>
+        <h1>GreenMind <span>AI</span></h1>
+        <p>An AI-powered plant assistant built with Flutter. Identify plants, detect diseases, understand plant health and get practical care guidance.</p>
+        <div class="buttons">
+          <a class="btn primary" href="https://github.com/amrulhasa/greenmind_ai/releases/download/v1.0.0/app-release.apk">Download APK</a>
+          <a class="btn secondary" href="https://github.com/amrulhasa/greenmind_ai">View on GitHub</a>
+        </div>
+      </section>
+
+      <section id="features">
+        <h2>What GreenMind AI Can Do</h2>
+        <div class="grid">
+          <div class="card"><div class="icon">🌿</div><h3>Plant Identification</h3><p>Identify plants using AI-powered image analysis.</p></div>
+          <div class="card"><div class="icon">🔬</div><h3>Disease Detection</h3><p>Analyze plant symptoms and identify potential diseases.</p></div>
+          <div class="card"><div class="icon">📊</div><h3>Plant Health Analysis</h3><p>Get useful insights about plant condition and health.</p></div>
+          <div class="card"><div class="icon">📋</div><h3>Care Reports</h3><p>Generate structured plant care reports and recommendations.</p></div>
+          <div class="card"><div class="icon">💬</div><h3>AI Assistant</h3><p>Ask questions and get intelligent plant-care guidance.</p></div>
+          <div class="card"><div class="icon">🕘</div><h3>Plant History</h3><p>Keep track of recent plant identification and analysis activity.</p></div>
+        </div>
+      </section>
+
+      <section id="install">
+        <h2>Install on Android</h2>
+        <div class="steps">
+          <div class="step"><div class="num">1</div><div><strong>Download the APK</strong><p>Tap the Download APK button above. The latest GreenMind AI release will download from GitHub.</p></div></div>
+          <div class="step"><div class="num">2</div><div><strong>Open the downloaded file</strong><p>Open app-release.apk from your browser's Downloads or your Files app.</p></div></div>
+          <div class="step"><div class="num">3</div><div><strong>Allow installation if Android asks</strong><p>If Android shows a security prompt for an app from an unknown source, allow the browser or file manager to install this APK.</p></div></div>
+          <div class="step"><div class="num">4</div><div><strong>Install GreenMind AI</strong><p>Tap Install and launch the app after installation completes.</p></div></div>
+        </div>
+      </section>
+
+      <section>
+        <div class="download">
+          <div class="version">GreenMind AI v1.0.0</div>
+          <h2 style="margin-bottom:12px">Ready to try GreenMind AI?</h2>
+          <p>Download the Android APK and explore the plant identification, disease detection and care features.</p>
+          <a class="btn primary" href="https://github.com/amrulhasa/greenmind_ai/releases/download/v1.0.0/app-release.apk">Download GreenMind AI</a>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      GreenMind AI · Built with Flutter · <a href="https://github.com/amrulhasa/greenmind_ai">GitHub Repository</a>
+    </footer>
+  </div>
+</body>
+</html>
