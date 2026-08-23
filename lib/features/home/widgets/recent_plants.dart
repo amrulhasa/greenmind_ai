@@ -7,88 +7,104 @@ import '../models/recent_plant.dart';
 import '../providers/recent_plants_provider.dart';
 import 'recent_plant_details_screen.dart';
 
-class RecentPlants extends ConsumerWidget {
-  const RecentPlants({super.key});
+class RecentPlants
+    extends ConsumerWidget {
+  const RecentPlants({
+    super.key,
+  });
 
   @override
   Widget build(
     BuildContext context,
     WidgetRef ref,
   ) {
-    final state = ref.watch(recentPlantsProvider);
-
-    // ==========================================================
-    // LOADING
-    // ==========================================================
+    final state =
+        ref.watch(
+      recentPlantsProvider,
+    );
 
     if (state.isLoading) {
-      return _LoadingCard();
+      return const _LoadingCard();
     }
-
-    // ==========================================================
-    // ERROR
-    // ==========================================================
 
     if (state.errorMessage != null &&
         state.plants.isEmpty) {
       return _ErrorCard(
-        message: state.errorMessage!,
+        message:
+            state.errorMessage!,
       );
     }
-
-    // ==========================================================
-    // EMPTY
-    // ==========================================================
 
     if (state.plants.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    // ==========================================================
-    // RECENT SCANS
-    // ==========================================================
+    final colors =
+        Theme.of(context)
+            .colorScheme;
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
       children: [
         Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
               width: 40,
               height: 40,
-              decoration: BoxDecoration(
-                color: const Color(0xFFEAF5EC),
-                borderRadius: BorderRadius.circular(13),
+              decoration:
+                  BoxDecoration(
+                color:
+                    colors.primary
+                        .withValues(
+                  alpha: 0.12,
+                ),
+                borderRadius:
+                    BorderRadius.circular(
+                  13,
+                ),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.history_rounded,
                 size: 20,
-                color: Color(0xFF2E7D32),
+                color:
+                    colors.primary,
               ),
             ),
 
-            const SizedBox(width: 11),
+            const SizedBox(
+              width: 11,
+            ),
 
-            const Expanded(
+            Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment:
+                    CrossAxisAlignment
+                        .start,
                 children: [
                   Text(
                     'Recent Scans',
-                    style: TextStyle(
+                    style:
+                        TextStyle(
                       fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.3,
-                      color: Color(0xFF182019),
+                      fontWeight:
+                          FontWeight.w800,
+                      letterSpacing:
+                          -0.3,
+                      color:
+                          colors.onSurface,
                     ),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(
+                    height: 2,
+                  ),
                   Text(
                     'Your latest plant discoveries',
-                    style: TextStyle(
+                    style:
+                        TextStyle(
                       fontSize: 11,
-                      color: Color(0xFF7A857C),
+                      color: colors
+                          .onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -96,35 +112,50 @@ class RecentPlants extends ConsumerWidget {
             ),
 
             Material(
-              color: Colors.transparent,
+              color:
+                  Colors.transparent,
               child: InkWell(
-                onTap: () {
-                  _showClearConfirmation(
-                    context,
-                    ref,
-                  );
-                },
-                borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
+                onTap: () =>
+                    _showClearConfirmation(
+                  context,
+                  ref,
+                ),
+                borderRadius:
+                    BorderRadius.circular(
+                  12,
+                ),
+                child:
+                    Padding(
+                  padding:
+                      const EdgeInsets
+                          .symmetric(
                     horizontal: 10,
                     vertical: 8,
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                  child:
+                      Row(
+                    mainAxisSize:
+                        MainAxisSize.min,
                     children: [
-                      const Icon(
-                        Icons.delete_outline_rounded,
+                      Icon(
+                        Icons
+                            .delete_outline_rounded,
                         size: 16,
-                        color: Color(0xFF2E7D32),
+                        color:
+                            colors.primary,
                       ),
-                      const SizedBox(width: 4),
-                      const Text(
+                      const SizedBox(
+                        width: 4,
+                      ),
+                      Text(
                         'Clear',
-                        style: TextStyle(
+                        style:
+                            TextStyle(
                           fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF2E7D32),
+                          fontWeight:
+                              FontWeight.w700,
+                          color:
+                              colors.primary,
                         ),
                       ),
                     ],
@@ -135,20 +166,26 @@ class RecentPlants extends ConsumerWidget {
           ],
         ),
 
-        const SizedBox(height: 15),
+        const SizedBox(
+          height: 15,
+        ),
 
         ListView.separated(
           shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: state.plants.length,
-          separatorBuilder: (_, _) {
-            return const SizedBox(height: 10);
-          },
-          itemBuilder: (context, index) {
-            final plant = state.plants[index];
-
+          physics:
+              const NeverScrollableScrollPhysics(),
+          itemCount:
+              state.plants.length,
+          separatorBuilder:
+              (_, _) =>
+                  const SizedBox(
+            height: 10,
+          ),
+          itemBuilder:
+              (context, index) {
             return _RecentPlantCard(
-              plant: plant,
+              plant:
+                  state.plants[index],
             );
           },
         ),
@@ -156,101 +193,81 @@ class RecentPlants extends ConsumerWidget {
     );
   }
 
-  Future<void> _showClearConfirmation(
+  Future<void>
+      _showClearConfirmation(
     BuildContext context,
     WidgetRef ref,
   ) async {
-    final shouldClear = await showDialog<bool>(
+    final colors =
+        Theme.of(context)
+            .colorScheme;
+
+    final shouldClear =
+        await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Colors.white,
-          surfaceTintColor: Colors.transparent,
-          elevation: 12,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(26),
-          ),
-          titlePadding: const EdgeInsets.fromLTRB(
-            24,
-            24,
-            24,
-            8,
-          ),
-          contentPadding: const EdgeInsets.fromLTRB(
-            24,
-            0,
-            24,
-            8,
-          ),
-          actionsPadding: const EdgeInsets.fromLTRB(
-            16,
-            8,
-            16,
-            16,
-          ),
-          title: const Row(
+          title: Row(
             children: [
-              Icon(
-                Icons.delete_sweep_outlined,
-                color: Color(0xFFD94B43),
-                size: 25,
+              const Icon(
+                Icons
+                    .delete_sweep_outlined,
+                color:
+                    Color(0xFFD94B43),
               ),
-              SizedBox(width: 10),
-              Text(
-                'Clear Recent Scans?',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF1D261F),
+              const SizedBox(
+                width: 10,
+              ),
+              Expanded(
+                child: Text(
+                  'Clear Recent Scans?',
+                  style:
+                      TextStyle(
+                    color:
+                        colors.onSurface,
+                    fontWeight:
+                        FontWeight.w800,
+                  ),
                 ),
               ),
             ],
           ),
-          content: const Text(
+          content:
+              Text(
             'All recent plant scans will be removed. '
             'This action cannot be undone.',
-            style: TextStyle(
-              fontSize: 13,
-              height: 1.45,
-              color: Color(0xFF68736A),
+            style:
+                TextStyle(
+              color: colors
+                  .onSurfaceVariant,
             ),
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(false);
-              },
-              style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFF667269),
-              ),
-              child: const Text(
+              onPressed: () =>
+                  Navigator.of(
+                context,
+              ).pop(false),
+              child:
+                  const Text(
                 'Cancel',
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                ),
               ),
             ),
             FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFD94B43),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 11,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(13),
+              style:
+                  FilledButton.styleFrom(
+                backgroundColor:
+                    const Color(
+                  0xFFD94B43,
                 ),
               ),
-              onPressed: () {
-                Navigator.of(context).pop(true);
-              },
-              child: const Text(
+              onPressed: () =>
+                  Navigator.of(
+                context,
+              ).pop(true),
+              child:
+                  const Text(
                 'Clear Scans',
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                ),
               ),
             ),
           ],
@@ -263,16 +280,20 @@ class RecentPlants extends ConsumerWidget {
     }
 
     await ref
-        .read(recentPlantsProvider.notifier)
+        .read(
+          recentPlantsProvider
+              .notifier,
+        )
         .clearAll();
   }
 }
 
 // ============================================================================
-// RECENT PLANT CARD
+// CARD
 // ============================================================================
 
-class _RecentPlantCard extends StatelessWidget {
+class _RecentPlantCard
+    extends StatelessWidget {
   const _RecentPlantCard({
     required this.plant,
   });
@@ -280,187 +301,298 @@ class _RecentPlantCard extends StatelessWidget {
   final RecentPlant plant;
 
   @override
-  Widget build(BuildContext context) {
-    final confidence = plant.confidence
-        .clamp(0.0, 100.0)
-        .toDouble();
+  Widget build(
+    BuildContext context,
+  ) {
+    final colors =
+        Theme.of(context)
+            .colorScheme;
 
-    final isDisease = plant.isDiseaseDetection;
+    final confidence =
+        plant.confidence
+            .clamp(0.0, 100.0)
+            .toDouble();
+
+    final isDisease =
+        plant.isDiseaseDetection;
 
     final title = isDisease
-        ? (
-            plant.diseaseName.trim().isEmpty
-                ? 'Plant Health Scan'
-                : plant.diseaseName.trim()
-          )
-        : (
-            plant.plantName.trim().isEmpty
-                ? 'Unknown Plant'
-                : plant.plantName.trim()
-          );
+        ? plant.diseaseName
+                .trim()
+                .isEmpty
+            ? 'Plant Health Scan'
+            : plant.diseaseName.trim()
+        : plant.plantName
+                .trim()
+                .isEmpty
+            ? 'Unknown Plant'
+            : plant.plantName.trim();
 
-    final statusColor = plant.isHealthy
-        ? const Color(0xFF2E7D32)
-        : const Color(0xFFE67E22);
+    final statusColor =
+        plant.isHealthy
+            ? colors.primary
+            : const Color(0xFFE67E22);
 
-    final statusBackground = plant.isHealthy
-        ? const Color(0xFFEAF5EC)
-        : const Color(0xFFFFF2E5);
+    final statusBackground =
+        plant.isHealthy
+            ? colors.primary
+                .withValues(
+                alpha: 0.12,
+              )
+            : const Color(
+                0xFFE67E22,
+              ).withValues(
+                alpha: 0.12,
+              );
 
     return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(22),
-      clipBehavior: Clip.antiAlias,
+      color:
+          Colors.transparent,
+      borderRadius:
+          BorderRadius.circular(
+        22,
+      ),
+      clipBehavior:
+          Clip.antiAlias,
       child: InkWell(
         onTap: () {
-          Navigator.of(context).push(
+          Navigator.of(
+            context,
+          ).push(
             MaterialPageRoute(
-              builder: (_) => RecentPlantDetailsScreen(
+              builder: (_) =>
+                  RecentPlantDetailsScreen(
                 plant: plant,
               ),
             ),
           );
         },
         child: Ink(
-          padding: const EdgeInsets.all(13),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: const Color(0xFFE1E9E2),
+          padding:
+              const EdgeInsets.all(
+            13,
+          ),
+          decoration:
+              BoxDecoration(
+            color:
+                colors.surface,
+            borderRadius:
+                BorderRadius.circular(
+              22,
+            ),
+            border:
+                Border.all(
+              color:
+                  colors.outline,
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF18351C)
-                    .withValues(alpha: 0.035),
-                blurRadius: 19,
-                offset: const Offset(0, 8),
+                color:
+                    Colors.black
+                        .withValues(
+                  alpha:
+                      Theme.of(context)
+                              .brightness ==
+                          Brightness.dark
+                      ? 0.20
+                      : 0.035,
+                ),
+                blurRadius:
+                    19,
+                offset:
+                    const Offset(
+                  0,
+                  8,
+                ),
               ),
             ],
           ),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // ========================================================
-              // IMAGE
-              // ========================================================
-
               _PlantImage(
-                imageBase64: plant.imageBase64,
+                imageBase64:
+                    plant.imageBase64,
               ),
 
-              const SizedBox(width: 13),
-
-              // ========================================================
-              // CONTENT
-              // ========================================================
+              const SizedBox(
+                width: 13,
+              ),
 
               Expanded(
                 child: Column(
                   crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                      CrossAxisAlignment
+                          .start,
                   children: [
                     Row(
                       crossAxisAlignment:
-                          CrossAxisAlignment.start,
+                          CrossAxisAlignment
+                              .start,
                       children: [
                         Expanded(
                           child: Text(
                             title,
                             maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 14.5,
-                              height: 1.2,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF1D261F),
+                            overflow:
+                                TextOverflow
+                                    .ellipsis,
+                            style:
+                                TextStyle(
+                              fontSize:
+                                  14.5,
+                              height:
+                                  1.2,
+                              fontWeight:
+                                  FontWeight
+                                      .w800,
+                              color:
+                                  colors
+                                      .onSurface,
                             ),
                           ),
                         ),
 
-                        const SizedBox(width: 7),
+                        const SizedBox(
+                          width: 7,
+                        ),
 
                         Container(
                           width: 28,
                           height: 28,
-                          decoration: BoxDecoration(
-                            color: statusBackground,
-                            shape: BoxShape.circle,
+                          decoration:
+                              BoxDecoration(
+                            color:
+                                statusBackground,
+                            shape:
+                                BoxShape
+                                    .circle,
                           ),
-                          child: Icon(
-                            plant.isHealthy
-                                ? Icons.check_circle_rounded
-                                : Icons.warning_amber_rounded,
+                          child:
+                              Icon(
+                            plant
+                                    .isHealthy
+                                ? Icons
+                                    .check_circle_rounded
+                                : Icons
+                                    .warning_amber_rounded,
                             size: 16,
-                            color: statusColor,
+                            color:
+                                statusColor,
                           ),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 6),
+                    const SizedBox(
+                      height: 6,
+                    ),
 
                     Container(
-                      padding: const EdgeInsets.symmetric(
+                      padding:
+                          const EdgeInsets
+                              .symmetric(
                         horizontal: 8,
                         vertical: 4,
                       ),
-                      decoration: BoxDecoration(
+                      decoration:
+                          BoxDecoration(
                         color: isDisease
-                            ? const Color(0xFFFFF0EF)
-                            : const Color(0xFFEAF5EC),
+                            ? const Color(
+                                0xFFD94B43,
+                              ).withValues(
+                                alpha:
+                                    0.12,
+                              )
+                            : colors.primary
+                                .withValues(
+                                alpha:
+                                    0.12,
+                              ),
                         borderRadius:
-                            BorderRadius.circular(20),
+                            BorderRadius
+                                .circular(
+                          20,
+                        ),
                       ),
-                      child: Text(
+                      child:
+                          Text(
                         isDisease
                             ? 'Disease Detection'
                             : 'Plant Identification',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w700,
-                          color: isDisease
-                              ? const Color(0xFFD94B43)
-                              : const Color(0xFF2E7D32),
+                        style:
+                            TextStyle(
+                          fontSize:
+                              9.5,
+                          fontWeight:
+                              FontWeight
+                                  .w700,
+                          color:
+                              isDisease
+                                  ? const Color(
+                                      0xFFFF8178,
+                                    )
+                                  : colors
+                                      .primary,
                         ),
                       ),
                     ),
 
                     if (!isDisease &&
-                        plant.scientificName
+                        plant
+                            .scientificName
                             .trim()
                             .isNotEmpty) ...[
-                      const SizedBox(height: 4),
+                      const SizedBox(
+                        height: 4,
+                      ),
                       Text(
-                        plant.scientificName.trim(),
+                        plant
+                            .scientificName
+                            .trim(),
                         maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 10.5,
-                          fontStyle: FontStyle.italic,
-                          color: Color(0xFF7C877F),
+                        overflow:
+                            TextOverflow
+                                .ellipsis,
+                        style:
+                            TextStyle(
+                          fontSize:
+                              10.5,
+                          fontStyle:
+                              FontStyle
+                                  .italic,
+                          color: colors
+                              .onSurfaceVariant,
                         ),
                       ),
                     ],
 
-                    const SizedBox(height: 7),
+                    const SizedBox(
+                      height: 7,
+                    ),
 
                     Row(
                       children: [
-                        const Icon(
-                          Icons.verified_rounded,
+                        Icon(
+                          Icons
+                              .verified_rounded,
                           size: 14,
-                          color: Color(0xFF4F9D55),
+                          color:
+                              colors.primary,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(
+                          width: 4,
+                        ),
                         Text(
                           '${confidence.toStringAsFixed(0)}% confidence',
-                          style: const TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF707B72),
+                          style:
+                              TextStyle(
+                            fontSize:
+                                10.5,
+                            fontWeight:
+                                FontWeight
+                                    .w600,
+                            color: colors
+                                .onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -469,23 +601,27 @@ class _RecentPlantCard extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(width: 9),
-
-              // ========================================================
-              // ARROW
-              // ========================================================
+              const SizedBox(
+                width: 9,
+              ),
 
               Container(
                 width: 31,
                 height: 31,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFF5F8F5),
-                  shape: BoxShape.circle,
+                decoration:
+                    BoxDecoration(
+                  color: colors
+                      .surfaceContainerHighest,
+                  shape:
+                      BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.chevron_right_rounded,
+                child:
+                    Icon(
+                  Icons
+                      .chevron_right_rounded,
                   size: 19,
-                  color: Color(0xFF7A857C),
+                  color: colors
+                      .onSurfaceVariant,
                 ),
               ),
             ],
@@ -497,10 +633,11 @@ class _RecentPlantCard extends StatelessWidget {
 }
 
 // ============================================================================
-// PLANT IMAGE
+// IMAGE
 // ============================================================================
 
-class _PlantImage extends StatelessWidget {
+class _PlantImage
+    extends StatelessWidget {
   const _PlantImage({
     required this.imageBase64,
   });
@@ -508,69 +645,99 @@ class _PlantImage extends StatelessWidget {
   final String? imageBase64;
 
   @override
-  Widget build(BuildContext context) {
-    final value = imageBase64?.trim();
+  Widget build(
+    BuildContext context,
+  ) {
+    final value =
+        imageBase64?.trim();
 
-    if (value == null || value.isEmpty) {
-      return _placeholder();
+    if (value == null ||
+        value.isEmpty) {
+      return _placeholder(
+        context,
+      );
     }
 
     try {
-      var decodedValue = value;
+      var decoded =
+          value;
 
-      if (decodedValue.contains(',')) {
-        decodedValue = decodedValue.split(',').last;
+      if (decoded.contains(',')) {
+        decoded =
+            decoded.split(',').last;
       }
 
-      final bytes = base64Decode(decodedValue);
+      final bytes =
+          base64Decode(decoded);
 
       if (bytes.isEmpty) {
-        return _placeholder();
+        return _placeholder(
+          context,
+        );
       }
 
       return ClipRRect(
-        borderRadius: BorderRadius.circular(17),
+        borderRadius:
+            BorderRadius.circular(
+          17,
+        ),
         child: Image.memory(
           bytes,
           width: 76,
           height: 76,
           fit: BoxFit.cover,
           gaplessPlayback: true,
-          errorBuilder: (
+          errorBuilder:
+              (
             context,
             error,
             stackTrace,
-          ) {
-            return _placeholder();
-          },
+          ) =>
+                  _placeholder(
+            context,
+          ),
         ),
       );
     } catch (_) {
-      return _placeholder();
+      return _placeholder(
+        context,
+      );
     }
   }
 
-  Widget _placeholder() {
+  Widget _placeholder(
+    BuildContext context,
+  ) {
+    final colors =
+        Theme.of(context)
+            .colorScheme;
+
     return Container(
       width: 76,
       height: 76,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFFE8F4EA),
-            Color(0xFFF5F9F5),
-          ],
+      decoration:
+          BoxDecoration(
+        color:
+            colors.primary
+                .withValues(
+          alpha: 0.10,
         ),
-        borderRadius: BorderRadius.circular(17),
-        border: Border.all(
-          color: const Color(0xFFDDEADE),
+        borderRadius:
+            BorderRadius.circular(
+          17,
+        ),
+        border:
+            Border.all(
+          color:
+              colors.outline,
         ),
       ),
-      child: const Icon(
-        Icons.local_florist_rounded,
-        color: Color(0xFF2E7D32),
+      child:
+          Icon(
+        Icons
+            .local_florist_rounded,
+        color:
+            colors.primary,
         size: 31,
       ),
     );
@@ -578,37 +745,50 @@ class _PlantImage extends StatelessWidget {
 }
 
 // ============================================================================
-// LOADING CARD
+// LOADING
 // ============================================================================
 
-class _LoadingCard extends StatelessWidget {
+class _LoadingCard
+    extends StatelessWidget {
+  const _LoadingCard();
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
+    final colors =
+        Theme.of(context)
+            .colorScheme;
+
     return Container(
       height: 150,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(
-          color: const Color(0xFFE2EAE3),
+      width:
+          double.infinity,
+      decoration:
+          BoxDecoration(
+        color:
+            colors.surface,
+        borderRadius:
+            BorderRadius.circular(
+          26,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF18351C)
-                .withValues(alpha: 0.025),
-            blurRadius: 20,
-            offset: const Offset(0, 7),
-          ),
-        ],
+        border:
+            Border.all(
+          color:
+              colors.outline,
+        ),
       ),
-      child: const Center(
-        child: SizedBox(
+      child:
+          Center(
+        child:
+            SizedBox(
           width: 25,
           height: 25,
-          child: CircularProgressIndicator(
+          child:
+              CircularProgressIndicator(
             strokeWidth: 2.5,
-            color: Color(0xFF2E7D32),
+            color:
+                colors.primary,
           ),
         ),
       ),
@@ -617,10 +797,11 @@ class _LoadingCard extends StatelessWidget {
 }
 
 // ============================================================================
-// ERROR CARD
+// ERROR
 // ============================================================================
 
-class _ErrorCard extends StatelessWidget {
+class _ErrorCard
+    extends StatelessWidget {
   const _ErrorCard({
     required this.message,
   });
@@ -628,39 +809,65 @@ class _ErrorCard extends StatelessWidget {
   final String message;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF7F6),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: const Color(0xFFF1D9D5),
+      width:
+          double.infinity,
+      padding:
+          const EdgeInsets.all(
+        18,
+      ),
+      decoration:
+          BoxDecoration(
+        color:
+            Theme.of(context)
+                .colorScheme
+                .error
+                .withValues(
+          alpha: 0.08,
+        ),
+        borderRadius:
+            BorderRadius.circular(
+          24,
+        ),
+        border:
+            Border.all(
+          color:
+              Theme.of(context)
+                  .colorScheme
+                  .error
+                  .withValues(
+            alpha: 0.20,
+          ),
         ),
       ),
       child: Row(
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: const Color(0xFFFDE8E6),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: const Icon(
-              Icons.error_outline_rounded,
-              color: Color(0xFFD94B43),
-            ),
+          Icon(
+            Icons
+                .error_outline_rounded,
+            color:
+                Theme.of(context)
+                    .colorScheme
+                    .error,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(
+            width: 12,
+          ),
           Expanded(
             child: Text(
               message,
-              style: const TextStyle(
+              style:
+                  TextStyle(
                 fontSize: 12,
                 height: 1.4,
-                color: Color(0xFF7C4C48),
+                color: Theme.of(
+                  context,
+                )
+                    .colorScheme
+                    .onSurface,
               ),
             ),
           ),

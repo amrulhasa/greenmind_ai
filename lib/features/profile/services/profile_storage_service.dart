@@ -16,30 +16,26 @@ class ProfileStorageService {
   static final FirebaseAuth _auth =
       FirebaseAuth.instance;
 
-  static CollectionReference<Map<String, dynamic>>
+  CollectionReference<Map<String, dynamic>>
       get _usersCollection {
     return _firestore.collection('users');
   }
 
-  // ============================================================
+  // ==========================================================================
   // CURRENT USER
-  // ============================================================
+  // ==========================================================================
 
   User? get currentUser {
     return _auth.currentUser;
   }
 
-  // ============================================================
-  // CURRENT USER ID
-  // ============================================================
-
   String? get currentUserId {
     return _auth.currentUser?.uid;
   }
 
-  // ============================================================
+  // ==========================================================================
   // LOAD PROFILE
-  // ============================================================
+  // ==========================================================================
 
   Future<UserProfile> loadProfile({
     required String userId,
@@ -55,9 +51,9 @@ class ProfileStorageService {
                 const Duration(seconds: 15),
               );
 
-      // ----------------------------------------------------------
+      // ----------------------------------------------------------------------
       // PROFILE DOES NOT EXIST
-      // ----------------------------------------------------------
+      // ----------------------------------------------------------------------
 
       if (!document.exists) {
         final user = _auth.currentUser;
@@ -76,9 +72,9 @@ class ProfileStorageService {
         return profile;
       }
 
-      // ----------------------------------------------------------
-      // PROFILE EXISTS
-      // ----------------------------------------------------------
+      // ----------------------------------------------------------------------
+      // PROFILE DATA
+      // ----------------------------------------------------------------------
 
       final data = document.data();
 
@@ -91,8 +87,7 @@ class ProfileStorageService {
       final profileData =
           Map<String, dynamic>.from(data);
 
-      // Firebase Authentication is ALWAYS
-      // the source of truth for email.
+      // Firebase Auth owns email.
       final authEmail =
           _auth.currentUser?.email ?? '';
 
@@ -108,8 +103,6 @@ class ProfileStorageService {
         'Unable to load profile: '
         '${e.message ?? e.code}',
       );
-    } on Exception {
-      rethrow;
     } catch (e) {
       throw Exception(
         'Unable to load profile: $e',
@@ -117,9 +110,9 @@ class ProfileStorageService {
     }
   }
 
-  // ============================================================
+  // ==========================================================================
   // SAVE PROFILE
-  // ============================================================
+  // ==========================================================================
 
   Future<void> saveProfile({
     required String userId,
@@ -137,25 +130,16 @@ class ProfileStorageService {
         );
       }
 
-      // ----------------------------------------------------------
-      // EMAIL
-      // ----------------------------------------------------------
-      //
-      // Never trust manually entered profile email.
-      // Firebase Auth owns the account email.
-      //
-
       final email =
           user.email ?? profile.email;
 
-      // ----------------------------------------------------------
-      // PROFILE DATA
-      // ----------------------------------------------------------
+      final data =
+          <String, dynamic>{
+        'name':
+            profile.name.trim(),
 
-      final data = <String, dynamic>{
-        'name': profile.name.trim(),
-
-        'email': email,
+        'email':
+            email,
 
         'location':
             profile.location.trim(),
@@ -179,9 +163,9 @@ class ProfileStorageService {
             FieldValue.serverTimestamp(),
       };
 
-      // ----------------------------------------------------------
-      // CREATE-ONLY FIELDS
-      // ----------------------------------------------------------
+      // ----------------------------------------------------------------------
+      // CREATE ONLY FIELDS
+      // ----------------------------------------------------------------------
 
       if (createIfMissing) {
         data['createdAt'] =
@@ -189,10 +173,6 @@ class ProfileStorageService {
 
         data['role'] = 'user';
       }
-
-      // ----------------------------------------------------------
-      // FIRESTORE SAVE
-      // ----------------------------------------------------------
 
       await _usersCollection
           .doc(userId)
@@ -210,8 +190,6 @@ class ProfileStorageService {
         'Unable to save profile: '
         '${e.message ?? e.code}',
       );
-    } on Exception {
-      rethrow;
     } catch (e) {
       throw Exception(
         'Unable to save profile: $e',
@@ -219,9 +197,9 @@ class ProfileStorageService {
     }
   }
 
-  // ============================================================
+  // ==========================================================================
   // ENSURE PROFILE
-  // ============================================================
+  // ==========================================================================
 
   Future<UserProfile> ensureProfile({
     required User user,
@@ -237,14 +215,12 @@ class ProfileStorageService {
                 const Duration(seconds: 15),
               );
 
-      // Existing profile
       if (document.exists) {
         return loadProfile(
           userId: user.uid,
         );
       }
 
-      // New profile
       final profile = UserProfile(
         name: _defaultName(user),
         email: user.email ?? '',
@@ -264,9 +240,9 @@ class ProfileStorageService {
     }
   }
 
-  // ============================================================
+  // ==========================================================================
   // PROFILE IMAGE
-  // ============================================================
+  // ==========================================================================
 
   Future<String> saveProfileImage(
     Uint8List bytes,
@@ -286,7 +262,6 @@ class ProfileStorageService {
       );
     }
 
-    // Keep image reasonably small.
     final resizedImage =
         decodedImage.width > 600
             ? img.copyResize(
@@ -312,22 +287,20 @@ class ProfileStorageService {
     );
   }
 
-  // ============================================================
+  // ==========================================================================
   // DELETE PROFILE IMAGE
-  // ============================================================
+  // ==========================================================================
 
   Future<void> deleteProfileImage(
     String? imageBase64,
   ) async {
-    // The image is stored in profileImagePath.
-    //
-    // Removing profileImagePath from the profile
-    // effectively removes the image.
+    // Profile image is stored inside profileImagePath.
+    // Setting profileImagePath to null removes it.
   }
 
-  // ============================================================
+  // ==========================================================================
   // PROFILE IMAGE EXISTS
-  // ============================================================
+  // ==========================================================================
 
   Future<bool> profileImageExists(
     String? imageBase64,
@@ -336,16 +309,9 @@ class ProfileStorageService {
         imageBase64.isNotEmpty;
   }
 
-  // ============================================================
-  // RESET PROFILE DATA
-  // ============================================================
-  //
-  // IMPORTANT:
-  // We DO NOT delete users/{uid}.
-  //
-  // The Firebase account must remain active.
-  // Role and createdAt must also remain safe.
-  // ============================================================
+  // ==========================================================================
+  // RESET PROFILE
+  // ==========================================================================
 
   Future<void> resetProfile({
     required String userId,
@@ -365,15 +331,30 @@ class ProfileStorageService {
           .doc(userId)
           .set(
             {
-              'name': _defaultName(user),
-              'email': user.email ?? '',
-              'location': '',
-              'phone': '',
+              'name':
+                  _defaultName(user),
+
+              'email':
+                  user.email ?? '',
+
+              'location':
+                  '',
+
+              'phone':
+                  '',
+
               'bio':
                   'GreenMind AI plant enthusiast',
-              'profileImagePath': null,
-              'notificationsEnabled': true,
-              'darkModeEnabled': false,
+
+              'profileImagePath':
+                  null,
+
+              'notificationsEnabled':
+                  true,
+
+              'darkModeEnabled':
+                  false,
+
               'updatedAt':
                   FieldValue.serverTimestamp(),
             },
@@ -389,8 +370,6 @@ class ProfileStorageService {
         'Unable to reset profile: '
         '${e.message ?? e.code}',
       );
-    } on Exception {
-      rethrow;
     } catch (e) {
       throw Exception(
         'Unable to reset profile: $e',
@@ -398,14 +377,9 @@ class ProfileStorageService {
     }
   }
 
-  // ============================================================
-  // LEGACY CLEAR PROFILE
-  // ============================================================
-  //
-  // Kept for compatibility with older provider code.
-  //
-  // DO NOT use this for normal logout.
-  // ============================================================
+  // ==========================================================================
+  // LEGACY
+  // ==========================================================================
 
   Future<void> clearProfile({
     required String userId,
@@ -415,9 +389,9 @@ class ProfileStorageService {
     );
   }
 
-  // ============================================================
+  // ==========================================================================
   // VALIDATE USER
-  // ============================================================
+  // ==========================================================================
 
   void _validateUser(
     String userId,
@@ -437,9 +411,9 @@ class ProfileStorageService {
     }
   }
 
-  // ============================================================
+  // ==========================================================================
   // DEFAULT NAME
-  // ============================================================
+  // ==========================================================================
 
   String _defaultName(
     User? user,
@@ -448,7 +422,6 @@ class ProfileStorageService {
       return 'Plant Lover';
     }
 
-    // Firebase display name
     final displayName =
         user.displayName?.trim();
 
@@ -457,7 +430,6 @@ class ProfileStorageService {
       return displayName;
     }
 
-    // Email username
     final email =
         user.email?.trim();
 

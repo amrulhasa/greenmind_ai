@@ -5,39 +5,60 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/constants/app_colors.dart';
 import '../../announcements/providers/announcement_badge_provider.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../../reminder/providers/notification_badge_provider.dart';
 
 class HomeHeader extends ConsumerWidget {
-  const HomeHeader({super.key});
+  const HomeHeader({
+    super.key,
+  });
+
+  // ==========================================================================
+  // OPEN ANNOUNCEMENTS
+  // ==========================================================================
 
   Future<void> _openAnnouncements(
     BuildContext context,
     WidgetRef ref,
   ) async {
     await ref
-        .read(announcementBadgeProvider.notifier)
+        .read(
+          announcementBadgeProvider.notifier,
+        )
         .markAllAsRead();
 
-    if (!context.mounted) return;
+    if (!context.mounted) {
+      return;
+    }
 
     await context.push('/announcements');
   }
+
+  // ==========================================================================
+  // OPEN REMINDERS
+  // ==========================================================================
 
   Future<void> _openReminders(
     BuildContext context,
     WidgetRef ref,
   ) async {
     await ref
-        .read(notificationBadgeProvider.notifier)
+        .read(
+          notificationBadgeProvider.notifier,
+        )
         .markAllAsRead();
 
-    if (!context.mounted) return;
+    if (!context.mounted) {
+      return;
+    }
 
     await context.push('/reminders');
   }
+
+  // ==========================================================================
+  // GREETING
+  // ==========================================================================
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
@@ -57,6 +78,10 @@ class HomeHeader extends ConsumerWidget {
     return 'Good Night';
   }
 
+  // ==========================================================================
+  // GREETING ICON
+  // ==========================================================================
+
   IconData _getGreetingIcon() {
     final hour = DateTime.now().hour;
 
@@ -75,13 +100,19 @@ class HomeHeader extends ConsumerWidget {
     return Icons.nightlight_round;
   }
 
+  // ==========================================================================
+  // BUILD
+  // ==========================================================================
+
   @override
   Widget build(
     BuildContext context,
     WidgetRef ref,
   ) {
-    final profileState = ref.watch(profileProvider);
-    final profile = profileState.profile;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    final profile = ref.watch(profileProvider).profile;
 
     final reminderCount = ref.watch(
       notificationBadgeProvider,
@@ -91,62 +122,83 @@ class HomeHeader extends ConsumerWidget {
       announcementBadgeProvider,
     );
 
-    final displayName = profile.name.trim().isEmpty
+    final String name = profile.name.trim();
+
+    final String displayName = name.isEmpty
         ? 'Welcome Back'
-        : 'Welcome, ${profile.name.trim()}';
+        : 'Welcome, $name';
 
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment:
+          CrossAxisAlignment.center,
       children: [
-        // =========================================================
-        // PROFILE
-        // =========================================================
+        // ====================================================================
+        // PROFILE AVATAR
+        // ====================================================================
 
         GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: () => context.push('/profile'),
+          onTap: () {
+            context.push('/profile');
+          },
           child: _ProfileAvatar(
-            imageBase64: profile.profileImagePath,
+            imageBase64:
+                profile.profileImagePath,
           ),
         ),
 
         const SizedBox(width: 14),
 
-        // =========================================================
-        // GREETING
-        // =========================================================
+        // ====================================================================
+        // GREETING + NAME
+        // ====================================================================
 
         Expanded(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
             children: [
+              // --------------------------------------------------------------
+              // GREETING CHIP
+              // --------------------------------------------------------------
+
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 9,
+                padding:
+                    const EdgeInsets.symmetric(
+                  horizontal: 10,
                   vertical: 5,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEAF5EC),
-                  borderRadius: BorderRadius.circular(20),
+                  color: colors.primary.withValues(
+                    alpha: 0.12,
+                  ),
+                  borderRadius:
+                      BorderRadius.circular(20),
                   border: Border.all(
-                    color: const Color(0xFFDDEBDF),
+                    color:
+                        colors.primary.withValues(
+                      alpha: 0.18,
+                    ),
                   ),
                 ),
                 child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisSize:
+                      MainAxisSize.min,
                   children: [
                     Icon(
                       _getGreetingIcon(),
                       size: 14,
-                      color: AppColors.primary,
+                      color: colors.primary,
                     ),
                     const SizedBox(width: 5),
                     Text(
                       _getGreeting(),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11.5,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF3E6B43),
+                        fontWeight:
+                            FontWeight.w700,
+                        color:
+                            colors.primary,
                       ),
                     ),
                   ],
@@ -155,15 +207,22 @@ class HomeHeader extends ConsumerWidget {
 
               const SizedBox(height: 7),
 
+              // --------------------------------------------------------------
+              // USER NAME
+              // --------------------------------------------------------------
+
               Text(
                 displayName,
                 maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                overflow:
+                    TextOverflow.ellipsis,
+                style: TextStyle(
                   fontSize: 22,
-                  fontWeight: FontWeight.w800,
+                  fontWeight:
+                      FontWeight.w800,
                   letterSpacing: -0.65,
-                  color: Color(0xFF172018),
+                  color:
+                      colors.onSurface,
                 ),
               ),
             ],
@@ -172,35 +231,46 @@ class HomeHeader extends ConsumerWidget {
 
         const SizedBox(width: 10),
 
-        // =========================================================
+        // ====================================================================
         // ANNOUNCEMENTS
-        // =========================================================
+        // ====================================================================
 
         _HeaderActionButton(
           icon: Icons.campaign_outlined,
           tooltip: 'Announcements',
-          backgroundColor: const Color(0xFFEAF5EC),
-          iconColor: AppColors.primary,
+          backgroundColor:
+              colors.primary.withValues(
+            alpha: 0.10,
+          ),
+          iconColor: colors.primary,
           badgeCount: announcementCount,
           onPressed: () {
-            _openAnnouncements(context, ref);
+            _openAnnouncements(
+              context,
+              ref,
+            );
           },
         ),
 
         const SizedBox(width: 8),
 
-        // =========================================================
+        // ====================================================================
         // REMINDERS
-        // =========================================================
+        // ====================================================================
 
         _HeaderActionButton(
-          icon: Icons.notifications_none_rounded,
+          icon:
+              Icons.notifications_none_rounded,
           tooltip: 'Plant Reminders',
-          backgroundColor: Colors.white,
-          iconColor: const Color(0xFF344139),
+          backgroundColor:
+              colors.surfaceContainerHighest,
+          iconColor: colors.onSurface,
           badgeCount: reminderCount,
           onPressed: () {
-            _openReminders(context, ref);
+            _openReminders(
+              context,
+              ref,
+            );
           },
         ),
       ],
@@ -209,10 +279,11 @@ class HomeHeader extends ConsumerWidget {
 }
 
 // ============================================================================
-// HEADER ACTION
+// HEADER ACTION BUTTON
 // ============================================================================
 
-class _HeaderActionButton extends StatelessWidget {
+class _HeaderActionButton
+    extends StatelessWidget {
   const _HeaderActionButton({
     required this.icon,
     required this.tooltip,
@@ -230,7 +301,12 @@ class _HeaderActionButton extends StatelessWidget {
   final int badgeCount;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
+    final colors =
+        Theme.of(context).colorScheme;
+
     return SizedBox(
       width: 48,
       height: 48,
@@ -242,20 +318,28 @@ class _HeaderActionButton extends StatelessWidget {
               color: Colors.transparent,
               child: InkWell(
                 onTap: onPressed,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius:
+                    BorderRadius.circular(16),
                 child: Ink(
                   decoration: BoxDecoration(
                     color: backgroundColor,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius:
+                        BorderRadius.circular(16),
                     border: Border.all(
-                      color: const Color(0xFFE0E9E1),
+                      color: colors.outline
+                          .withValues(
+                        alpha: 0.18,
+                      ),
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF18351C)
-                            .withValues(alpha: 0.035),
+                        color:
+                            Colors.black.withValues(
+                          alpha: 0.05,
+                        ),
                         blurRadius: 13,
-                        offset: const Offset(0, 5),
+                        offset:
+                            const Offset(0, 5),
                       ),
                     ],
                   ),
@@ -273,6 +357,10 @@ class _HeaderActionButton extends StatelessWidget {
               ),
             ),
           ),
+
+          // ------------------------------------------------------------------
+          // BADGE
+          // ------------------------------------------------------------------
 
           if (badgeCount > 0)
             Positioned(
@@ -292,7 +380,8 @@ class _HeaderActionButton extends StatelessWidget {
 // NOTIFICATION BADGE
 // ============================================================================
 
-class _NotificationBadge extends StatelessWidget {
+class _NotificationBadge
+    extends StatelessWidget {
   const _NotificationBadge({
     required this.count,
   });
@@ -300,30 +389,41 @@ class _NotificationBadge extends StatelessWidget {
   final int count;
 
   @override
-  Widget build(BuildContext context) {
-    final text = count > 99 ? '99+' : '$count';
+  Widget build(
+    BuildContext context,
+  ) {
+    final colors =
+        Theme.of(context).colorScheme;
+
+    final String text =
+        count > 99 ? '99+' : '$count';
 
     return Container(
-      constraints: const BoxConstraints(
+      constraints:
+          const BoxConstraints(
         minWidth: 21,
         minHeight: 21,
       ),
-      padding: const EdgeInsets.symmetric(
+      padding:
+          const EdgeInsets.symmetric(
         horizontal: 5,
         vertical: 2,
       ),
       decoration: BoxDecoration(
         color: const Color(0xFFFF8A00),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius:
+            BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.white,
+          color: colors.surface,
           width: 2,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFF8A00)
-                .withValues(alpha: 0.24),
-            blurRadius: 8,
+            color:
+                Colors.black.withValues(
+              alpha: 0.12,
+            ),
+            blurRadius: 5,
             offset: const Offset(0, 2),
           ),
         ],
@@ -347,7 +447,8 @@ class _NotificationBadge extends StatelessWidget {
 // PROFILE AVATAR
 // ============================================================================
 
-class _ProfileAvatar extends StatelessWidget {
+class _ProfileAvatar
+    extends StatelessWidget {
   const _ProfileAvatar({
     required this.imageBase64,
   });
@@ -355,8 +456,13 @@ class _ProfileAvatar extends StatelessWidget {
   final String? imageBase64;
 
   @override
-  Widget build(BuildContext context) {
-    final hasImage =
+  Widget build(
+    BuildContext context,
+  ) {
+    final colors =
+        Theme.of(context).colorScheme;
+
+    final bool hasImage =
         imageBase64 != null &&
         imageBase64!.trim().isNotEmpty;
 
@@ -365,41 +471,64 @@ class _ProfileAvatar extends StatelessWidget {
       height: 58,
       padding: const EdgeInsets.all(2.5),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF55A35B),
-            Color(0xFF267331),
+            colors.primary.withValues(
+              alpha: 0.75,
+            ),
+            colors.primary,
           ],
         ),
-        borderRadius: BorderRadius.circular(19),
+        borderRadius:
+            BorderRadius.circular(19),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.18),
+            color: colors.primary
+                .withValues(
+              alpha: 0.18,
+            ),
             blurRadius: 17,
             offset: const Offset(0, 7),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius:
+            BorderRadius.circular(16),
         child: hasImage
-            ? _buildImage()
-            : _placeholder(),
+            ? _buildImage(context)
+            : _placeholder(context),
       ),
     );
   }
 
-  Widget _buildImage() {
+  // ==========================================================================
+  // IMAGE
+  // ==========================================================================
+
+  Widget _buildImage(
+    BuildContext context,
+  ) {
     try {
-      var value = imageBase64!.trim();
+      String value =
+          imageBase64!.trim();
+
+      // --------------------------------------------------------------
+      // Support data:image/...;base64,... format
+      // --------------------------------------------------------------
 
       if (value.contains(',')) {
         value = value.split(',').last;
       }
 
-      final Uint8List bytes = base64Decode(value);
+      final Uint8List bytes =
+          base64Decode(value);
+
+      if (bytes.isEmpty) {
+        return _placeholder(context);
+      }
 
       return Image.memory(
         bytes,
@@ -408,21 +537,30 @@ class _ProfileAvatar extends StatelessWidget {
         fit: BoxFit.cover,
         gaplessPlayback: true,
         errorBuilder: (
-          context,
-          error,
-          stackTrace,
+          BuildContext context,
+          Object error,
+          StackTrace? stackTrace,
         ) {
-          return _placeholder();
+          return _placeholder(context);
         },
       );
     } catch (_) {
-      return _placeholder();
+      return _placeholder(context);
     }
   }
 
-  Widget _placeholder() {
+  // ==========================================================================
+  // PLACEHOLDER
+  // ==========================================================================
+
+  Widget _placeholder(
+    BuildContext context,
+  ) {
+    final colors =
+        Theme.of(context).colorScheme;
+
     return Container(
-      color: const Color(0xFF2E7D32),
+      color: colors.primary,
       child: const Center(
         child: Icon(
           Icons.person_rounded,

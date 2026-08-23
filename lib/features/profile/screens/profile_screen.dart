@@ -40,10 +40,19 @@ class ProfileScreen extends ConsumerWidget {
     }
 
     // ==========================================================
+    // THEME
+    // ==========================================================
+
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    // ==========================================================
     // SCREEN
     // ==========================================================
 
     return Scaffold(
+      backgroundColor: colorScheme.surface,
+
       // ========================================================
       // APP BAR
       // ========================================================
@@ -74,14 +83,21 @@ class ProfileScreen extends ConsumerWidget {
 
       body: SafeArea(
         child: RefreshIndicator(
+          color: colorScheme.primary,
+          backgroundColor: colorScheme.surface,
           onRefresh: notifier.reloadProfile,
           child: SingleChildScrollView(
             physics:
                 const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(
+            padding: const EdgeInsets.fromLTRB(
               AppSpacing.lg,
+              AppSpacing.md,
+              AppSpacing.lg,
+              AppSpacing.xl,
             ),
             child: Column(
+              crossAxisAlignment:
+                  CrossAxisAlignment.stretch,
               children: [
                 // ==================================================
                 // PROFILE HEADER
@@ -206,86 +222,124 @@ class ProfileScreen extends ConsumerWidget {
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
+      isScrollControlled: true,
       builder: (sheetContext) {
+        final theme =
+            Theme.of(sheetContext);
+
+        final colorScheme =
+            theme.colorScheme;
+
         return SafeArea(
-          child: Column(
-            mainAxisSize:
-                MainAxisSize.min,
-            children: [
-              // ==================================================
-              // CAMERA
-              // ==================================================
-
-              ListTile(
-                leading: const Icon(
-                  Icons.camera_alt_outlined,
+          child: Padding(
+            padding: const EdgeInsets.only(
+              bottom: 8,
+            ),
+            child: Column(
+              mainAxisSize:
+                  MainAxisSize.min,
+              children: [
+                const ListTile(
+                  leading: Icon(
+                    Icons.photo_camera_back_outlined,
+                  ),
+                  title: Text(
+                    'Profile Photo',
+                  ),
+                  subtitle: Text(
+                    'Choose how you want to update your photo',
+                  ),
                 ),
-                title: const Text(
-                  'Camera',
+
+                const Divider(
+                  height: 1,
                 ),
-                onTap: () async {
-                  Navigator.of(
-                    sheetContext,
-                  ).pop();
 
-                  await notifier.changeProfilePicture(
-                    source: ImageSource.camera,
-                  );
-                },
-              ),
+                // ==================================================
+                // CAMERA
+                // ==================================================
 
-              // ==================================================
-              // GALLERY
-              // ==================================================
-
-              ListTile(
-                leading: const Icon(
-                  Icons.photo_library_outlined,
-                ),
-                title: const Text(
-                  'Gallery',
-                ),
-                onTap: () async {
-                  Navigator.of(
-                    sheetContext,
-                  ).pop();
-
-                  await notifier.changeProfilePicture(
-                    source: ImageSource.gallery,
-                  );
-                },
-              ),
-
-              // ==================================================
-              // REMOVE PHOTO
-              // ==================================================
-
-              if (profile.profileImagePath != null &&
-                  profile.profileImagePath!.isNotEmpty)
                 ListTile(
-                  leading: const Icon(
-                    Icons.delete_outline,
-                    color: Colors.red,
+                  leading: Icon(
+                    Icons.camera_alt_outlined,
+                    color: colorScheme.primary,
                   ),
                   title: const Text(
-                    'Remove Photo',
-                    style: TextStyle(
-                      color: Colors.red,
-                    ),
+                    'Camera',
+                  ),
+                  subtitle: const Text(
+                    'Take a new photo',
                   ),
                   onTap: () async {
                     Navigator.of(
                       sheetContext,
                     ).pop();
 
-                    await notifier.removeProfilePicture();
+                    await notifier.changeProfilePicture(
+                      source:
+                          ImageSource.camera,
+                    );
                   },
                 ),
 
-              const SizedBox(
-                height: 8,
-              ),
-            ],
+                // ==================================================
+                // GALLERY
+                // ==================================================
+
+                ListTile(
+                  leading: Icon(
+                    Icons.photo_library_outlined,
+                    color: colorScheme.primary,
+                  ),
+                  title: const Text(
+                    'Gallery',
+                  ),
+                  subtitle: const Text(
+                    'Choose an existing photo',
+                  ),
+                  onTap: () async {
+                    Navigator.of(
+                      sheetContext,
+                    ).pop();
+
+                    await notifier.changeProfilePicture(
+                      source:
+                          ImageSource.gallery,
+                    );
+                  },
+                ),
+
+                // ==================================================
+                // REMOVE PHOTO
+                // ==================================================
+
+                if (profile.profileImagePath != null &&
+                    profile.profileImagePath!.isNotEmpty)
+                  ListTile(
+                    leading: Icon(
+                      Icons.delete_outline_rounded,
+                      color: colorScheme.error,
+                    ),
+                    title: Text(
+                      'Remove Photo',
+                      style: TextStyle(
+                        color: colorScheme.error,
+                      ),
+                    ),
+                    subtitle: const Text(
+                      'Delete your current profile photo',
+                    ),
+                    onTap: () async {
+                      Navigator.of(
+                        sheetContext,
+                      ).pop();
+
+                      await notifier
+                          .removeProfilePicture();
+                    },
+                  ),
+              ],
+            ),
           ),
         );
       },
@@ -303,7 +357,8 @@ class ProfileScreen extends ConsumerWidget {
     final profile =
         ref.read(profileProvider).profile;
 
-    final result = await showDialog<bool>(
+    final result =
+        await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
@@ -327,15 +382,19 @@ class ProfileScreen extends ConsumerWidget {
             final updatedState =
                 ref.read(profileProvider);
 
-            return updatedState.errorMessage == null;
+            return updatedState.errorMessage ==
+                null;
           },
         );
       },
     );
 
-    if (result == true && context.mounted) {
+    if (result == true &&
+        context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
+          behavior:
+              SnackBarBehavior.floating,
           content: Text(
             'Profile updated successfully.',
           ),
@@ -352,10 +411,14 @@ class ProfileScreen extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
   ) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed =
+        await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
+          icon: const Icon(
+            Icons.restart_alt_rounded,
+          ),
           title: const Text(
             'Reset Profile Data?',
           ),
@@ -404,6 +467,8 @@ class ProfileScreen extends ConsumerWidget {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          behavior:
+              SnackBarBehavior.floating,
           content: Text(
             state.errorMessage ??
                 'Profile data reset successfully.',
@@ -430,6 +495,8 @@ class ProfileScreen extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
+            behavior:
+                SnackBarBehavior.floating,
             content: Text(
               'Unable to sign out. Please try again.',
             ),
@@ -444,7 +511,8 @@ class ProfileScreen extends ConsumerWidget {
 // EDIT PROFILE DIALOG
 // ============================================================================
 
-class _EditProfileDialog extends StatefulWidget {
+class _EditProfileDialog
+    extends StatefulWidget {
   final UserProfile profile;
 
   final Future<bool> Function({
@@ -470,10 +538,20 @@ class _EditProfileDialog extends StatefulWidget {
 
 class _EditProfileDialogState
     extends State<_EditProfileDialog> {
-  late final TextEditingController _nameController;
-  late final TextEditingController _locationController;
-  late final TextEditingController _phoneController;
-  late final TextEditingController _bioController;
+  late final TextEditingController
+      _nameController;
+
+  late final TextEditingController
+      _emailController;
+
+  late final TextEditingController
+      _locationController;
+
+  late final TextEditingController
+      _phoneController;
+
+  late final TextEditingController
+      _bioController;
 
   bool _saving = false;
 
@@ -481,19 +559,28 @@ class _EditProfileDialogState
   void initState() {
     super.initState();
 
-    _nameController = TextEditingController(
+    _nameController =
+        TextEditingController(
       text: widget.profile.name,
     );
 
-    _locationController = TextEditingController(
+    _emailController =
+        TextEditingController(
+      text: widget.profile.email,
+    );
+
+    _locationController =
+        TextEditingController(
       text: widget.profile.location,
     );
 
-    _phoneController = TextEditingController(
+    _phoneController =
+        TextEditingController(
       text: widget.profile.phone,
     );
 
-    _bioController = TextEditingController(
+    _bioController =
+        TextEditingController(
       text: widget.profile.bio,
     );
   }
@@ -501,6 +588,7 @@ class _EditProfileDialogState
   @override
   void dispose() {
     _nameController.dispose();
+    _emailController.dispose();
     _locationController.dispose();
     _phoneController.dispose();
     _bioController.dispose();
@@ -564,7 +652,8 @@ class _EditProfileDialogState
     });
 
     try {
-      final success = await widget.onSave(
+      final success =
+          await widget.onSave(
         name: name,
         location: location,
         phone: phone,
@@ -616,7 +705,41 @@ class _EditProfileDialogState
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
+        behavior:
+            SnackBarBehavior.floating,
         content: Text(message),
+      ),
+    );
+  }
+
+  // ============================================================
+  // FIELD
+  // ============================================================
+
+  Widget _buildField({
+    required String label,
+    required TextEditingController controller,
+    required IconData icon,
+    bool enabled = true,
+    TextInputType? keyboardType,
+    int maxLines = 1,
+    int? maxLength,
+    TextCapitalization textCapitalization =
+        TextCapitalization.none,
+    String? helperText,
+  }) {
+    return TextField(
+      controller: controller,
+      enabled: enabled && !_saving,
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      maxLength: maxLength,
+      textCapitalization:
+          textCapitalization,
+      decoration: InputDecoration(
+        labelText: label,
+        helperText: helperText,
+        prefixIcon: Icon(icon),
       ),
     );
   }
@@ -638,105 +761,103 @@ class _EditProfileDialogState
           mainAxisSize:
               MainAxisSize.min,
           children: [
-            TextField(
+            // ==================================================
+            // NAME
+            // ==================================================
+
+            _buildField(
+              label: 'Full Name',
               controller:
                   _nameController,
-              enabled: !_saving,
+              icon:
+                  Icons.person_outline_rounded,
               textCapitalization:
                   TextCapitalization.words,
-              decoration:
-                  const InputDecoration(
-                labelText: 'Full Name',
-                prefixIcon: Icon(
-                  Icons.person_outline,
-                ),
-              ),
             ),
 
             const SizedBox(
               height: 14,
             ),
 
-            TextField(
-              enabled: false,
+            // ==================================================
+            // EMAIL
+            // ==================================================
+
+            _buildField(
+              label: 'Email',
               controller:
-                  TextEditingController(
-                text:
-                    widget.profile.email,
-              ),
-              decoration:
-                  const InputDecoration(
-                labelText: 'Email',
-                prefixIcon: Icon(
+                  _emailController,
+              icon:
                   Icons.email_outlined,
-                ),
-                helperText:
-                    'Linked to your account',
-              ),
+              enabled: false,
+              keyboardType:
+                  TextInputType.emailAddress,
+              helperText:
+                  'Linked to your account',
             ),
 
             const SizedBox(
               height: 14,
             ),
 
-            TextField(
+            // ==================================================
+            // LOCATION
+            // ==================================================
+
+            _buildField(
+              label: 'Location',
               controller:
                   _locationController,
-              enabled: !_saving,
+              icon:
+                  Icons.location_on_outlined,
               textCapitalization:
                   TextCapitalization.words,
-              decoration:
-                  const InputDecoration(
-                labelText: 'Location',
-                prefixIcon: Icon(
-                  Icons.location_on_outlined,
-                ),
-              ),
             ),
 
             const SizedBox(
               height: 14,
             ),
 
-            TextField(
+            // ==================================================
+            // PHONE
+            // ==================================================
+
+            _buildField(
+              label: 'Phone Number',
               controller:
                   _phoneController,
-              enabled: !_saving,
+              icon:
+                  Icons.phone_outlined,
               keyboardType:
                   TextInputType.phone,
-              decoration:
-                  const InputDecoration(
-                labelText: 'Phone Number',
-                prefixIcon: Icon(
-                  Icons.phone_outlined,
-                ),
-              ),
             ),
 
             const SizedBox(
               height: 14,
             ),
 
-            TextField(
+            // ==================================================
+            // BIO
+            // ==================================================
+
+            _buildField(
+              label: 'Bio',
               controller:
                   _bioController,
-              enabled: !_saving,
+              icon:
+                  Icons.info_outline_rounded,
               maxLines: 3,
               maxLength: 150,
               textCapitalization:
                   TextCapitalization.sentences,
-              decoration:
-                  const InputDecoration(
-                labelText: 'Bio',
-                alignLabelWithHint: true,
-                prefixIcon: Icon(
-                  Icons.info_outline,
-                ),
-              ),
             ),
           ],
         ),
       ),
+
+      // ========================================================
+      // ACTIONS
+      // ========================================================
 
       actions: [
         TextButton(
@@ -752,21 +873,26 @@ class _EditProfileDialogState
           ),
         ),
 
-        FilledButton(
+        FilledButton.icon(
           onPressed:
               _saving ? null : _save,
-          child: _saving
+          icon: _saving
               ? const SizedBox(
-                  width: 18,
-                  height: 18,
+                  width: 16,
+                  height: 16,
                   child:
                       CircularProgressIndicator(
                     strokeWidth: 2,
                   ),
                 )
-              : const Text(
-                  'Save',
+              : const Icon(
+                  Icons.check_rounded,
                 ),
+          label: Text(
+            _saving
+                ? 'Saving...'
+                : 'Save',
+          ),
         ),
       ],
     );
@@ -791,7 +917,7 @@ class _EditProfileButton
   ) {
     return SizedBox(
       width: double.infinity,
-      height: 50,
+      height: 54,
       child: FilledButton.icon(
         onPressed: onPressed,
         icon: const Icon(
@@ -823,50 +949,160 @@ class _PreferencesCard
   Widget build(
     BuildContext context,
   ) {
+    final theme =
+        Theme.of(context);
+
+    final colorScheme =
+        theme.colorScheme;
+
     return Card(
       elevation: 0,
+      margin: EdgeInsets.zero,
+      clipBehavior:
+          Clip.antiAlias,
       child: Column(
         children: [
-          const ListTile(
-            leading: Icon(
-              Icons.settings_outlined,
+          // ====================================================
+          // HEADER
+          // ====================================================
+
+          Padding(
+            padding:
+                const EdgeInsets.fromLTRB(
+              20,
+              18,
+              20,
+              12,
             ),
-            title: Text(
-              'Preferences',
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: colorScheme
+                        .primaryContainer,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons
+                        .settings_outlined,
+                    color: colorScheme
+                        .onPrimaryContainer,
+                  ),
+                ),
+                const SizedBox(
+                  width: 14,
+                ),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Preferences',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight:
+                              FontWeight.w600,
+                        ),
+                      ),
+                      SizedBox(
+                        height: 3,
+                      ),
+                      Text(
+                        'Customize your GreenMind AI experience',
+                        style: TextStyle(
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
 
+          const Divider(
+            height: 1,
+          ),
+
+          // ====================================================
+          // NOTIFICATIONS
+          // ====================================================
+
           SwitchListTile(
-            value:
-                state.profile.notificationsEnabled,
+            contentPadding:
+                const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 4,
+            ),
+            value: state
+                .profile
+                .notificationsEnabled,
             onChanged: (_) {
               notifier.toggleNotifications();
             },
+            secondary: Icon(
+              Icons
+                  .notifications_none_rounded,
+              color: colorScheme.primary,
+            ),
             title: const Text(
               'Notifications',
             ),
             subtitle: const Text(
               'Receive plant care reminders and updates',
             ),
-            secondary: const Icon(
-              Icons.notifications_none_rounded,
-            ),
           ),
 
+          const Divider(
+            height: 1,
+            indent: 20,
+            endIndent: 20,
+          ),
+
+          // ====================================================
+          // DARK MODE
+          // ====================================================
+
           SwitchListTile(
-            value:
-                state.profile.darkModeEnabled,
+            contentPadding:
+                const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 4,
+            ),
+            value: state
+                .profile
+                .darkModeEnabled,
             onChanged: (_) {
               notifier.toggleDarkMode();
             },
+            secondary: AnimatedSwitcher(
+              duration:
+                  const Duration(
+                milliseconds: 250,
+              ),
+              child: Icon(
+                state.profile.darkModeEnabled
+                    ? Icons
+                        .dark_mode_rounded
+                    : Icons
+                        .light_mode_outlined,
+                key: ValueKey(
+                  state.profile
+                      .darkModeEnabled,
+                ),
+                color: colorScheme.primary,
+              ),
+            ),
             title: const Text(
               'Dark Mode',
             ),
-            subtitle: const Text(
-              'Use dark appearance',
-            ),
-            secondary: const Icon(
-              Icons.dark_mode_outlined,
+            subtitle: Text(
+              state.profile.darkModeEnabled
+                  ? 'Dark appearance is enabled'
+                  : 'Use a comfortable dark appearance',
             ),
           ),
         ],
@@ -879,7 +1115,8 @@ class _PreferencesCard
 // ACCOUNT CARD
 // ============================================================================
 
-class _AccountCard extends StatelessWidget {
+class _AccountCard
+    extends StatelessWidget {
   final VoidCallback onReset;
   final VoidCallback onFeedback;
   final VoidCallback onSupport;
@@ -896,26 +1133,80 @@ class _AccountCard extends StatelessWidget {
   Widget build(
     BuildContext context,
   ) {
+    final theme =
+        Theme.of(context);
+
+    final colorScheme =
+        theme.colorScheme;
+
     return Card(
       elevation: 0,
+      margin: EdgeInsets.zero,
+      clipBehavior:
+          Clip.antiAlias,
       child: Column(
         children: [
-          const ListTile(
-            leading: Icon(
-              Icons.manage_accounts_outlined,
+          // ====================================================
+          // HEADER
+          // ====================================================
+
+          Padding(
+            padding:
+                const EdgeInsets.fromLTRB(
+              20,
+              18,
+              20,
+              12,
             ),
-            title: Text(
-              'Account',
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: colorScheme
+                        .secondaryContainer,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons
+                        .manage_accounts_outlined,
+                    color: colorScheme
+                        .onSecondaryContainer,
+                  ),
+                ),
+                const SizedBox(
+                  width: 14,
+                ),
+                const Text(
+                  'Account',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight:
+                        FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
 
-          // ==================================================
+          const Divider(
+            height: 1,
+          ),
+
+          // ====================================================
           // RESET
-          // ==================================================
+          // ====================================================
 
           ListTile(
-            leading: const Icon(
+            contentPadding:
+                const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 4,
+            ),
+            leading: Icon(
               Icons.restart_alt_rounded,
+              color: colorScheme.primary,
             ),
             title: const Text(
               'Reset Profile Data',
@@ -923,20 +1214,31 @@ class _AccountCard extends StatelessWidget {
             subtitle: const Text(
               'Clear name, location, phone and bio',
             ),
+            trailing: const Icon(
+              Icons.chevron_right_rounded,
+            ),
             onTap: onReset,
           ),
 
           const Divider(
             height: 1,
+            indent: 20,
+            endIndent: 20,
           ),
 
-          // ==================================================
+          // ====================================================
           // SUPPORT
-          // ==================================================
+          // ====================================================
 
           ListTile(
-            leading: const Icon(
+            contentPadding:
+                const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 4,
+            ),
+            leading: Icon(
               Icons.support_agent_outlined,
+              color: colorScheme.primary,
             ),
             title: const Text(
               'Help & Support',
@@ -952,15 +1254,23 @@ class _AccountCard extends StatelessWidget {
 
           const Divider(
             height: 1,
+            indent: 20,
+            endIndent: 20,
           ),
 
-          // ==================================================
+          // ====================================================
           // FEEDBACK
-          // ==================================================
+          // ====================================================
 
           ListTile(
-            leading: const Icon(
+            contentPadding:
+                const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 4,
+            ),
+            leading: Icon(
               Icons.feedback_outlined,
+              color: colorScheme.primary,
             ),
             title: const Text(
               'Send Feedback',
@@ -976,24 +1286,44 @@ class _AccountCard extends StatelessWidget {
 
           const Divider(
             height: 1,
+            indent: 20,
+            endIndent: 20,
           ),
 
-          // ==================================================
+          // ====================================================
           // SIGN OUT
-          // ==================================================
+          // ====================================================
 
           ListTile(
-            leading: const Icon(
-              Icons.logout_rounded,
-              color: Colors.red,
+            contentPadding:
+                const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 4,
             ),
-            title: const Text(
+            leading: Icon(
+              Icons.logout_rounded,
+              color: colorScheme.error,
+            ),
+            title: Text(
               'Sign Out',
               style: TextStyle(
-                color: Colors.red,
+                color: colorScheme.error,
+                fontWeight:
+                    FontWeight.w500,
               ),
             ),
+            subtitle: const Text(
+              'Sign out of your GreenMind AI account',
+            ),
+            trailing: Icon(
+              Icons.chevron_right_rounded,
+              color: colorScheme.error,
+            ),
             onTap: onSignOut,
+          ),
+
+          const SizedBox(
+            height: 8,
           ),
         ],
       ),
@@ -1005,7 +1335,8 @@ class _AccountCard extends StatelessWidget {
 // ERROR MESSAGE
 // ============================================================================
 
-class _ErrorMessage extends StatelessWidget {
+class _ErrorMessage
+    extends StatelessWidget {
   final String message;
 
   const _ErrorMessage({
@@ -1016,34 +1347,41 @@ class _ErrorMessage extends StatelessWidget {
   Widget build(
     BuildContext context,
   ) {
+    final colorScheme =
+        Theme.of(context).colorScheme;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(12),
+      padding:
+          const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.red.withValues(
-          alpha: 0.08,
-        ),
+        color: colorScheme
+            .errorContainer,
         borderRadius:
-            BorderRadius.circular(12),
+            BorderRadius.circular(14),
+        border: Border.all(
+          color: colorScheme.error
+              .withValues(alpha: 0.25),
+        ),
       ),
       child: Row(
         crossAxisAlignment:
             CrossAxisAlignment.start,
         children: [
-          const Icon(
-            Icons.error_outline,
-            color: Colors.red,
+          Icon(
+            Icons.error_outline_rounded,
+            color:
+                colorScheme.onErrorContainer,
           ),
-
           const SizedBox(
             width: 10,
           ),
-
           Expanded(
             child: Text(
               message,
-              style: const TextStyle(
-                color: Colors.red,
+              style: TextStyle(
+                color: colorScheme
+                    .onErrorContainer,
               ),
             ),
           ),

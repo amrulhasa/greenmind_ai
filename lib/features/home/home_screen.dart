@@ -11,9 +11,9 @@ import 'widgets/home_header.dart';
 import 'widgets/recent_plants.dart';
 
 class HomeScreen extends ConsumerWidget {
-  const HomeScreen({
-    super.key,
-  });
+  const HomeScreen({super.key});
+
+  static const Color _background = Color(0xFFF3F8F3);
 
   @override
   Widget build(
@@ -21,142 +21,56 @@ class HomeScreen extends ConsumerWidget {
     WidgetRef ref,
   ) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F8F3),
+      backgroundColor: _background,
       bottomNavigationBar: const BottomNav(),
       body: SafeArea(
         bottom: false,
         child: Stack(
           children: [
-            // ==========================================================
-            // PREMIUM BACKGROUND
-            // ==========================================================
-
             const _HomeBackground(),
-
-            // ==========================================================
-            // CONTENT
-            // ==========================================================
 
             LayoutBuilder(
               builder: (context, constraints) {
-                final bool isWide = constraints.maxWidth >= 900;
-
-                final double horizontalPadding = isWide
-                    ? ((constraints.maxWidth - 1180) / 2).clamp(
-                        24.0,
-                        80.0,
-                      )
-                    : 20.0;
-
                 return SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
-                  padding: EdgeInsets.fromLTRB(
-                    horizontalPadding,
-                    20,
-                    horizontalPadding,
-                    40,
+                  padding: const EdgeInsets.fromLTRB(
+                    18,
+                    18,
+                    18,
+                    38,
                   ),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      maxWidth: 1180,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // ==================================================
-                        // HEADER
-                        // ==================================================
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: 1180,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const HomeHeader(),
 
-                        const HomeHeader(),
+                          const SizedBox(height: 26),
 
-                        const SizedBox(height: 28),
+                          const FeatureCard(),
 
-                        // ==================================================
-                        // HERO FEATURES
-                        // ==================================================
+                          const SizedBox(height: 22),
 
-                        const FeatureCard(),
+                          const _QuickActionsCard(),
 
-                        const SizedBox(height: 22),
+                          const SizedBox(height: 22),
 
-                        // ==================================================
-                        // QUICK ACTIONS
-                        // ==================================================
-
-                        const _QuickActionsCard(),
-
-                        const SizedBox(height: 22),
-
-                        // ==================================================
-                        // SECONDARY FEATURES
-                        // ==================================================
-
-                        if (isWide)
-                          Row(
-                            crossAxisAlignment:
-                                CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: _PlantReportCard(
-                                  onTap: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            const PlantReportScreen(),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              const SizedBox(width: 18),
-                              Expanded(
-                                child: _NearbyNurseryCard(
-                                  onTap: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            const NearbyNurseryScreen(),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ],
-                          )
-                        else ...[
-                          _PlantReportCard(
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      const PlantReportScreen(),
-                                ),
-                              );
-                            },
+                          _SecondaryFeatures(
+                            isWide: constraints.maxWidth >= 900,
                           ),
-                          const SizedBox(height: 18),
-                          _NearbyNurseryCard(
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      const NearbyNurseryScreen(),
-                                ),
-                              );
-                            },
-                          ),
+
+                          const SizedBox(height: 30),
+
+                          const RecentPlants(),
+
+                          const SizedBox(height: 24),
                         ],
-
-                        const SizedBox(height: 30),
-
-                        // ==================================================
-                        // RECENT PLANTS
-                        // ==================================================
-
-                        const RecentPlants(),
-
-                        const SizedBox(height: 24),
-                      ],
+                      ),
                     ),
                   ),
                 );
@@ -170,7 +84,69 @@ class HomeScreen extends ConsumerWidget {
 }
 
 // ============================================================================
-// PREMIUM HOME BACKGROUND
+// SECONDARY FEATURES
+// ============================================================================
+
+class _SecondaryFeatures extends StatelessWidget {
+  const _SecondaryFeatures({
+    required this.isWide,
+  });
+
+  final bool isWide;
+
+  void _openPlantReport(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const PlantReportScreen(),
+      ),
+    );
+  }
+
+  void _openNursery(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const NearbyNurseryScreen(),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (isWide) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: _PlantReportCard(
+              onTap: () => _openPlantReport(context),
+            ),
+          ),
+          const SizedBox(width: 18),
+          Expanded(
+            child: _NearbyNurseryCard(
+              onTap: () => _openNursery(context),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      children: [
+        _PlantReportCard(
+          onTap: () => _openPlantReport(context),
+        ),
+        const SizedBox(height: 18),
+        _NearbyNurseryCard(
+          onTap: () => _openNursery(context),
+        ),
+      ],
+    );
+  }
+}
+
+// ============================================================================
+// PREMIUM BACKGROUND
 // ============================================================================
 
 class _HomeBackground extends StatelessWidget {
@@ -181,7 +157,6 @@ class _HomeBackground extends StatelessWidget {
     return IgnorePointer(
       child: Stack(
         children: [
-          // Main soft gradient
           Positioned.fill(
             child: DecoratedBox(
               decoration: const BoxDecoration(
@@ -189,70 +164,65 @@ class _HomeBackground extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Color(0xFFF7FBF7),
-                    Color(0xFFF2F7F2),
-                    Color(0xFFEEF5EF),
+                    Color(0xFFF8FCF8),
+                    Color(0xFFF3F8F3),
+                    Color(0xFFEDF5EE),
                   ],
                 ),
               ),
             ),
           ),
 
-          // Top green glow
           Positioned(
-            top: -150,
-            left: -120,
+            top: -160,
+            left: -140,
             child: _GlowCircle(
-              size: 360,
-              color: Color(0xFFBFE4C5),
-              opacity: 0.28,
+              size: 390,
+              color: const Color(0xFFB9E2BF),
+              opacity: 0.24,
             ),
           ),
 
-          // Top-right glow
           Positioned(
-            top: -100,
-            right: -140,
+            top: -120,
+            right: -150,
             child: _GlowCircle(
-              size: 340,
-              color: Color(0xFFD7EFD9),
-              opacity: 0.45,
+              size: 370,
+              color: const Color(0xFFD8EEDB),
+              opacity: 0.42,
             ),
           ),
 
-          // Middle decorative glow
           Positioned(
-            top: 430,
-            right: -180,
+            top: 420,
+            right: -190,
             child: _GlowCircle(
-              size: 380,
-              color: Color(0xFFCDE8D0),
-              opacity: 0.20,
+              size: 410,
+              color: const Color(0xFFCBE6CF),
+              opacity: 0.17,
             ),
           ),
 
-          // Bottom glow
           Positioned(
-            bottom: -180,
-            left: -150,
+            bottom: -190,
+            left: -170,
             child: _GlowCircle(
-              size: 400,
-              color: Color(0xFFB9DDBE),
-              opacity: 0.18,
+              size: 430,
+              color: const Color(0xFFB9DCBE),
+              opacity: 0.15,
             ),
           ),
 
-          // Subtle decorative leaves
           Positioned(
-            top: 115,
-            right: 25,
+            top: 125,
+            right: 18,
             child: Transform.rotate(
               angle: -0.35,
               child: Icon(
                 Icons.eco_rounded,
-                size: 75,
+                size: 80,
                 color: const Color(0xFF2E7D32).withValues(
-                  alpha: 0.035,
+                  alpha: 0.032,
                 ),
               ),
             ),
@@ -260,14 +230,14 @@ class _HomeBackground extends StatelessWidget {
 
           Positioned(
             top: 390,
-            left: 8,
+            left: 4,
             child: Transform.rotate(
               angle: 0.4,
               child: Icon(
                 Icons.spa_rounded,
-                size: 90,
+                size: 94,
                 color: const Color(0xFF2E7D32).withValues(
-                  alpha: 0.025,
+                  alpha: 0.023,
                 ),
               ),
             ),
@@ -277,10 +247,6 @@ class _HomeBackground extends StatelessWidget {
     );
   }
 }
-
-// ============================================================================
-// GLOW CIRCLE
-// ============================================================================
 
 class _GlowCircle extends StatelessWidget {
   const _GlowCircle({
@@ -339,115 +305,63 @@ class _QuickActionsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Color(0xFFE7F5E9),
-                      Color(0xFFD8EEDB),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(
-                  Icons.bolt_rounded,
-                  size: 21,
-                  color: Color(0xFF2E7D32),
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Quick Actions',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF182019),
-                        letterSpacing: -0.25,
-                      ),
-                    ),
-                    SizedBox(height: 3),
-                    Text(
-                      'Everything you need, one tap away',
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        color: Color(0xFF7A857C),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          const _SectionHeader(
+            icon: Icons.bolt_rounded,
+            title: 'Quick Actions',
+            subtitle: 'Everything you need, one tap away',
           ),
 
           const SizedBox(height: 17),
 
           LayoutBuilder(
             builder: (context, constraints) {
-              final bool compact = constraints.maxWidth < 500;
+              final compact = constraints.maxWidth < 520;
 
               if (compact) {
-                return Column(
+                return const Column(
                   children: [
                     _QuickActionItem(
                       icon: Icons.notifications_none_rounded,
                       title: 'Reminders',
                       subtitle: 'Plant care',
-                      iconBackground: const Color(0xFFE8F5E9),
-                      iconColor: const Color(0xFF2E7D32),
-                      onTap: () {
-                        context.push('/reminders');
-                      },
+                      iconBackground: Color(0xFFE8F5E9),
+                      iconColor: Color(0xFF2E7D32),
+                      route: '/reminders',
                     ),
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10),
                     _QuickActionItem(
                       icon: Icons.campaign_outlined,
                       title: 'Announcements',
                       subtitle: 'Latest updates',
-                      iconBackground: const Color(0xFFFFF3E2),
-                      iconColor: const Color(0xFFEF6C00),
-                      onTap: () {
-                        context.push('/announcements');
-                      },
+                      iconBackground: Color(0xFFFFF3E2),
+                      iconColor: Color(0xFFEF6C00),
+                      route: '/announcements',
                     ),
                   ],
                 );
               }
 
-              return Row(
+              return const Row(
                 children: [
                   Expanded(
                     child: _QuickActionItem(
                       icon: Icons.notifications_none_rounded,
                       title: 'Reminders',
                       subtitle: 'Plant care',
-                      iconBackground: const Color(0xFFE8F5E9),
-                      iconColor: const Color(0xFF2E7D32),
-                      onTap: () {
-                        context.push('/reminders');
-                      },
+                      iconBackground: Color(0xFFE8F5E9),
+                      iconColor: Color(0xFF2E7D32),
+                      route: '/reminders',
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Expanded(
                     child: _QuickActionItem(
                       icon: Icons.campaign_outlined,
                       title: 'Announcements',
                       subtitle: 'Latest updates',
-                      iconBackground: const Color(0xFFFFF3E2),
-                      iconColor: const Color(0xFFEF6C00),
-                      onTap: () {
-                        context.push('/announcements');
-                      },
+                      iconBackground: Color(0xFFFFF3E2),
+                      iconColor: Color(0xFFEF6C00),
+                      route: '/announcements',
                     ),
                   ),
                 ],
@@ -456,6 +370,75 @@ class _QuickActionsCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ============================================================================
+// SECTION HEADER
+// ============================================================================
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFFE7F5E9),
+                Color(0xFFD8EEDB),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Icon(
+            icon,
+            size: 21,
+            color: const Color(0xFF2E7D32),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF182019),
+                  letterSpacing: -0.25,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  color: Color(0xFF7A857C),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -471,7 +454,7 @@ class _QuickActionItem extends StatelessWidget {
     required this.subtitle,
     required this.iconBackground,
     required this.iconColor,
-    required this.onTap,
+    required this.route,
   });
 
   final IconData icon;
@@ -479,15 +462,16 @@ class _QuickActionItem extends StatelessWidget {
   final String subtitle;
   final Color iconBackground;
   final Color iconColor;
-  final VoidCallback onTap;
+  final String route;
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(19),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: onTap,
+        onTap: () => context.push(route),
         borderRadius: BorderRadius.circular(19),
         child: Ink(
           padding: const EdgeInsets.symmetric(
@@ -570,7 +554,7 @@ class _QuickActionItem extends StatelessWidget {
 }
 
 // ============================================================================
-// PLANT CARE REPORT
+// PLANT REPORT CARD
 // ============================================================================
 
 class _PlantReportCard extends StatelessWidget {
@@ -590,7 +574,7 @@ class _PlantReportCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFFE5F4E7),
+            Color(0xFFE4F4E7),
             Color(0xFFF9FCF9),
           ],
         ),
@@ -601,7 +585,7 @@ class _PlantReportCard extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF2E7D32).withValues(
-              alpha: 0.06,
+              alpha: 0.055,
             ),
             blurRadius: 30,
             offset: const Offset(0, 12),
@@ -613,10 +597,10 @@ class _PlantReportCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              _PremiumIconBox(
+              const _PremiumIconBox(
                 icon: Icons.auto_awesome_rounded,
                 background: Colors.white,
-                color: const Color(0xFF2E7D32),
+                color: Color(0xFF2E7D32),
               ),
               const SizedBox(width: 13),
               const Expanded(
@@ -625,6 +609,8 @@ class _PlantReportCard extends StatelessWidget {
                   children: [
                     Text(
                       'Plant Care Report',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
@@ -635,6 +621,8 @@ class _PlantReportCard extends StatelessWidget {
                     SizedBox(height: 4),
                     Text(
                       'AI-powered personalized care plan',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 12,
                         color: Color(0xFF68786B),
@@ -643,12 +631,11 @@ class _PlantReportCard extends StatelessWidget {
                   ],
                 ),
               ),
+              const SizedBox(width: 8),
               const _SmallAiBadge(),
             ],
           ),
-
           const SizedBox(height: 17),
-
           const Text(
             'Analyze your plant and receive personalized '
             'recommendations for watering, light, soil and care.',
@@ -658,9 +645,7 @@ class _PlantReportCard extends StatelessWidget {
               color: Color(0xFF657468),
             ),
           ),
-
           const SizedBox(height: 16),
-
           const Row(
             children: [
               Expanded(
@@ -685,9 +670,7 @@ class _PlantReportCard extends StatelessWidget {
               ),
             ],
           ),
-
           const SizedBox(height: 15),
-
           SizedBox(
             width: double.infinity,
             height: 50,
@@ -721,7 +704,7 @@ class _PlantReportCard extends StatelessWidget {
 }
 
 // ============================================================================
-// NEARBY NURSERY
+// NEARBY NURSERY CARD
 // ============================================================================
 
 class _NearbyNurseryCard extends StatelessWidget {
@@ -757,10 +740,10 @@ class _NearbyNurseryCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              _PremiumIconBox(
+              const _PremiumIconBox(
                 icon: Icons.location_on_rounded,
-                background: const Color(0xFFEAF5EC),
-                color: const Color(0xFF2E7D32),
+                background: Color(0xFFEAF5EC),
+                color: Color(0xFF2E7D32),
               ),
               const SizedBox(width: 13),
               const Expanded(
@@ -769,6 +752,8 @@ class _NearbyNurseryCard extends StatelessWidget {
                   children: [
                     Text(
                       'Nearby Nurseries',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
@@ -779,6 +764,8 @@ class _NearbyNurseryCard extends StatelessWidget {
                     SizedBox(height: 4),
                     Text(
                       'Find plant nurseries near you',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 12,
                         color: Color(0xFF778078),
@@ -787,6 +774,7 @@ class _NearbyNurseryCard extends StatelessWidget {
                   ],
                 ),
               ),
+              const SizedBox(width: 8),
               Container(
                 width: 35,
                 height: 35,
@@ -805,9 +793,7 @@ class _NearbyNurseryCard extends StatelessWidget {
               ),
             ],
           ),
-
           const SizedBox(height: 17),
-
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(14),
@@ -839,9 +825,7 @@ class _NearbyNurseryCard extends StatelessWidget {
               ],
             ),
           ),
-
           const SizedBox(height: 13),
-
           SizedBox(
             width: double.infinity,
             height: 48,
@@ -876,7 +860,7 @@ class _NearbyNurseryCard extends StatelessWidget {
 }
 
 // ============================================================================
-// PREMIUM ICON BOX
+// PREMIUM ICON
 // ============================================================================
 
 class _PremiumIconBox extends StatelessWidget {
@@ -900,9 +884,7 @@ class _PremiumIconBox extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(
-              alpha: 0.035,
-            ),
+            color: Colors.black.withValues(alpha: 0.035),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -979,9 +961,7 @@ class _ReportFeature extends StatelessWidget {
     return Container(
       height: 43,
       decoration: BoxDecoration(
-        color: Colors.white.withValues(
-          alpha: 0.82,
-        ),
+        color: Colors.white.withValues(alpha: 0.82),
         borderRadius: BorderRadius.circular(13),
         border: Border.all(
           color: const Color(0xFFDDE9DE),

@@ -65,38 +65,49 @@ class UserProfile {
     final name =
         json['name']?.toString().trim() ?? '';
 
+    final email =
+        json['email']?.toString().trim() ?? '';
+
+    final location =
+        json['location']?.toString().trim() ?? '';
+
+    final phone =
+        json['phone']?.toString().trim() ?? '';
+
     final bio =
         json['bio']?.toString().trim() ?? '';
+
+    final profileImage =
+        json['profileImagePath']?.toString();
+
+    final notifications =
+        json['notificationsEnabled'];
+
+    final darkMode =
+        json['darkModeEnabled'];
 
     return UserProfile(
       name: name.isNotEmpty
           ? name
           : 'Plant Lover',
-
-      email:
-          json['email']?.toString() ?? '',
-
-      location:
-          json['location']?.toString() ?? '',
-
-      phone:
-          json['phone']?.toString() ?? '',
-
+      email: email,
+      location: location,
+      phone: phone,
       bio: bio.isNotEmpty
           ? bio
           : 'GreenMind AI plant enthusiast',
-
       profileImagePath:
-          json['profileImagePath']?.toString(),
-
+          profileImage != null &&
+                  profileImage.trim().isNotEmpty
+              ? profileImage
+              : null,
       notificationsEnabled:
-          json['notificationsEnabled'] is bool
-              ? json['notificationsEnabled'] as bool
+          notifications is bool
+              ? notifications
               : true,
-
       darkModeEnabled:
-          json['darkModeEnabled'] is bool
-              ? json['darkModeEnabled'] as bool
+          darkMode is bool
+              ? darkMode
               : false,
     );
   }

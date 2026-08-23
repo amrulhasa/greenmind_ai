@@ -1,33 +1,51 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Home Provider
+/// ============================================================
+/// HOME PROVIDER
+/// ============================================================
 ///
-/// Handles all business logic for the Home module.
-/// Future updates:
-/// - Load recent plants
-/// - Fetch user profile
-/// - Weather API
+/// Handles Home module state.
+///
+/// Currently prepared for future dashboard features such as:
+/// - Recent plants
+/// - User profile
 /// - Plant care reminders
+/// - Weather information
 /// - Dashboard statistics
+///
+/// Navigation/tab state is intentionally NOT handled here.
+/// GoRouter + BottomNav are responsible for navigation.
+///
 
-final homeProvider = StateNotifierProvider<HomeNotifier, HomeState>(
-  (ref) => HomeNotifier(),
+final homeProvider =
+    NotifierProvider<HomeNotifier, HomeState>(
+  HomeNotifier.new,
 );
 
-class HomeNotifier extends StateNotifier<HomeState> {
-  HomeNotifier() : super(const HomeState());
-
-  void changeTab(int index) {
-    state = state.copyWith(selectedIndex: index);
+class HomeNotifier extends Notifier<HomeState> {
+  @override
+  HomeState build() {
+    return const HomeState();
   }
+
+  /// Future Home business logic can be added here.
+  ///
+  /// Example:
+  /// - refreshDashboard()
+  /// - loadWeather()
+  /// - loadStatistics()
+  /// - refreshHomeData()
 }
 
+
+/// ============================================================
+/// HOME STATE
+/// ============================================================
+
 class HomeState {
-  final int selectedIndex;
+  const HomeState();
 
-  const HomeState({this.selectedIndex = 0});
-
-  HomeState copyWith({int? selectedIndex}) {
-    return HomeState(selectedIndex: selectedIndex ?? this.selectedIndex);
+  HomeState copyWith() {
+    return const HomeState();
   }
 }

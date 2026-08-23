@@ -8,78 +8,55 @@ import 'package:image_picker/image_picker.dart';
 import '../models/user_profile.dart';
 import '../services/profile_storage_service.dart';
 
-// ============================================================
-// PROFILE STORAGE SERVICE PROVIDER
-// ============================================================
+// ============================================================================
+// STORAGE
+// ============================================================================
 
 final profileStorageServiceProvider =
-    Provider<ProfileStorageService>(
-  (ref) {
-    return ProfileStorageService();
-  },
-);
+    Provider<ProfileStorageService>((ref) {
+  return ProfileStorageService();
+});
 
-// ============================================================
+// ============================================================================
 // PROFILE PROVIDER
-// ============================================================
+// ============================================================================
 
 final profileProvider =
-    NotifierProvider<
-        ProfileNotifier,
-        ProfileState>(
+    NotifierProvider<ProfileNotifier, ProfileState>(
   ProfileNotifier.new,
 );
 
-// ============================================================
+// ============================================================================
 // PROFILE NOTIFIER
-// ============================================================
+// ============================================================================
 
-class ProfileNotifier
-    extends Notifier<ProfileState> {
-  // ============================================================
-  // STORAGE SERVICE
-  // ============================================================
+class ProfileNotifier extends Notifier<ProfileState> {
+  ProfileStorageService get _storage =>
+      ref.read(profileStorageServiceProvider);
 
-  ProfileStorageService get _storageService {
-    return ref.read(
-      profileStorageServiceProvider,
-    );
-  }
-
-  // ============================================================
-  // FIREBASE AUTH
-  // ============================================================
-
-  FirebaseAuth get _auth {
-    return FirebaseAuth.instance;
-  }
-
-  // ============================================================
-  // AUTH LISTENER
-  // ============================================================
+  FirebaseAuth get _auth =>
+      FirebaseAuth.instance;
 
   StreamSubscription<User?>? _authSubscription;
 
-  // ============================================================
+  Future<void> _saveQueue =
+      Future<void>.value();
+
+  int _operationVersion = 0;
+
+  UserProfile? _pendingProfile;
+
+  // ==========================================================================
   // BUILD
-  // ============================================================
+  // ==========================================================================
 
   @override
   ProfileState build() {
-    // ----------------------------------------------------------
-    // IMPORTANT
-    //
-    // Firebase Auth may need a short time to restore the
-    // previously logged-in user after app restart.
-    //
-    // Therefore we DO NOT immediately assume that
-    // currentUser == null means logged out.
-    // ----------------------------------------------------------
-
     _listenToAuthChanges();
 
     ref.onDispose(() {
       _authSubscription?.cancel();
+      _authSubscription = null;
     });
 
     return const ProfileState(
@@ -87,18 +64,18 @@ class ProfileNotifier
     );
   }
 
-  // ============================================================
-  // LISTEN TO FIREBASE AUTH
-  // ============================================================
+  // ==========================================================================
+  // AUTH LISTENER
+  // ==========================================================================
 
   void _listenToAuthChanges() {
+    _authSubscription?.cancel();
+
     _authSubscription =
         _auth.authStateChanges().listen(
-      (User? user) async {
+      (user) async {
         if (user == null) {
-          // ----------------------------------------------------
-          // User is genuinely logged out.
-          // ----------------------------------------------------
+          _pendingProfile = null;
 
           state = const ProfileState(
             profile: UserProfile(),
@@ -108,20 +85,11 @@ class ProfileNotifier
           return;
         }
 
-        // ------------------------------------------------------
-        // Firebase has restored the logged-in user.
-        // Now load profile from Firestore.
-        // ------------------------------------------------------
-
-        await _loadProfileForUser(user);
+        await _loadProfile(user);
       },
-      onError: (Object error, StackTrace stackTrace) {
+      onError: (error, stackTrace) {
         debugPrint(
           'AUTH STATE ERROR: $error',
-        );
-
-        debugPrint(
-          '$stackTrace',
         );
 
         state = state.copyWith(
@@ -133,38 +101,11 @@ class ProfileNotifier
     );
   }
 
-  // ============================================================
+  // ==========================================================================
   // LOAD PROFILE
-  // ============================================================
+  // ==========================================================================
 
-  // ignore: unused_element
-  Future<void> _loadProfile() async {
-    final user = _auth.currentUser;
-
-    // ----------------------------------------------------------
-    // If Firebase Auth has not restored the user yet,
-    // DO NOT reset the profile.
-    //
-    // The authStateChanges listener will load it once
-    // Firebase finishes restoring the session.
-    // ----------------------------------------------------------
-
-    if (user == null) {
-      state = state.copyWith(
-        isLoading: true,
-      );
-
-      return;
-    }
-
-    await _loadProfileForUser(user);
-  }
-
-  // ============================================================
-  // LOAD PROFILE FOR USER
-  // ============================================================
-
-  Future<void> _loadProfileForUser(
+  Future<void> _loadProfile(
     User user,
   ) async {
     try {
@@ -173,49 +114,36 @@ class ProfileNotifier
         clearError: true,
       );
 
-      final profile =
-          await _storageService.loadProfile(
+      final loadedProfile =
+          await _storage.loadProfile(
         userId: user.uid,
       );
 
-      // --------------------------------------------------------
-      // Firebase Auth email is always authoritative.
-      // --------------------------------------------------------
+      final effectiveProfile =
+          _pendingProfile ?? loadedProfile;
 
-      final profileWithEmail =
-          profile.copyWith(
-        email: user.email ?? profile.email,
+      final profile =
+          effectiveProfile.copyWith(
+        email: user.email ??
+            effectiveProfile.email,
       );
 
       state = state.copyWith(
-        profile: profileWithEmail,
+        profile: profile,
         isLoading: false,
         clearError: true,
       );
 
       debugPrint(
-        'PROFILE LOADED SUCCESSFULLY',
-      );
-
-      debugPrint(
-        'UID: ${user.uid}',
-      );
-
-      debugPrint(
-        'NAME: ${profileWithEmail.name}',
-      );
-
-      debugPrint(
-        'EMAIL: ${profileWithEmail.email}',
+        'PROFILE LOADED | '
+        'darkMode=${profile.darkModeEnabled}',
       );
     } catch (e, stackTrace) {
       debugPrint(
         'PROFILE LOAD ERROR: $e',
       );
 
-      debugPrint(
-        '$stackTrace',
-      );
+      debugPrint('$stackTrace');
 
       state = state.copyWith(
         isLoading: false,
@@ -225,27 +153,21 @@ class ProfileNotifier
     }
   }
 
-  // ============================================================
-  // PUBLIC RELOAD
-  // ============================================================
+  // ==========================================================================
+  // RELOAD
+  // ==========================================================================
 
   Future<void> reloadProfile() async {
     final user = _auth.currentUser;
 
-    if (user == null) {
-      state = state.copyWith(
-        isLoading: true,
-      );
+    if (user == null) return;
 
-      return;
-    }
-
-    await _loadProfileForUser(user);
+    await _loadProfile(user);
   }
 
-  // ============================================================
+  // ==========================================================================
   // UPDATE PROFILE
-  // ============================================================
+  // ==========================================================================
 
   Future<void> updateProfile({
     String? name,
@@ -255,75 +177,256 @@ class ProfileNotifier
   }) async {
     final user = _auth.currentUser;
 
-    // ----------------------------------------------------------
-    // AUTH CHECK
-    // ----------------------------------------------------------
-
     if (user == null) {
-      state = state.copyWith(
-        errorMessage:
-            'Please login first.',
-      );
-
+      _setLoginError();
       return;
     }
 
-    // ----------------------------------------------------------
-    // CREATE UPDATED PROFILE
-    // ----------------------------------------------------------
-
-    final updatedProfile =
+    final updated =
         state.profile.copyWith(
       name: name,
       location: location,
       phone: phone,
       bio: bio,
-
-      // Email intentionally not changed.
-      // Firebase Auth owns the account email.
     );
 
-    // ----------------------------------------------------------
-    // SAVE
-    // ----------------------------------------------------------
-
     await _saveProfile(
-      updatedProfile,
-      user.uid,
+      oldProfile: state.profile,
+      updatedProfile: updated,
+      userId: user.uid,
     );
   }
 
-  // ============================================================
-  // CHANGE PROFILE PICTURE
-  // ============================================================
+  // ==========================================================================
+  // TOGGLE NOTIFICATIONS
+  // ==========================================================================
+
+  Future<void> toggleNotifications() async {
+    final user = _auth.currentUser;
+
+    if (user == null) {
+      _setLoginError();
+      return;
+    }
+
+    final oldProfile =
+        state.profile;
+
+    final updated =
+        oldProfile.copyWith(
+      notificationsEnabled:
+          !oldProfile.notificationsEnabled,
+    );
+
+    await _savePreference(
+      oldProfile: oldProfile,
+      updatedProfile: updated,
+      userId: user.uid,
+    );
+  }
+
+  // ==========================================================================
+  // TOGGLE DARK MODE
+  // ==========================================================================
+
+  Future<void> toggleDarkMode() async {
+    final user = _auth.currentUser;
+
+    if (user == null) {
+      _setLoginError();
+      return;
+    }
+
+    final oldProfile =
+        state.profile;
+
+    final updated =
+        oldProfile.copyWith(
+      darkModeEnabled:
+          !oldProfile.darkModeEnabled,
+    );
+
+    // Immediate UI update.
+    state = state.copyWith(
+      profile: updated,
+      clearError: true,
+    );
+
+    // Keep pending state so profile loading cannot
+    // overwrite the new preference.
+    _pendingProfile = updated;
+
+    debugPrint(
+      'DARK MODE → '
+      '${updated.darkModeEnabled}',
+    );
+
+    await _queueSave(
+      oldProfile: oldProfile,
+      updatedProfile: updated,
+      userId: user.uid,
+    );
+  }
+
+  // ==========================================================================
+  // SAVE PREFERENCE
+  // ==========================================================================
+
+  Future<void> _savePreference({
+    required UserProfile oldProfile,
+    required UserProfile updatedProfile,
+    required String userId,
+  }) async {
+    state = state.copyWith(
+      profile: updatedProfile,
+      clearError: true,
+    );
+
+    _pendingProfile = updatedProfile;
+
+    await _queueSave(
+      oldProfile: oldProfile,
+      updatedProfile: updatedProfile,
+      userId: userId,
+    );
+  }
+
+  // ==========================================================================
+  // QUEUED SAVE
+  // ==========================================================================
+
+  Future<void> _queueSave({
+    required UserProfile oldProfile,
+    required UserProfile updatedProfile,
+    required String userId,
+  }) async {
+    final operation =
+        ++_operationVersion;
+
+    _saveQueue = _saveQueue.then(
+      (_) async {
+        try {
+          await _storage.saveProfile(
+            userId: userId,
+            profile: updatedProfile,
+          );
+
+          if (operation ==
+              _operationVersion) {
+            _pendingProfile = null;
+
+            state = state.copyWith(
+              profile: updatedProfile,
+              clearError: true,
+            );
+
+            debugPrint(
+              'PROFILE SAVED SUCCESSFULLY',
+            );
+          }
+        } catch (e, stackTrace) {
+          debugPrint(
+            'PROFILE SAVE ERROR: $e',
+          );
+
+          debugPrint('$stackTrace');
+
+          if (operation ==
+              _operationVersion) {
+            _pendingProfile = null;
+
+            state = state.copyWith(
+              profile: oldProfile,
+              errorMessage:
+                  'Unable to save your preference.',
+            );
+          }
+        }
+      },
+    );
+
+    await _saveQueue;
+  }
+
+  // ==========================================================================
+  // NORMAL PROFILE SAVE
+  // ==========================================================================
+
+  Future<void> _saveProfile({
+    required UserProfile oldProfile,
+    required UserProfile updatedProfile,
+    required String userId,
+  }) async {
+    final operation =
+        ++_operationVersion;
+
+    _pendingProfile = updatedProfile;
+
+    state = state.copyWith(
+      profile: updatedProfile,
+      clearError: true,
+    );
+
+    try {
+      await _storage.saveProfile(
+        userId: userId,
+        profile: updatedProfile,
+      );
+
+      if (operation ==
+          _operationVersion) {
+        _pendingProfile = null;
+
+        state = state.copyWith(
+          profile: updatedProfile,
+          isLoading: false,
+          clearError: true,
+        );
+      }
+    } catch (e, stackTrace) {
+      debugPrint(
+        'PROFILE SAVE ERROR: $e',
+      );
+
+      debugPrint('$stackTrace');
+
+      if (operation ==
+          _operationVersion) {
+        _pendingProfile = null;
+
+        state = state.copyWith(
+          profile: oldProfile,
+          isLoading: false,
+          errorMessage:
+              'Unable to save profile.',
+        );
+      }
+    }
+  }
+
+  // ==========================================================================
+  // CHANGE PROFILE IMAGE
+  // ==========================================================================
 
   Future<void> changeProfilePicture({
     required ImageSource source,
   }) async {
     final user = _auth.currentUser;
 
-    // ----------------------------------------------------------
-    // AUTH CHECK
-    // ----------------------------------------------------------
-
     if (user == null) {
-      state = state.copyWith(
-        errorMessage:
-            'Please login first.',
-      );
-
+      _setLoginError();
       return;
     }
 
     try {
-      // --------------------------------------------------------
-      // PICK IMAGE
-      // --------------------------------------------------------
+      state = state.copyWith(
+        isLoading: true,
+        clearError: true,
+      );
 
-      final picker =
-          ImagePicker();
+      final picker = ImagePicker();
 
-      final XFile? pickedImage =
+      final image =
           await picker.pickImage(
         source: source,
         imageQuality: 90,
@@ -331,17 +434,15 @@ class ProfileNotifier
         maxHeight: 1600,
       );
 
-      // User cancelled.
-      if (pickedImage == null) {
+      if (image == null) {
+        state = state.copyWith(
+          isLoading: false,
+        );
         return;
       }
 
-      // --------------------------------------------------------
-      // READ IMAGE
-      // --------------------------------------------------------
-
       final bytes =
-          await pickedImage.readAsBytes();
+          await image.readAsBytes();
 
       if (bytes.isEmpty) {
         throw Exception(
@@ -349,47 +450,30 @@ class ProfileNotifier
         );
       }
 
-      // --------------------------------------------------------
-      // COMPRESS + BASE64
-      // --------------------------------------------------------
-
       final imageBase64 =
-          await _storageService
-              .saveProfileImage(
+          await _storage.saveProfileImage(
         bytes,
       );
 
       if (imageBase64.isEmpty) {
         throw Exception(
-          'Unable to process profile image.',
+          'Unable to process image.',
         );
       }
 
-      // --------------------------------------------------------
-      // UPDATE PROFILE
-      // --------------------------------------------------------
-
-      final updatedProfile =
+      final updated =
           state.profile.copyWith(
         profileImagePath:
             imageBase64,
       );
 
-      // --------------------------------------------------------
-      // SAVE TO FIRESTORE
-      // --------------------------------------------------------
-
-      await _storageService.saveProfile(
+      await _storage.saveProfile(
         userId: user.uid,
-        profile: updatedProfile,
+        profile: updated,
       );
 
-      // --------------------------------------------------------
-      // UPDATE UI
-      // --------------------------------------------------------
-
       state = state.copyWith(
-        profile: updatedProfile,
+        profile: updated,
         isLoading: false,
         clearError: true,
       );
@@ -398,9 +482,7 @@ class ProfileNotifier
         'PROFILE IMAGE ERROR: $e',
       );
 
-      debugPrint(
-        '$stackTrace',
-      );
+      debugPrint('$stackTrace');
 
       state = state.copyWith(
         isLoading: false,
@@ -410,46 +492,45 @@ class ProfileNotifier
     }
   }
 
-  // ============================================================
-  // REMOVE PROFILE PICTURE
-  // ============================================================
+  // ==========================================================================
+  // REMOVE PROFILE IMAGE
+  // ==========================================================================
 
   Future<void> removeProfilePicture() async {
     final user = _auth.currentUser;
 
     if (user == null) {
-      state = state.copyWith(
-        errorMessage:
-            'Please login first.',
-      );
-
+      _setLoginError();
       return;
     }
 
     try {
-      final updatedProfile =
+      state = state.copyWith(
+        isLoading: true,
+        clearError: true,
+      );
+
+      final updated =
           state.profile.copyWith(
         clearProfileImage: true,
       );
 
-      await _storageService.saveProfile(
+      await _storage.saveProfile(
         userId: user.uid,
-        profile: updatedProfile,
+        profile: updated,
       );
 
       state = state.copyWith(
-        profile: updatedProfile,
+        profile: updated,
         isLoading: false,
         clearError: true,
       );
     } catch (e, stackTrace) {
       debugPrint(
-        'REMOVE PROFILE IMAGE ERROR: $e',
+        'REMOVE IMAGE ERROR: $e',
       );
 
-      debugPrint(
-        '$stackTrace',
-      );
+      debugPrint('$stackTrace');
 
       state = state.copyWith(
         isLoading: false,
@@ -459,99 +540,43 @@ class ProfileNotifier
     }
   }
 
-  // ============================================================
-  // TOGGLE NOTIFICATIONS
-  // ============================================================
-
-  Future<void> toggleNotifications() async {
-    final user = _auth.currentUser;
-
-    if (user == null) {
-      state = state.copyWith(
-        errorMessage:
-            'Please login first.',
-      );
-
-      return;
-    }
-
-    final updatedProfile =
-        state.profile.copyWith(
-      notificationsEnabled:
-          !state.profile.notificationsEnabled,
-    );
-
-    await _saveProfile(
-      updatedProfile,
-      user.uid,
-    );
-  }
-
-  // ============================================================
-  // TOGGLE DARK MODE
-  // ============================================================
-
-  Future<void> toggleDarkMode() async {
-    final user = _auth.currentUser;
-
-    if (user == null) {
-      state = state.copyWith(
-        errorMessage:
-            'Please login first.',
-      );
-
-      return;
-    }
-
-    final updatedProfile =
-        state.profile.copyWith(
-      darkModeEnabled:
-          !state.profile.darkModeEnabled,
-    );
-
-    await _saveProfile(
-      updatedProfile,
-      user.uid,
-    );
-  }
-
-  // ============================================================
+  // ==========================================================================
   // RESET PROFILE
-  // ============================================================
-  //
-  // This is a REAL profile reset.
-  //
-  // It does NOT:
-  // - logout user
-  // - delete Firebase account
-  // - delete recent plants
-  //
-  // ============================================================
+  // ==========================================================================
 
   Future<void> resetProfile() async {
     final user = _auth.currentUser;
 
     if (user == null) {
-      state = state.copyWith(
-        errorMessage:
-            'Please login first.',
-      );
-
+      _setLoginError();
       return;
     }
 
     try {
-      await _storageService.resetProfile(
+      ++_operationVersion;
+
+      _pendingProfile = null;
+
+      state = state.copyWith(
+        isLoading: true,
+        clearError: true,
+      );
+
+      await _storage.resetProfile(
         userId: user.uid,
       );
 
-      final defaultProfile =
+      final profile =
           UserProfile(
+        name: 'Plant Lover',
         email: user.email ?? '',
+        bio: 'GreenMind AI plant enthusiast',
+        notificationsEnabled: true,
+        darkModeEnabled: false,
       );
 
       state = state.copyWith(
-        profile: defaultProfile,
+        profile: profile,
         isLoading: false,
         clearError: true,
       );
@@ -560,9 +585,7 @@ class ProfileNotifier
         'RESET PROFILE ERROR: $e',
       );
 
-      debugPrint(
-        '$stackTrace',
-      );
+      debugPrint('$stackTrace');
 
       state = state.copyWith(
         isLoading: false,
@@ -572,74 +595,24 @@ class ProfileNotifier
     }
   }
 
-  // ============================================================
-  // RESET PROFILE DATA
-  // ============================================================
-  //
-  // Kept because ProfileScreen uses this method.
-  //
-  // ============================================================
+  Future<void> resetProfileData() =>
+      resetProfile();
 
-  Future<void> resetProfileData() async {
-    await resetProfile();
-  }
+  // ==========================================================================
+  // LOGIN ERROR
+  // ==========================================================================
 
-  // ============================================================
-  // SAVE PROFILE
-  // ============================================================
-
-  Future<void> _saveProfile(
-    UserProfile profile,
-    String userId,
-  ) async {
-    try {
-      // --------------------------------------------------------
-      // SAVE TO FIRESTORE
-      // --------------------------------------------------------
-
-      await _storageService.saveProfile(
-        userId: userId,
-        profile: profile,
-      );
-
-      // --------------------------------------------------------
-      // UPDATE LOCAL RIVERPOD STATE
-      // --------------------------------------------------------
-
-      state = state.copyWith(
-        profile: profile,
-        isLoading: false,
-        clearError: true,
-      );
-
-      debugPrint(
-        'PROFILE SAVED SUCCESSFULLY',
-      );
-
-      debugPrint(
-        'UID: $userId',
-      );
-    } catch (e, stackTrace) {
-      debugPrint(
-        'PROFILE SAVE ERROR: $e',
-      );
-
-      debugPrint(
-        '$stackTrace',
-      );
-
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage:
-            'Unable to save profile.',
-      );
-    }
+  void _setLoginError() {
+    state = state.copyWith(
+      errorMessage:
+          'Please login first.',
+    );
   }
 }
 
-// ============================================================
+// ============================================================================
 // PROFILE STATE
-// ============================================================
+// ============================================================================
 
 class ProfileState {
   final UserProfile profile;
@@ -662,10 +635,8 @@ class ProfileState {
     return ProfileState(
       profile:
           profile ?? this.profile,
-
       isLoading:
           isLoading ?? this.isLoading,
-
       errorMessage:
           clearError
               ? null

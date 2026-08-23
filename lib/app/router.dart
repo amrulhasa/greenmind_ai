@@ -58,16 +58,14 @@ class AppRouter {
   // ROUTER
   // ============================================================
 
-  static final GoRouter router =
-      GoRouter(
+  static final GoRouter router = GoRouter(
     initialLocation: '/',
 
     // ==========================================================
     // AUTH REFRESH
     // ==========================================================
 
-    refreshListenable:
-        authRefreshNotifier,
+    refreshListenable: authRefreshNotifier,
 
     // ==========================================================
     // REDIRECT
@@ -77,33 +75,25 @@ class AppRouter {
       BuildContext context,
       GoRouterState state,
     ) async {
-      final ProviderContainer
-          container =
+      final ProviderContainer container =
           ProviderScope.containerOf(
         context,
         listen: false,
       );
 
-      final authState =
-          container.read(
+      final authState = container.read(
         authProvider,
       );
 
-      final String location =
-          state.uri.path;
+      final String location = state.uri.path;
 
       // ========================================================
       // PUBLIC ROUTES
       // ========================================================
 
-      final bool isSplashPage =
-          location == '/';
-
-      final bool isLoginPage =
-          location == '/login';
-
-      final bool isRegisterPage =
-          location == '/register';
+      final bool isSplashPage = location == '/';
+      final bool isLoginPage = location == '/login';
+      final bool isRegisterPage = location == '/register';
 
       final bool isPublicPage =
           isSplashPage ||
@@ -123,8 +113,7 @@ class AppRouter {
       // ========================================================
 
       final bool isLoggedIn =
-          authState.valueOrNull !=
-              null;
+          authState.valueOrNull != null;
 
       // ========================================================
       // NOT LOGGED IN
@@ -146,8 +135,7 @@ class AppRouter {
 
       try {
         role =
-            await UserService
-                .getCurrentUserRole();
+            await UserService.getCurrentUserRole();
       } catch (error) {
         debugPrint(
           'GET USER ROLE ERROR: $error',
@@ -169,34 +157,18 @@ class AppRouter {
       // ========================================================
 
       if (isAdmin) {
-        // ======================================================
-        // AUTH PAGES
-        // ======================================================
-
         if (isLoginPage ||
             isRegisterPage) {
           return '/admin';
         }
 
-        // ======================================================
-        // SPLASH
-        // ======================================================
-
         if (isSplashPage) {
           return '/admin';
         }
 
-        // ======================================================
-        // BLOCK USER HOME
-        // ======================================================
-
         if (location == '/home') {
           return '/admin';
         }
-
-        // ======================================================
-        // USER-ONLY ROUTES
-        // ======================================================
 
         final bool isUserOnlyRoute =
             location == '/identify' ||
@@ -212,10 +184,6 @@ class AppRouter {
           return '/admin';
         }
 
-        // ======================================================
-        // ADMIN ROUTES
-        // ======================================================
-
         final bool isAdminRoute =
             location == '/admin' ||
             location == '/admin/users' ||
@@ -223,38 +191,21 @@ class AppRouter {
             location == '/admin/reports' ||
             location == '/admin/feedback' ||
             location == '/admin/support' ||
-            location ==
-                '/admin/announcements' ||
-            location ==
-                '/admin/settings' ||
+            location == '/admin/announcements' ||
+            location == '/admin/settings' ||
             location == '/admin/logs';
 
         if (isAdminRoute) {
           return null;
         }
 
-        // ======================================================
-        // USER ANNOUNCEMENTS
-        // ======================================================
-
-        if (location ==
-            '/announcements') {
+        if (location == '/announcements') {
           return null;
         }
 
-        // ======================================================
-        // UNKNOWN ADMIN ROUTE
-        // ======================================================
-
-        if (location.startsWith(
-          '/admin/',
-        )) {
+        if (location.startsWith('/admin/')) {
           return '/admin';
         }
-
-        // ======================================================
-        // DEFAULT
-        // ======================================================
 
         return '/admin';
       }
@@ -263,46 +214,23 @@ class AppRouter {
       // NORMAL USER
       // ========================================================
 
-      // ========================================================
-      // BLOCK ADMIN ROUTES
-      // ========================================================
-
       if (location == '/admin' ||
-          location.startsWith(
-            '/admin/',
-          )) {
+          location.startsWith('/admin/')) {
         return '/home';
       }
-
-      // ========================================================
-      // LOGIN / REGISTER
-      // ========================================================
 
       if (isLoginPage ||
           isRegisterPage) {
         return '/home';
       }
 
-      // ========================================================
-      // SPLASH
-      // ========================================================
-
       if (isSplashPage) {
         return '/home';
       }
 
-      // ========================================================
-      // ANNOUNCEMENTS
-      // ========================================================
-
-      if (location ==
-          '/announcements') {
+      if (location == '/announcements') {
         return null;
       }
-
-      // ========================================================
-      // OTHER USER ROUTES
-      // ========================================================
 
       return null;
     },
@@ -312,10 +240,6 @@ class AppRouter {
     // ==========================================================
 
     routes: [
-      // ========================================================
-      // SPLASH
-      // ========================================================
-
       GoRoute(
         path: '/',
         builder: (
@@ -325,10 +249,6 @@ class AppRouter {
           return const SplashScreen();
         },
       ),
-
-      // ========================================================
-      // LOGIN
-      // ========================================================
 
       GoRoute(
         path: '/login',
@@ -340,10 +260,6 @@ class AppRouter {
         },
       ),
 
-      // ========================================================
-      // REGISTER
-      // ========================================================
-
       GoRoute(
         path: '/register',
         builder: (
@@ -353,10 +269,6 @@ class AppRouter {
           return const RegisterScreen();
         },
       ),
-
-      // ========================================================
-      // HOME
-      // ========================================================
 
       GoRoute(
         path: '/home',
@@ -368,10 +280,6 @@ class AppRouter {
         },
       ),
 
-      // ========================================================
-      // USER ANNOUNCEMENTS
-      // ========================================================
-
       GoRoute(
         path: '/announcements',
         builder: (
@@ -381,10 +289,6 @@ class AppRouter {
           return const AnnouncementsScreen();
         },
       ),
-
-      // ========================================================
-      // ADMIN DASHBOARD
-      // ========================================================
 
       GoRoute(
         path: '/admin',
@@ -396,10 +300,6 @@ class AppRouter {
         },
       ),
 
-      // ========================================================
-      // ADMIN USERS
-      // ========================================================
-
       GoRoute(
         path: '/admin/users',
         builder: (
@@ -409,10 +309,6 @@ class AppRouter {
           return const AdminUsersScreen();
         },
       ),
-
-      // ========================================================
-      // ADMIN PLANTS
-      // ========================================================
 
       GoRoute(
         path: '/admin/plants',
@@ -424,10 +320,6 @@ class AppRouter {
         },
       ),
 
-      // ========================================================
-      // ADMIN REPORTS
-      // ========================================================
-
       GoRoute(
         path: '/admin/reports',
         builder: (
@@ -437,10 +329,6 @@ class AppRouter {
           return const AdminReportsScreen();
         },
       ),
-
-      // ========================================================
-      // ADMIN FEEDBACK
-      // ========================================================
 
       GoRoute(
         path: '/admin/feedback',
@@ -452,10 +340,6 @@ class AppRouter {
         },
       ),
 
-      // ========================================================
-      // ADMIN SUPPORT
-      // ========================================================
-
       GoRoute(
         path: '/admin/support',
         builder: (
@@ -465,10 +349,6 @@ class AppRouter {
           return const AdminSupportScreen();
         },
       ),
-
-      // ========================================================
-      // ADMIN ANNOUNCEMENTS
-      // ========================================================
 
       GoRoute(
         path: '/admin/announcements',
@@ -480,10 +360,6 @@ class AppRouter {
         },
       ),
 
-      // ========================================================
-      // ADMIN APP SETTINGS
-      // ========================================================
-
       GoRoute(
         path: '/admin/settings',
         builder: (
@@ -493,10 +369,6 @@ class AppRouter {
           return const AdminAppSettingsScreen();
         },
       ),
-
-      // ========================================================
-      // ADMIN LOGS
-      // ========================================================
 
       GoRoute(
         path: '/admin/logs',
@@ -508,10 +380,6 @@ class AppRouter {
         },
       ),
 
-      // ========================================================
-      // IDENTIFY
-      // ========================================================
-
       GoRoute(
         path: '/identify',
         builder: (
@@ -521,10 +389,6 @@ class AppRouter {
           return const IdentifyScreen();
         },
       ),
-
-      // ========================================================
-      // PLANT REPORT
-      // ========================================================
 
       GoRoute(
         path: '/plant-report',
@@ -536,10 +400,6 @@ class AppRouter {
         },
       ),
 
-      // ========================================================
-      // DISEASE
-      // ========================================================
-
       GoRoute(
         path: '/disease',
         builder: (
@@ -549,10 +409,6 @@ class AppRouter {
           return const DiseaseScreen();
         },
       ),
-
-      // ========================================================
-      // CHATBOT
-      // ========================================================
 
       GoRoute(
         path: '/chatbot',
@@ -564,10 +420,6 @@ class AppRouter {
         },
       ),
 
-      // ========================================================
-      // REMINDERS
-      // ========================================================
-
       GoRoute(
         path: '/reminders',
         builder: (
@@ -577,10 +429,6 @@ class AppRouter {
           return const ReminderScreen();
         },
       ),
-
-      // ========================================================
-      // PROFILE
-      // ========================================================
 
       GoRoute(
         path: '/profile',
@@ -592,10 +440,6 @@ class AppRouter {
         },
       ),
 
-      // ========================================================
-      // FEEDBACK
-      // ========================================================
-
       GoRoute(
         path: '/feedback',
         builder: (
@@ -605,10 +449,6 @@ class AppRouter {
           return const FeedbackScreen();
         },
       ),
-
-      // ========================================================
-      // SUPPORT
-      // ========================================================
 
       GoRoute(
         path: '/support',
@@ -622,3 +462,15 @@ class AppRouter {
     ],
   );
 }
+
+// ============================================================
+// GLOBAL ROUTER INSTANCE
+// ============================================================
+//
+// app.dart uses:
+// routerConfig: appRouter
+//
+// Therefore this must exist.
+//
+
+final GoRouter appRouter = AppRouter.router;
