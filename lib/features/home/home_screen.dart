@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../nursery/screens/nearby_nursery_screen.dart';
 import '../plant_report/screens/plant_report_screen.dart';
@@ -14,6 +15,44 @@ class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   static const Color _background = Color(0xFFF3F8F3);
+
+  // ==========================================================================
+  // APK DOWNLOAD
+  // ==========================================================================
+
+  static const String _apkUrl =
+      'https://github.com/amrulhasa/greenmind_ai/releases/download/v1.0.0/GreenMind-AI-v1.0.0.apk';
+
+  Future<void> _downloadApk(BuildContext context) async {
+    final uri = Uri.parse(_apkUrl);
+
+    try {
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!launched && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Unable to open the APK download link.',
+            ),
+          ),
+        );
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Could not open the APK download link.',
+            ),
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(
@@ -56,6 +95,16 @@ class HomeScreen extends ConsumerWidget {
 
                           const SizedBox(height: 22),
 
+                          // ==================================================
+                          // DOWNLOAD APK
+                          // ==================================================
+
+                          _DownloadApkCard(
+                            onTap: () => _downloadApk(context),
+                          ),
+
+                          const SizedBox(height: 22),
+
                           const _QuickActionsCard(),
 
                           const SizedBox(height: 22),
@@ -78,6 +127,242 @@ class HomeScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// DOWNLOAD APK CARD
+// ============================================================================
+
+class _DownloadApkCard extends StatelessWidget {
+  const _DownloadApkCard({
+    required this.onTap,
+  });
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(21),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF1F6B2A),
+            Color(0xFF2E7D32),
+            Color(0xFF3D8D45),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF2E7D32).withValues(
+              alpha: 0.16,
+            ),
+            blurRadius: 30,
+            offset: const Offset(0, 14),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(
+                    alpha: 0.15,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.white.withValues(
+                      alpha: 0.18,
+                    ),
+                  ),
+                ),
+                child: const Icon(
+                  Icons.android_rounded,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 13),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'GreenMind AI for Android',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Download and install the mobile app',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFFDCEEDF),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 17),
+
+          const Text(
+            'Get the GreenMind AI Android app and take '
+            'your intelligent plant care assistant with you.',
+            style: TextStyle(
+              fontSize: 12.5,
+              height: 1.45,
+              color: Color(0xFFE7F4E8),
+            ),
+          ),
+
+          const SizedBox(height: 15),
+
+          // ================================================================
+          // VERSION INFO
+          // ================================================================
+
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _DownloadInfoChip(
+                icon: Icons.android_rounded,
+                label: 'Android',
+              ),
+              _DownloadInfoChip(
+                icon: Icons.download_rounded,
+                label: 'v1.0.0',
+              ),
+              _DownloadInfoChip(
+                icon: Icons.storage_rounded,
+                label: '68.4 MB',
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // ================================================================
+          // DOWNLOAD BUTTON
+          // ================================================================
+
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton.icon(
+              onPressed: onTap,
+              icon: const Icon(
+                Icons.download_rounded,
+                size: 20,
+              ),
+              label: const Text(
+                'Download Android APK',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: const Color(0xFF2E7D32),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 10),
+
+          const Center(
+            child: Text(
+              'Free • Android • Direct APK',
+              style: TextStyle(
+                fontSize: 10.5,
+                color: Color(0xFFDCEEDF),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// DOWNLOAD INFO CHIP
+// ============================================================================
+
+class _DownloadInfoChip extends StatelessWidget {
+  const _DownloadInfoChip({
+    required this.icon,
+    required this.label,
+  });
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 7,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(
+          alpha: 0.13,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white.withValues(
+            alpha: 0.15,
+          ),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 13,
+            color: Colors.white,
+          ),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
