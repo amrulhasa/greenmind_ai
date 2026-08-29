@@ -1,264 +1,314 @@
 # GreenMind AI
 
-GreenMind AI is a cross-platform Flutter application that uses Google Gemini (via Firebase AI) to identify plants from images, assess plant health, detect diseases, generate personalized care reports (including PDF export), and provide an AI chatbot for plant-care guidance. It also includes care reminders, nearby nursery discovery, user authentication, profiles, and an admin panel.
+> **AI-Powered Plant Identification & Smart Plant Care Assistant**
 
-**Live Demo:** [https://greenmind-ai-app.netlify.app/](https://greenmind-ai-app.netlify.app/)
+GreenMind AI is a cross-platform Flutter application that combines **Google Gemini AI through Firebase AI** with a modern plant-care experience. It helps users identify plants from images, analyze plant health, detect visible diseases, generate personalized care reports, receive AI-powered guidance, manage care reminders, and discover nearby nurseries.
 
-**Repository:** [https://github.com/amrulhasa/greenmind_ai](https://github.com/amrulhasa/greenmind_ai)
+<p align="center">
+  <a href="https://greenmind-ai-app.netlify.app/">Live Demo</a> •
+  <a href="https://github.com/amrulhasa/greenmind_ai">Source Code</a>
+</p>
 
 ---
 
-## Overview
+## Project Overview
 
-Many plant owners struggle to correctly identify plants, diagnose visible health issues, and maintain consistent care routines. GreenMind AI addresses this by combining on-device image capture with cloud-based multimodal AI analysis. Users can upload or capture a plant image, receive identification results with confidence scores, health assessments, disease analysis, practical care recommendations, and downloadable reports. The app also supports reminders, location-based nursery discovery, and user account management.
+Plant owners often have difficulty identifying unfamiliar plants, recognizing visible health problems, and maintaining consistent care routines. GreenMind AI addresses these challenges through an AI-assisted workflow:
+
+**Capture / Upload Image → AI Analysis → Plant & Health Insights → Personalized Care → Ongoing Reminders**
+
+The application combines multimodal AI analysis, Firebase services, local device capabilities, and a feature-first Flutter architecture to provide a complete smart plant-care platform.
 
 ---
 
 ## Key Features
 
-The following features are implemented in the current codebase:
+### AI & Plant Intelligence
 
-- **AI Plant Identification** – Upload or capture an image; Gemini analyzes visual characteristics and returns common name, scientific name, confidence, description, care tips, and health status.
-- **Plant Disease Detection** – Image-based analysis for visible disease/pest/stress symptoms, with confidence, symptoms, treatment, and prevention guidance. Results are cached locally by image hash.
-- **AI-Generated Plant Care Reports** – Structured reports combining identification, health, disease analysis, care schedule, and recommendations. PDF generation and preview/export are supported (`pdf` + `printing` packages).
-- **AI Chatbot** – Conversational plant-care assistant powered by Gemini with system instructions focused on identification, care, disease, and gardening topics.
-- **Care Reminders** – Create and manage watering/care reminders with local notifications and alarm support.
-- **Nearby Nursery Discovery** – Location-based nursery search using device geolocation and OpenStreetMap (`flutter_map` + `latlong2`).
-- **User Authentication** – Email/password sign-in and registration via Firebase Authentication.
-- **User Profile** – Profile management (name, location, phone, bio, profile image) stored in Cloud Firestore.
-- **Application Preferences** – Dark mode and notification preferences.
-- **Admin Panel** – Role-based admin area for users, identifications, plants, reports, announcements, feedback, support, logs, and app settings.
-- **Announcements, Feedback & Support** – In-app announcement viewing, feedback submission, and support features.
-- **Cross-platform UI** – Material 3 design targeting Android, iOS, and Web (deployed on Netlify).
+- **AI Plant Identification** — Identify plants from captured or uploaded images.
+- **Plant Health Analysis** — Receive an AI-generated visual health assessment and health score.
+- **Disease Detection** — Analyze visible disease, pest, or stress symptoms with confidence, symptoms, treatment, and prevention guidance.
+- **Personalized Plant Care Report** — Generate a structured care report containing health analysis, care guidance, schedules, and recommendations.
+- **PDF Report Export** — Preview and export generated plant-care reports as PDF.
+- **AI Plant-Care Chatbot** — Ask questions and receive conversational guidance focused on plants, gardening, identification, and care.
+
+### Smart Plant Care
+
+- **Care Reminders** — Create watering and plant-care reminders.
+- **Local Notifications & Alarms** — Receive scheduled care notifications.
+- **Nearby Nursery Discovery** — Find nearby nurseries using device location and OpenStreetMap-based maps.
+
+### User & Platform Features
+
+- **Firebase Authentication** — Email/password registration and sign-in.
+- **User Profiles** — Manage name, location, phone, bio, and profile information.
+- **Dark Mode** — Light and dark application themes.
+- **Notification Preferences** — Control plant-care notifications.
+- **Announcements, Feedback & Support** — Built-in communication features.
+- **Admin Panel** — Role-based administration for users, plant identifications, reports, announcements, feedback, support, logs, and application settings.
+- **Cross-Platform UI** — Flutter application targeting Android, iOS, and Web.
 
 ---
 
-## How It Works
+## How GreenMind AI Works
 
-1. User signs in or registers with Firebase Authentication.
-2. From the home screen, the user selects Plant Identification or Disease Detection.
-3. The user captures a photo or picks an image from the gallery.
-4. The image bytes are sent to a Gemini model via Firebase AI (`firebase_ai`).
-5. The model returns structured text (parsed into models such as `IdentifyResult` or `DiseaseResult`).
-6. Results are displayed with confidence scores, descriptions, care tips, and health status.
-7. Users can generate a full plant care report and export it as PDF.
-8. Optional features: set care reminders, chat with the AI assistant, find nearby nurseries, or manage profile/settings.
-9. Admins can access a separate dashboard for content and user management.
+1. The user registers or signs in using Firebase Authentication.
+2. The user selects **Plant Identification** or **Disease Detection**.
+3. A plant image is captured or selected from the device.
+4. The image is analyzed using Google Gemini through Firebase AI.
+5. AI results are parsed into structured application models.
+6. The application displays identification, confidence, health, disease, and care information.
+7. The user can generate a personalized plant-care report and export it as PDF.
+8. Users can continue managing reminders, chatting with the AI assistant, finding nearby nurseries, and updating their profile.
+9. Administrators can manage application data through the dedicated admin area.
 
 ---
 
 ## Technology Stack
 
-| Category              | Technology                                      |
-|-----------------------|-------------------------------------------------|
-| Framework             | Flutter                                         |
-| Language              | Dart (SDK ^3.9.0)                               |
-| State Management      | Riverpod (`flutter_riverpod`)                   |
-| Navigation            | GoRouter                                        |
-| UI                    | Material 3, Google Fonts, flutter_svg           |
-| Authentication        | Firebase Auth                                   |
-| Database              | Cloud Firestore                                 |
-| AI                    | Firebase AI / Google Gemini                     |
-| Image Handling        | image_picker, image, file_picker                |
-| PDF Generation        | pdf, printing                                   |
-| Local Storage         | shared_preferences, path_provider               |
-| Location & Maps       | geolocator, flutter_map, latlong2               |
-| Notifications         | flutter_local_notifications, timezone, alarm    |
-| Networking            | dio                                             |
-| Other                 | connectivity_plus, url_launcher, uuid, crypto, logger, intl |
-
-**Deployment:** Web build published to Netlify (`netlify.toml` + `build.sh`).
+| Category | Technology |
+|---|---|
+| Framework | Flutter |
+| Language | Dart |
+| State Management | Riverpod |
+| Navigation | GoRouter |
+| UI | Material 3, Google Fonts, flutter_svg |
+| AI | Firebase AI / Google Gemini |
+| Authentication | Firebase Authentication |
+| Database | Cloud Firestore |
+| Networking | Dio |
+| Image Processing | image_picker, image, file_picker |
+| PDF | pdf, printing |
+| Local Storage | shared_preferences, path_provider |
+| Location | Geolocator |
+| Maps | OpenStreetMap, flutter_map, latlong2 |
+| Notifications | flutter_local_notifications, timezone |
+| Alarm | alarm |
+| Security | Firebase App Check |
+| Utilities | connectivity_plus, url_launcher, uuid, crypto, logger, intl |
+| Deployment | Netlify |
 
 ---
 
-## Project Architecture
+## Architecture
 
-Feature-first structure under `lib/`:
+GreenMind AI follows a **feature-first Flutter architecture** designed to keep application modules organized and maintainable.
 
-```
+```text
 lib/
-├── main.dart                 # App entry point, Firebase init, ProviderScope
+├── main.dart
 ├── firebase_options.dart
+│
 ├── app/
-│   ├── app.dart              # Root widget
-│   ├── router.dart           # GoRouter configuration
-│   └── theme.dart            # Light/dark themes
+│   ├── app.dart
+│   ├── router.dart
+│   └── theme.dart
+│
 ├── core/
-│   ├── constants/            # Colors, spacing, radius, text styles
-│   └── services/             # Shared services (e.g. AI helper)
+│   ├── constants/
+│   └── services/
+│
 └── features/
-    ├── auth/                 # Login, register, user service
-    ├── home/                 # Dashboard, recent plants
-    ├── identify/             # Plant identification flow
-    ├── disease/              # Disease detection flow
-    ├── plant_report/         # Care reports + PDF generation
-    ├── chatbot/              # AI chat assistant
-    ├── reminder/             # Reminders & notifications
-    ├── nursery/              # Nearby nursery map
-    ├── profile/              # User profile
+    ├── auth/
+    ├── home/
+    ├── identify/
+    ├── disease/
+    ├── plant_report/
+    ├── chatbot/
+    ├── reminder/
+    ├── nursery/
+    ├── profile/
     ├── announcements/
     ├── feedback/
     ├── support/
-    ├── admin/                # Admin dashboard & management
+    ├── admin/
     └── splash/
 ```
 
-Each feature typically contains `models/`, `providers/`, `screens/`, `services/`, and `widgets/`.
+Most features are organized around their own **models, providers, screens, services, and widgets**, making the project easier to extend and maintain.
 
 ---
 
 ## AI Integration
 
-AI capabilities are implemented with the **Firebase AI** package (`firebase_ai`), which provides access to Google Gemini models.
+GreenMind AI uses **Firebase AI** to access Google Gemini models for multimodal plant analysis and conversational assistance.
 
-- **Plant Identification** (`IdentifyService` / `AIService`): Image bytes + detailed text prompt → structured fields (plant name, scientific name, confidence, description, care tips, healthy flag).
-- **Disease Detection** (`DiseaseService`): Image + prompt → disease name, confidence, description, symptoms, treatment, prevention, healthy flag. Results are cached locally using SHA-256 image hash.
-- **Chatbot** (`ChatbotService`): Multi-turn chat session with a system instruction that restricts the assistant to plant-care topics.
+### Plant Identification
 
-Models referenced in code include Gemini Flash variants (e.g. `gemini-2.5-flash`, `gemini-3.5-flash`, `gemini-3.5-flash-lite`, `gemini-3.6-flash`). Exact model names may be updated in the service files.
+The identification workflow sends plant image data together with a carefully designed prompt and processes the AI response into structured fields such as:
 
-Input is primarily image data (`Uint8List` + MIME type detection) combined with carefully engineered prompts that request strict field-based or JSON-like output for reliable parsing.
+- Plant/common name
+- Scientific name
+- Confidence score
+- Description
+- Care tips
+- Health status
+
+### Disease Detection
+
+The disease-analysis workflow evaluates an uploaded plant image and provides:
+
+- Disease or issue name
+- Confidence score
+- Description
+- Symptoms
+- Treatment guidance
+- Prevention guidance
+- Health status
+
+Disease results are cached locally using an image hash to reduce unnecessary repeated processing.
+
+### AI Chatbot
+
+The chatbot uses a multi-turn AI session with plant-care-focused instructions so users can ask questions about plant identification, care, disease symptoms, gardening, and related topics.
 
 ---
 
-## Firebase / Backend
+## Firebase Architecture
 
-| Service              | Role                                              |
-|----------------------|---------------------------------------------------|
-| Firebase Auth        | User sign-up, sign-in, session management         |
-| Cloud Firestore      | User profiles (`users` collection), admin data, announcements, feedback, support, logs |
-| Firebase AI          | Gemini model access for identification, disease analysis, and chatbot |
-| Firebase App Check   | App integrity / security                          |
-| Firebase Core        | Initialization                                    |
+| Firebase Service | Purpose |
+|---|---|
+| Firebase Authentication | User registration, sign-in, and session management |
+| Cloud Firestore | Profiles, application data, announcements, feedback, support, and administrative data |
+| Firebase AI | Google Gemini-powered plant analysis and chatbot |
+| Firebase App Check | Application integrity and security |
+| Firebase Core | Firebase initialization and configuration |
 
-No custom backend server is required. The Flutter client communicates directly with Firebase services.
+The application does not require a separate custom backend server for its core functionality; the Flutter client communicates with Firebase services directly.
 
 ---
 
 ## Screenshots
 
-Screenshots are not currently stored in the repository. Recommended placement:
+The application includes the following major interfaces:
 
-```
-docs/screenshots/
-├── 01-login.png
-├── 02-home.png
-├── 03-identify.png
-├── 04-disease.png
-├── 05-report.png
-├── 06-chatbot.png
-├── 07-profile.png
-└── 08-admin.png
-```
+- Login & Registration
+- Home Dashboard
+- Plant Identification
+- AI Plant Health / Care Report
+- Disease Detection
+- AI Chatbot
+- Care Reminders
+- Nearby Nursery Finder
+- User Profile & Preferences
+- Admin Dashboard
 
-After adding images, you can display them with:
-
-```markdown
-| Login | Home | Identify |
-|:-----:|:----:|:--------:|
-| ![Login](docs/screenshots/01-login.png) | ![Home](docs/screenshots/02-home.png) | ![Identify](docs/screenshots/03-identify.png) |
-```
+> Screenshots can be added under `docs/screenshots/` as the project documentation is expanded.
 
 ---
 
-## Installation & Setup
+## Live Demo
+
+**Web Application:**
+
+https://greenmind-ai-app.netlify.app/
+
+The web version is deployed on **Netlify** and demonstrates the application's core user interface and workflows.
+
+---
+
+## Getting Started
 
 ### Prerequisites
 
-- Flutter SDK (compatible with Dart SDK ^3.9.0)
-- A Firebase project with Authentication, Cloud Firestore, and Firebase AI (Gemini) enabled
-- Platform tooling (Android Studio / Xcode / Chrome) depending on target
+- Flutter SDK compatible with the project's Dart SDK
+- Android Studio / Xcode / Chrome depending on target platform
+- A Firebase project
+- Firebase Authentication enabled
+- Cloud Firestore configured
+- Firebase AI / Gemini configured for the project
 
-### Steps
+### Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/amrulhasa/greenmind_ai.git
-   cd greenmind_ai
-   ```
+```bash
+git clone https://github.com/amrulhasa/greenmind_ai.git
+cd greenmind_ai
+flutter pub get
+```
 
-2. **Install dependencies**
-   ```bash
-   flutter pub get
-   ```
+### Firebase Configuration
 
-3. **Firebase configuration**
-   - The project includes `lib/firebase_options.dart` and `firebase.json`.
-   - Ensure your Firebase project is correctly linked (FlutterFire CLI or manual configuration of `firebase_options.dart` and platform-specific files such as `google-services.json` / `GoogleService-Info.plist`).
-   - Enable Email/Password authentication and create a Firestore database.
-   - Enable the Gemini / Firebase AI API for your Firebase project.
+Make sure the Firebase project is correctly configured for the target platforms. The repository includes the project's Firebase configuration files. Authentication, Firestore, and Firebase AI must be configured in the Firebase project before using the corresponding features.
 
-4. **Run the application**
-   ```bash
-   flutter run
-   ```
-   Or target a specific platform:
-   ```bash
-   flutter run -d chrome
-   flutter run -d android
-   flutter run -d ios
-   ```
+### Run
 
-### Web Deployment
+```bash
+flutter run
+```
 
-The repository contains `netlify.toml` and `build.sh` for Netlify deployment. The published directory is `build/web`.
+For web:
+
+```bash
+flutter run -d chrome
+```
+
+For Android:
+
+```bash
+flutter run -d android
+```
 
 ---
 
-## Project Structure (Key Paths)
+## Web Deployment
 
-| Path | Purpose |
-|------|---------|
-| `lib/main.dart` | Entry point, Firebase initialization, Riverpod scope |
-| `lib/app/router.dart` | Route definitions and navigation |
-| `lib/features/identify/` | Plant identification UI + Gemini service |
-| `lib/features/disease/` | Disease detection UI + caching |
-| `lib/features/plant_report/` | Care reports and PDF generation |
-| `lib/features/chatbot/` | Conversational AI assistant |
-| `lib/features/admin/` | Admin dashboard and management screens |
-| `lib/features/nursery/` | Location + map-based nursery finder |
-| `assets/` | Images, icons, animations, fonts |
+The repository contains Netlify deployment configuration, including `netlify.toml` and `build.sh`.
+
+The published Flutter Web output is generated in:
+
+```text
+build/web
+```
+
+---
+
+## Project Highlights
+
+This project demonstrates practical experience with:
+
+- Multimodal AI integration using Google Gemini
+- Firebase AI integration
+- Flutter and Dart application development
+- Riverpod state management
+- GoRouter navigation
+- Firebase Authentication and Cloud Firestore
+- Image capture and processing
+- AI-powered plant identification and disease analysis
+- PDF report generation and export
+- Local notifications and scheduled reminders
+- Location services and interactive maps
+- Role-based administration
+- Material 3 responsive UI
+- Light and dark themes
+- Cross-platform development and web deployment
 
 ---
 
 ## Future Improvements
 
-Possible enhancements not yet fully implemented or still evolving:
+Potential areas for future development include:
 
-- Expanded offline support and more robust local data synchronization
-- Additional plant database / history features beyond current recent plants and reports
-- Refined admin analytics and reporting dashboards
+- Stronger offline support and synchronization
+- Expanded plant history and knowledge database
+- More advanced analytics for administrators
 - Improved accessibility and internationalization
-- More comprehensive automated tests
-
----
-
-## Development Highlights
-
-This project demonstrates:
-
-- Multimodal AI integration (image + text prompts) with Google Gemini via Firebase AI
-- Clean feature-first Flutter architecture
-- Riverpod for state management
-- GoRouter for declarative navigation
-- Firebase Authentication and Cloud Firestore
-- Image capture, processing, and local caching
-- PDF report generation
-- Local notifications and reminders
-- Location services and interactive maps
-- Role-based admin functionality
-- Material 3 theming with light/dark mode support
-- Cross-platform deployment (including web on Netlify)
+- Broader automated test coverage
+- Additional plant-care automation and personalization
 
 ---
 
 ## Author
 
-**MD. AMRUL HASAN SAKIB**  
-GitHub: [https://github.com/amrulhasa](https://github.com/amrulhasa)
+**MD. AMRUL HASAN SAKIB**
+
+Computer Science Student | Software Developer | AI & Machine Learning Enthusiast
+
+- GitHub: https://github.com/amrulhasa
+- Project: https://github.com/amrulhasa/greenmind_ai
+- Live Demo: https://greenmind-ai-app.netlify.app/
 
 ---
 
 ## License
 
-No license file is currently present in the repository. A license can be added later if desired.
+No license file is currently included in this repository.
